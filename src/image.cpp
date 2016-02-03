@@ -37,11 +37,11 @@ std::chrono::system_clock::time_point to_time_point(const FILETIME& filetime) {
 	return std::chrono::system_clock::from_time_t(filetime_time_t);
 }
 
-std::wstring widen(const std::string& str) {
+std::wstring widen(const std::string& string) {
 	std::wostringstream os;
-	const std::ctype<wchar_t>& ctfacet = std::use_facet<std::ctype<wchar_t>>(os.getloc());    
-	for (std::size_t i = 0; i < str.size(); ++i)
-		os << ctfacet.widen(str[i]);
+	auto& f = std::use_facet<std::ctype<wchar_t>>(os.getloc());    
+	for (const auto c : string)
+		os << f.widen(c);
 	return os.str();
 }
 
@@ -143,9 +143,9 @@ float Image::get_distance(const Image& image, const float maximum_distance) cons
 		Transform::flip_h, Transform::flip_v, Transform::flip_nw_se, Transform::flip_sw_ne,
 	};
 
-	float sum = std::numeric_limits<float>::max();
+	auto sum = std::numeric_limits<float>::max();
 	for (auto t : transforms) {
-		float s = 0;
+		auto s = 0.0f;
 		for (int y = 0; y < n_intensity_block_divisions; y++) {
 			for (int x = 0; x < n_intensity_block_divisions; x++) {
 				Colour c1 = get_intensity(x, y);
@@ -182,11 +182,11 @@ void Image::draw(
 
 		render_target->FillRectangle(rect_dest, brush);
 
-		const D2D1_POINT_2F line_offset = {32, 32};
-		const D2D1_POINT_2F square_offset = {64, 64};
-		const float thickness = 12;
+		const D2D1_POINT_2F line_offset{32, 32};
+		const D2D1_POINT_2F square_offset{64, 64};
+		const auto thickness = 12.0f;
 
-		D2D1_POINT_2F centre = {
+		D2D1_POINT_2F centre{
 			rect_dest.left + (rect_dest.right - rect_dest.left) / 2,
 			rect_dest.top + (rect_dest.bottom - rect_dest.top) / 2};
 
@@ -241,18 +241,18 @@ void Image::open_folder() const {
 		return;
 	std::wstring folder_string = path.substr(0, r);
 
-	__unaligned ITEMIDLIST* folder = ILCreateFromPath(folder_string.c_str());
+	__unaligned auto folder = ILCreateFromPath(folder_string.c_str());
 	if (folder == nullptr)
 		return;
 
-	__unaligned ITEMIDLIST* file = ILCreateFromPath(path.c_str());
+	__unaligned auto file = ILCreateFromPath(path.c_str());
 	if (file) {
-		__unaligned const ITEMIDLIST* selection[] = { file };
+		__unaligned const ITEMIDLIST* selection[]{file};
 		et = SHOpenFolderAndSelectItems(folder, 1, selection, 0);
 		CoTaskMemFree(file);
 	}
 	else {
-		__unaligned const ITEMIDLIST* selection[] = { folder };
+		__unaligned const ITEMIDLIST* selection[]{folder};
 		et = SHOpenFolderAndSelectItems(folder, 1, selection, 0);
 	}
 
@@ -315,8 +315,8 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 			std::uint32_t b = 0;
 			std::uint32_t a = 0;
 
-			for (std::uint32_t y = offset_y; y < offset_y_next; y++) {
-				for (std::uint32_t x = offset_x; x < offset_x_next; x++) {
+			for (auto y = offset_y; y < offset_y_next; y++) {
+				for (auto x = offset_x; x < offset_x_next; x++) {
 					b += pixel_buffer.data()[y*pixel_buffer_stride + x*pixel_stride + 0];
 					g += pixel_buffer.data()[y*pixel_buffer_stride + x*pixel_stride + 1];
 					r += pixel_buffer.data()[y*pixel_buffer_stride + x*pixel_stride + 2];
@@ -374,14 +374,12 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 }
 
 std::wstring get_propvariant_string(const PROPVARIANT& pv) {
-	std::wstring s;
-
 	if (pv.vt == VT_LPSTR)
-		s = widen(std::string(pv.pszVal));
+		return trim(widen(pv.pszVal));
 	else if (pv.vt == VT_LPWSTR)
-		s = pv.pwszVal;
-
-	return trim(s);
+		return trim(pv.pwszVal);
+	else
+		return L"";
 }
 
 std::chrono::system_clock::time_point get_propvariant_time(const PROPVARIANT& pv) {
@@ -455,10 +453,10 @@ float get_propvariant_location(const PROPVARIANT& pv) {
 	et = PropVariantGetUInt64Elem(pv, 1, &data[1]);
 	et = PropVariantGetUInt64Elem(pv, 2, &data[2]);
 
-	ULONG* ul_data = reinterpret_cast<ULONG*>(data);
-	float d = static_cast<float>(ul_data[0]) / ul_data[1];
-	float m = static_cast<float>(ul_data[2]) / ul_data[3];
-	float s = static_cast<float>(ul_data[4]) / ul_data[5];
+	auto ul_data = reinterpret_cast<ULONG*>(data);
+	auto d = static_cast<float>(ul_data[0]) / ul_data[1];
+	auto m = static_cast<float>(ul_data[2]) / ul_data[3];
+	auto s = static_cast<float>(ul_data[4]) / ul_data[5];
 
 	return d + m/60 + s/3600;
 }
@@ -676,7 +674,7 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 		et = PropVariantClear(&value);
 
 		if (metadata_position.x == 0 || metadata_position.y == 0)
-			metadata_position = D2D1::Point2F(0, 0);
+			metadata_position = {0, 0};
 
 		#if 0
 		// metadata test
