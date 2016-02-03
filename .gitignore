@@ -1,0 +1,6 @@
+vs_output/
+.vs/
+*.sln
+*.sdf
+*.vc.opendb
+*.vcxproj.user

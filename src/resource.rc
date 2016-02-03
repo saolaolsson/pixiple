@@ -1,0 +1,36 @@
+#include "resource.h"
+
+#include <VerRsrc.h>
+
+APP_ICON ICON "icon.ico"
+
+//#define APP_RELEASE_STRING STRINGIZE(APP_RELEASE)
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION APP_RELEASE,0,0,0
+PRODUCTVERSION APP_RELEASE,0,0,0
+//FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+//FILEFLAGS 0
+//FILEOS VOS__WINDOWS32
+//FILETYPE VFT_APP
+//FILESUBTYPE 0x0L
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "040904b0"
+		BEGIN
+			//VALUE "Companyname", "companyname"
+			VALUE "FileDescription", APP_DESCRIPTION
+			VALUE "FileVersion", APP_RELEASE
+			//VALUE "InternalName", "internalname"
+			//VALUE "LegalCopyright", "legalcopyright"
+			//VALUE "OriginalFilename", "originalfilename"
+			VALUE "ProductName", APP_NAME
+			VALUE "ProductVersion", APP_RELEASE
+		END
+	END
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0x809, 1200
+	END
+END
