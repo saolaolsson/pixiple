@@ -30,17 +30,19 @@ std::wstring get_windows_path(const std::wstring& path) {
 
 std::chrono::system_clock::time_point to_time_point(const FILETIME& filetime) {
 	static_assert(sizeof time_t >= 8, "time_t must be 64-bit type or larger");
-	auto filetime_time_t = (numeric_cast<time_t>(filetime.dwHighDateTime) << 32) + filetime.dwLowDateTime;
+	auto filetime_time_t =
+		(numeric_cast<time_t>(filetime.dwHighDateTime) << 32) +
+		filetime.dwLowDateTime;
 	filetime_time_t = (filetime_time_t - 116444736000000000) / 1000 / 1000 / 10;
 	return std::chrono::system_clock::from_time_t(filetime_time_t);
 }
 
 std::wstring widen(const std::string& str) {
-	std::wostringstream wstm;
-	const std::ctype<wchar_t>& ctfacet = std::use_facet<std::ctype<wchar_t>>(wstm.getloc());    
+	std::wostringstream os;
+	const std::ctype<wchar_t>& ctfacet = std::use_facet<std::ctype<wchar_t>>(os.getloc());    
 	for (std::size_t i = 0; i < str.size(); ++i)
-		wstm << ctfacet.widen(str[i]);
-	return wstm.str();
+		os << ctfacet.widen(str[i]);
+	return os.str();
 }
 
 void Image::clear_cache() {
@@ -163,8 +165,8 @@ void Image::draw(
 	ID2D1HwndRenderTarget* const render_target,
 	const D2D1_RECT_F& rect_dest,
 	const D2D1_RECT_F& rect_src,
-	const D2D1_BITMAP_INTERPOLATION_MODE& interpolation_mode) const
-{
+	const D2D1_BITMAP_INTERPOLATION_MODE& interpolation_mode
+) const {
 	auto bitmap = get_bitmap(render_target);
 	if (bitmap) {
 		render_target->DrawBitmap(bitmap, rect_dest, 1.0, interpolation_mode, rect_src);
