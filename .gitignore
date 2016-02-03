@@ -4,3 +4,4 @@ vs_output/
 *.sdf
 *.vc.opendb
 *.vcxproj.user
+debug_log.txt
