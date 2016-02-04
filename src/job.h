@@ -45,5 +45,5 @@ private:
 	std::size_t index_next_to_create = 0;
 	std::mutex index_mutex;
 
-	float progress = 0;
+	std::atomic<float> progress = 0;
 };
