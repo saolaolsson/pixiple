@@ -38,7 +38,7 @@ std::vector<std::wstring> scan(Window& window, ComPtr<IShellItem> root) {
 
 	window.add_pane(0, 0, 1, 2, 3, margin, false, false, D2D1::ColorF(0xf8f8f8));
 	window.set_cursor(0, IDC_WAIT);
-	window.set_progressbar_progress(0, 0, 0);
+	window.set_progressbar_progress(0, -1.0f);
 
 	std::vector<std::wstring> paths;
 	std::vector<decltype(root)> items{root};

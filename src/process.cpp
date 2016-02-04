@@ -228,11 +228,11 @@ std::vector<std::vector<Duplicate>> process(Window& window, const std::vector<st
 			job.force_thread_exit = true;
 			break;
 		}
-		window.set_progressbar_progress(0, static_cast<std::size_t>(job.get_progress()*1000), 1000);
+		window.set_progressbar_progress(0, job.get_progress());
 	}
 
 	if (!window.quit_event_seen()) {
-		window.set_progressbar_progress(0, 1, 1);
+		window.set_progressbar_progress(0, 1.0f);
 		window.has_event();
 	}
 

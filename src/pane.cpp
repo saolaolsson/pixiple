@@ -380,11 +380,7 @@ void Pane::set_text(const std::wstring& text, const std::vector<std::pair<std::s
 	window->layout_valid = false;
 }
 
-void Pane::set_progressbar_progress(const std::size_t value, const std::size_t max_value) {
-	assert(value >= 0);
-	assert(max_value >= 0);
-	assert(value <= max_value);
-
+void Pane::set_progressbar_progress(const float progress) {
 	if (!progressbar) {
 		//int width = rect.right - rect.left - 2*margin;
 		//int height = et = GetSystemMetrics(SM_CYVSCROLL);
@@ -408,7 +404,7 @@ void Pane::set_progressbar_progress(const std::size_t value, const std::size_t m
 		window->layout_valid = false;
 	}
 
-	if (value == 0 && max_value == 0) {
+	if (progress < 0.0f || progress > 1.0f) {
 		if (progressbar_mode != PB_INDETERMINATE) {
 			et = SetWindowLongPtr(progressbar, GWL_STYLE, WS_CHILD | WS_VISIBLE | PBS_MARQUEE);
 			et = PostMessage(progressbar, PBM_SETMARQUEE, true, 0);
@@ -423,6 +419,8 @@ void Pane::set_progressbar_progress(const std::size_t value, const std::size_t m
 			progressbar_mode = PB_NORMAL;
 		}
 
+		std::int32_t max_value = std::numeric_limits<int32_t>::max();
+		std::int32_t value = static_cast<std::int32_t>(progress * max_value);
 		et = PostMessage(progressbar, PBM_SETRANGE32, 0, max_value);
 		et = PostMessage(progressbar, PBM_SETPOS, value, 0);
 		et = progressbar_taskbar_list->SetProgressValue(window->get_handle(), value, max_value);

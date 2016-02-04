@@ -361,9 +361,9 @@ void Window::set_text(const int pane_index, const std::wstring& text, const std:
 	panes[pane_index].set_text(text, bold_ranges);
 }
 
-void Window::set_progressbar_progress(const int pane_index, const std::size_t value, const std::size_t max_value) {
+void Window::set_progressbar_progress(const int pane_index, const float progress) {
 	assert(pane_index < int(edges.size()));
-	panes[pane_index].set_progressbar_progress(value, max_value);
+	panes[pane_index].set_progressbar_progress(progress);
 }
 
 void Window::add_button(const int pane_index, const int button_id, const std::wstring& label) {

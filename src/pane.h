@@ -60,7 +60,7 @@ public:
 
 	void set_text(const std::wstring& text, const std::vector<std::pair<std::size_t, std::size_t>>& bold_ranges = std::vector<std::pair<std::size_t, std::size_t>>());
 
-	void set_progressbar_progress(const std::size_t value, const std::size_t max_value);
+	void set_progressbar_progress(const float progress);
 
 	void add_button(const int button_id, const std::wstring& label);
 	void add_combobox(const int button_id, const std::vector<std::wstring>& items);
