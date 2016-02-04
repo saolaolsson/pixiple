@@ -6,6 +6,8 @@ Pixiple searches for and lets you compare and manipulate a list of image file pa
 
 ## Screenshot
 
+![Screenshot](screenshot.jpg)
+
 ## Features
 
 - Fast, multi-threaded processing, though even with a fast SSD, you will likely be IO-bound.
