@@ -137,8 +137,6 @@ Window::Window(const std::wstring& title, const D2D1_SIZE_U& size_min, const HIC
 	et = CheckMenuRadioItem(menu_stack.back(), 2, 5, 5, MF_BYCOMMAND);
 	et = CheckMenuItem(menu, 4, MF_BYCOMMAND | MF_CHECKED);
 	#endif
-
-	paint();
 }
 
 Window::~Window() {
@@ -333,6 +331,7 @@ void Window::add_pane(
 		margin, fixed_width, fixed_height, colour});
 
 	layout_valid = false;
+	et = InvalidateRect(hwnd, nullptr, false);
 }
 
 int Window::get_pane(const D2D1_POINT_2F& mouse_position) const {
@@ -711,8 +710,7 @@ void Window::paint() const {
 	}
 
 	PAINTSTRUCT ps;
-	HDC dc = et = BeginPaint(hwnd, &ps);
-	et = Rectangle(dc, 0, 0, 1, 1); // why is this line required?
+	et = BeginPaint(hwnd, &ps);
 	render_target->BeginDraw();
 
 	for (auto& pane : panes)
