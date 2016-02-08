@@ -45,6 +45,7 @@ Window::Window(const std::wstring& title, const D2D1_SIZE_U& size_min, const HIC
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 		GetDesktopWindow(), nullptr, window_class.hInstance, this
 	);
+	focus = hwnd;
 
 	// make window at least as large as size_min
 	RECT r;
@@ -404,11 +405,15 @@ void Window::set_button_state(const int button_id, const bool enable) {
 
 	if (enable) {
 		EnableWindow(bw, true);
-		if ((GetWindowLongPtr(bw, GWL_STYLE) & BS_TYPEMASK) == BS_DEFPUSHBUTTON)
-			et = SetFocus(bw);
+		if ((GetWindowLongPtr(bw, GWL_STYLE) & BS_TYPEMASK) == BS_DEFPUSHBUTTON) {
+			focus = bw;
+			SetFocus(focus);
+		}
 	} else {
-		if (bw == GetFocus())
-			et = SetFocus(hwnd);
+		if (bw == GetFocus()) {
+			focus = hwnd;
+			SetFocus(focus);
+		}
 		EnableWindow(bw, false);
 	}
 }
@@ -446,7 +451,8 @@ void Window::set_button_focus(const int button_id) {
 			style &= ~BS_TYPEMASK;
 			if (w == bw) {
 				style |= BS_DEFPUSHBUTTON;
-				SetFocus(w);
+				focus = w;
+				SetFocus(focus);
 			} else {
 				style |= BS_PUSHBUTTON;
 			}
@@ -498,7 +504,7 @@ void Window::translate_image_centre(const int pane_index, const D2D1_POINT_2F& t
 LRESULT WINAPI Window::static_window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	Window* window;
 
-	if(msg == WM_NCCREATE) {
+	if (msg == WM_NCCREATE) {
 		CREATESTRUCT* cs = reinterpret_cast<CREATESTRUCT*>(lparam);
 		window = static_cast<Window*>(cs->lpCreateParams);
 		SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
@@ -510,10 +516,6 @@ LRESULT WINAPI Window::static_window_procedure(HWND hwnd, UINT msg, WPARAM wpara
 }
 
 LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-	// remember focus (child) window when focus is lost so that we can restore
-	// it when the main window regains focus
-	static HWND hwnd_last_focus = nullptr;
-
 	if (msg == WM_DISPLAYCHANGE)
 		debug_log << L"WM_DISPLAYCHANGE" << std::endl;
 
@@ -523,8 +525,11 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 		// WM_USER+1, used by IsDialogMessage()
 	} else if (msg == WM_ACTIVATE) {
 		if (wparam == WA_INACTIVE) {
-			assert(hwnd_last_focus == nullptr);
-			hwnd_last_focus = GetFocus();
+			auto f = GetFocus();
+			if (f && IsChild(hwnd, f))
+				focus = f;
+		} else {
+			SetFocus(focus);
 		}
 	} else if (msg == WM_CLOSE) {
 		queue_event(Event(Event::Type::quit));
@@ -571,11 +576,6 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 		if (pane >= 0)
 			SetCursor(panes[pane].get_cursor());
 		return true;
-	} else if (msg == WM_SETFOCUS) {
-		if (hwnd_last_focus) {
-			et = SetFocus(hwnd_last_focus);
-			hwnd_last_focus = nullptr;
-		}
 	} else if (msg == WM_SIZE) {
 		D2D1_SIZE_U s = D2D1::SizeU(LOWORD(lparam), HIWORD(lparam));
 		if (s.width != 0 && s.height != 0) {

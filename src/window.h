@@ -116,6 +116,7 @@ private:
 	D2D1_POINT_2F scale;
 	D2D1_POINT_2F mouse_position;
 	HCURSOR cursor;
+	HWND focus;
 
 	std::wstring title;
 
