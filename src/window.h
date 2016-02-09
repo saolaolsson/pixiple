@@ -111,7 +111,7 @@ private:
 
 	mutable std::list<Event> events;
 
-	mutable D2D1_SIZE_F size;
+	mutable D2D1_SIZE_F size{0, 0};
 	D2D1_SIZE_F size_min;
 	D2D1_POINT_2F scale;
 	D2D1_POINT_2F mouse_position;
