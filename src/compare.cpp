@@ -527,6 +527,49 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 		L"Maximum pair age: one day"});
 	#endif
 
+	// ui settings
+
+	static enum class Scoring {visual, time, location, combined} scoring = Scoring::combined;
+	static enum class FolderFilter {any, same, different} folder_filter = FolderFilter::any;
+	static auto maximum_pair_age = std::chrono::system_clock::duration::max();
+
+	switch (scoring) {
+		case Scoring::visual: window.set_menu_item_checked(BUTTON_SCORING_VISUAL); break;
+		case Scoring::time: window.set_menu_item_checked(BUTTON_SCORING_TIME); break;
+		case Scoring::location: window.set_menu_item_checked(BUTTON_SCORING_LOCATION); break;
+		case Scoring::combined: window.set_menu_item_checked(BUTTON_SCORING_COMBINED); break;
+		default: assert(false); break;
+	}
+
+	switch (folder_filter) {
+		case FolderFilter::any: window.set_menu_item_checked(BUTTON_FILTERS_FOLDER_ANY); break;
+		case FolderFilter::same: window.set_menu_item_checked(BUTTON_FILTERS_FOLDER_SAME); break;
+		case FolderFilter::different: window.set_menu_item_checked(BUTTON_FILTERS_FOLDER_DIFFERENT); break;
+		default: assert(false); break;
+	}
+
+	if (maximum_pair_age > std::chrono::hours(365*24))
+		window.set_menu_item_checked(BUTTON_FILTERS_AGE_ANY);
+	else if (maximum_pair_age == std::chrono::hours(365*24))
+		window.set_menu_item_checked(BUTTON_FILTERS_AGE_YEAR);
+	else if (maximum_pair_age == std::chrono::hours(30*24))
+		window.set_menu_item_checked(BUTTON_FILTERS_AGE_MONTH);
+	else if (maximum_pair_age == std::chrono::hours(7*24))
+		window.set_menu_item_checked(BUTTON_FILTERS_AGE_WEEK);
+	else if (maximum_pair_age == std::chrono::hours(24))
+		window.set_menu_item_checked(BUTTON_FILTERS_AGE_DAY);
+	else
+		assert(false);
+
+	auto duplicates = duplicate_categories[static_cast<int>(scoring)];
+	auto duplicates_it = duplicates.begin();
+
+	// when text is first updated, layout will change. update
+	// text here so that image fit scale will work for the first pair.
+	update_text(window, duplicates, duplicates_it);
+
+	std::vector<std::pair<float, float>> scale_levels;
+
 	bool duplicates_valid = false;
 	bool images_valid = false;
 	bool scale_levels_valid = false;
@@ -536,56 +579,34 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 
 	bool swapped_state = false;
 
-	enum Scoring { SCORING_VISUAL, SCORING_TIME, SCORING_LOCATION, SCORING_COMBINED, SCORING_N }
-		scoring = SCORING_COMBINED;
-	assert(duplicate_categories.size() == SCORING_N);
-	window.set_menu_item_checked(BUTTON_SCORING_COMBINED);
-
-	enum FolderFilter { FOLDER_FILTER_ANY, FOLDER_FILTER_SAME, FOLDER_FILTER_DIFFERENT }
-		folder_filter = FOLDER_FILTER_ANY;
-	window.set_menu_item_checked(BUTTON_FILTERS_FOLDER_ANY);
-
-	std::chrono::system_clock::duration maximum_pair_age =
-		std::chrono::system_clock::duration::max();
-	window.set_menu_item_checked(BUTTON_FILTERS_AGE_ANY);
-
-	auto duplicates = duplicate_categories[scoring];
-	auto duplicates_it = duplicates.begin();
-
-	// when text is first updated, layout will change. update
-	// text here so that image fit scale will work for the first pair.
-	update_text(window, duplicates, duplicates_it);
-
-	std::vector<std::pair<float, float>> scale_levels;
-
 	for (;;) {
 		if (!duplicates_valid) {
 			bool copy_all =
-				folder_filter == FOLDER_FILTER_ANY &&
+				folder_filter == FolderFilter::any &&
 				maximum_pair_age == std::chrono::system_clock::duration::max();
 			if (copy_all) {
-				duplicates = duplicate_categories[scoring];
+				duplicates = duplicate_categories[static_cast<int>(scoring)];
 			} else {
 				duplicates.clear();
 
-				if (folder_filter == FOLDER_FILTER_ANY)
+				if (folder_filter == FolderFilter::any)
 					std::copy_if(
-						duplicate_categories[scoring].cbegin(),
-						duplicate_categories[scoring].cend(),
+						duplicate_categories[static_cast<int>(scoring)].cbegin(),
+						duplicate_categories[static_cast<int>(scoring)].cend(),
 						back_inserter(duplicates),
 						[&](const Duplicate& d) {
 							return d.get_age() < maximum_pair_age; });
-				else if (folder_filter == FOLDER_FILTER_SAME)
+				else if (folder_filter == FolderFilter::same)
 					std::copy_if(
-						duplicate_categories[scoring].cbegin(),
-						duplicate_categories[scoring].cend(),
+						duplicate_categories[static_cast<int>(scoring)].cbegin(),
+						duplicate_categories[static_cast<int>(scoring)].cend(),
 						back_inserter(duplicates),
 						[&](const Duplicate& d) {
 							return d.get_age() < maximum_pair_age && d.is_in_same_folder(); });
-				else if (folder_filter == FOLDER_FILTER_DIFFERENT)
+				else if (folder_filter == FolderFilter::different)
 					std::copy_if(
-						duplicate_categories[scoring].cbegin(),
-						duplicate_categories[scoring].cend(),
+						duplicate_categories[static_cast<int>(scoring)].cbegin(),
+						duplicate_categories[static_cast<int>(scoring)].cend(),
 						back_inserter(duplicates),
 						[&](const Duplicate& d) {
 							return d.get_age() < maximum_pair_age && !d.is_in_same_folder(); });
@@ -832,29 +853,29 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 			case BUTTON_FILTERS_AGE_WEEK:
 			case BUTTON_FILTERS_AGE_DAY:
 				if (e.button_id == BUTTON_SCORING_COMBINED)
-					scoring = SCORING_COMBINED;
+					scoring = Scoring::combined;
 				else if (e.button_id == BUTTON_SCORING_VISUAL)
-					scoring = SCORING_VISUAL;
+					scoring = Scoring::visual;
 				else if (e.button_id == BUTTON_SCORING_TIME)
-					scoring = SCORING_TIME;
+					scoring = Scoring::time;
 				else if (e.button_id == BUTTON_SCORING_LOCATION)
-					scoring = SCORING_LOCATION;
+					scoring = Scoring::location;
 				else if (e.button_id == BUTTON_FILTERS_FOLDER_ANY)
-					folder_filter = FOLDER_FILTER_ANY;
+					folder_filter = FolderFilter::any;
 				else if (e.button_id == BUTTON_FILTERS_FOLDER_SAME)
-					folder_filter = FOLDER_FILTER_SAME;
+					folder_filter = FolderFilter::same;
 				else if (e.button_id == BUTTON_FILTERS_FOLDER_DIFFERENT)
-					folder_filter = FOLDER_FILTER_DIFFERENT;
+					folder_filter = FolderFilter::different;
 				else if (e.button_id == BUTTON_FILTERS_AGE_ANY)
 					maximum_pair_age = std::chrono::system_clock::duration::max();
 				else if (e.button_id == BUTTON_FILTERS_AGE_YEAR)
-					maximum_pair_age = std::chrono::seconds(86400*366);
+					maximum_pair_age = std::chrono::hours(365*24);
 				else if (e.button_id == BUTTON_FILTERS_AGE_MONTH)
-					maximum_pair_age = std::chrono::seconds(86400*31);
+					maximum_pair_age = std::chrono::hours(30*24);
 				else if (e.button_id == BUTTON_FILTERS_AGE_WEEK)
-					maximum_pair_age = std::chrono::seconds(86400*7);
+					maximum_pair_age = std::chrono::hours(7*24);
 				else if (e.button_id == BUTTON_FILTERS_AGE_DAY)
-					maximum_pair_age = std::chrono::seconds(86400);
+					maximum_pair_age = std::chrono::hours(24);
 				else
 					assert(false);
 
