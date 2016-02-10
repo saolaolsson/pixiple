@@ -419,8 +419,8 @@ void Pane::set_progressbar_progress(const float progress) {
 			progressbar_mode = PB_NORMAL;
 		}
 
-		std::int32_t max_value = std::numeric_limits<int32_t>::max();
-		std::int32_t value = static_cast<std::int32_t>(progress * max_value);
+		auto max_value = std::numeric_limits<std::int16_t>::max();
+		auto value = std::min(static_cast<decltype(max_value)>(progress * max_value), max_value);
 		et = PostMessage(progressbar, PBM_SETRANGE32, 0, max_value);
 		et = PostMessage(progressbar, PBM_SETPOS, value, 0);
 		et = progressbar_taskbar_list->SetProgressValue(window->get_handle(), value, max_value);
