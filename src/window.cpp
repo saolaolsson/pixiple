@@ -518,6 +518,16 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 	if (msg == WM_DISPLAYCHANGE)
 		debug_log << L"WM_DISPLAYCHANGE" << std::endl;
 
+	D2D1_POINT_2F mouse_position_delta;
+	if (this) {
+		POINT mp;
+		et = GetCursorPos(&mp);
+		et = ScreenToClient(hwnd, &mp);
+		auto mouse_position_new = D2D1::Point2F(to_dip_x(mp.x), to_dip_y(mp.y));
+		mouse_position_delta = {mouse_position.x - mouse_position_new.x, mouse_position.y - mouse_position_new.y};
+		mouse_position = mouse_position_new;
+	}
+
 	if (msg == DM_GETDEFID) {
 		// WM_USER+0, used by IsDialogMessage()
 	} else if (msg == DM_SETDEFID) {
@@ -548,17 +558,14 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 	} else if (msg == WM_LBUTTONUP) {
 		et = ReleaseCapture();
 	} else if (msg == WM_MOUSEMOVE) {
-		D2D1_POINT_2F mouse_position_new =
-			{to_dip_x(GET_X_LPARAM(lparam)), to_dip_y(GET_Y_LPARAM(lparam))};
-		D2D1_POINT_2F mouse_position_delta =
-			{mouse_position.x - mouse_position_new.x, mouse_position.y - mouse_position_new.y};
-		mouse_position = mouse_position_new;
-
 		if (wparam & MK_LBUTTON && !lmb_down)
 			lmb_down_mouse_position = mouse_position;
 		lmb_down = wparam & MK_LBUTTON;
 
-		if (lmb_down) {
+		bool drag_event =
+			lmb_down &&
+			(mouse_position_delta.x != 0.0f || mouse_position_delta.y != 0.0f);
+		if (drag_event) {
 			Event e(Event::Type::drag);
 			e.drag_mouse_position_delta = mouse_position_delta;
 			e.drag_mouse_position_start = lmb_down_mouse_position;
