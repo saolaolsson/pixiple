@@ -66,7 +66,7 @@ Image::Image(const std::wstring path) : path(path) {
 	assert(!path.empty());
 
 	file_size = ::get_file_size(path);
-	file_time = get_file_time();
+	file_time = ::get_file_time(path);
 
 	std::vector<std::uint8_t> data(file_size);
 	auto frame = get_frame(data);
