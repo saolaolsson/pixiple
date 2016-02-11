@@ -69,9 +69,9 @@ static void app() {
 	window.add_pane(0, 0, 1, 2, 3, {0, 0, 0,0 }, false, false, D2D1::ColorF(0xf8f8f8));
 
 	for (;;) {
-		auto root_item = browse();
-
 		window.reset();
+
+		auto root_item = browse();
 
 		std::vector<std::vector<Duplicate>> duplicate_categories(4);
 
