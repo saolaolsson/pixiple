@@ -463,15 +463,15 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 	// menu
 
 	window.push_menu_level(L"File");
-	window.add_menu_item(L"&New scan...", BUTTON_FILE_NEW_SCAN);
+	window.add_menu_item(L"New scan...", BUTTON_FILE_NEW_SCAN);
 	window.add_menu_item(L"Exit", BUTTON_FILE_EXIT);
 	window.pop_menu_level();
 
 	window.push_menu_level(L"Scoring");
-	window.add_menu_item(L"&Visual similarity", BUTTON_SCORING_VISUAL, CHECKMARK_GROUP_SCORING);
-	window.add_menu_item(L"&Time difference (metadata)", BUTTON_SCORING_TIME, CHECKMARK_GROUP_SCORING);
-	window.add_menu_item(L"&Location distance (metadata)", BUTTON_SCORING_LOCATION, CHECKMARK_GROUP_SCORING);
-	window.add_menu_item(L"&Combined", BUTTON_SCORING_COMBINED, CHECKMARK_GROUP_SCORING);
+	window.add_menu_item(L"Visual similarity", BUTTON_SCORING_VISUAL, CHECKMARK_GROUP_SCORING);
+	window.add_menu_item(L"Time difference (metadata)", BUTTON_SCORING_TIME, CHECKMARK_GROUP_SCORING);
+	window.add_menu_item(L"Location distance (metadata)", BUTTON_SCORING_LOCATION, CHECKMARK_GROUP_SCORING);
+	window.add_menu_item(L"Combined", BUTTON_SCORING_COMBINED, CHECKMARK_GROUP_SCORING);
 	window.pop_menu_level();
 
 	window.push_menu_level(L"Filters");
