@@ -12,6 +12,7 @@
 #include <sstream>
 #include <vector>
 
+#include <shellapi.h>
 #include <windowsx.h>
 
 enum {
@@ -394,7 +395,7 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 		BUTTON_SCORING_VISUAL, BUTTON_SCORING_TIME, BUTTON_SCORING_LOCATION, BUTTON_SCORING_COMBINED,
 		BUTTON_FILTERS_FOLDER_ANY, BUTTON_FILTERS_FOLDER_DIFFERENT, BUTTON_FILTERS_FOLDER_SAME,
 		BUTTON_FILTERS_AGE_ANY, BUTTON_FILTERS_AGE_YEAR, BUTTON_FILTERS_AGE_MONTH, BUTTON_FILTERS_AGE_WEEK, BUTTON_FILTERS_AGE_DAY,
-		BUTTON_HELP_ABOUT };
+		BUTTON_HELP_WEBSITE, BUTTON_HELP_LICENSE };
 
 	enum { CHECKMARK_GROUP_SCORING, CHECKMARK_GROUP_FOLDER, CHECKMARK_GROUP_AGE };
 
@@ -490,7 +491,8 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 	window.pop_menu_level();
 
 	window.push_menu_level(L"Help");
-	window.add_menu_item(L"About Pixiple...", BUTTON_HELP_ABOUT);
+	window.add_menu_item(L"Website...", BUTTON_HELP_WEBSITE);
+	window.add_menu_item(L"License...", BUTTON_HELP_LICENSE);
 	window.pop_menu_level();
 
 	#if 0
@@ -887,6 +889,20 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 				text_valid = false;
 				cursor_valid = false;
 				buttons_valid = false;
+				break;
+
+			case BUTTON_HELP_WEBSITE:
+				ShellExecute(nullptr, L"open", L"https://github.com/olaolsso/pixiple/", nullptr, nullptr, SW_SHOWNORMAL);
+				break;
+
+			case BUTTON_HELP_LICENSE:
+				{
+					std::wstring license{L"The MIT License (MIT)\n\nCopyright (c) 2016 Ola Olsson\n\n"
+					"Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\n"
+					"The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\n"
+					"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."};
+					MessageBox(window.get_handle(), license.c_str(), L"License", MB_OK);
+				}
 				break;
 
 			default:
