@@ -25,14 +25,14 @@ std::vector<std::wstring> scan(Window& window, ComPtr<IShellItem> root);
 std::vector<std::vector<Duplicate>> process(Window& window, const std::vector<std::wstring>& paths);
 void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicate_categories);
 
-static ComPtr<IShellItem> browse() {
+static ComPtr<IShellItem> browse(HWND parent) {
 	PIDLIST_ABSOLUTE pidlist;
 
 	#ifdef _DEBUG
 	pidlist = et = ILCreateFromPath(L"c:\\users\\");
 	#else
 	BROWSEINFO bi{
-		nullptr, nullptr, nullptr,
+		parent, nullptr, nullptr,
 		L"Select a folder to scan for similar images (recursively, starting with the images and folders in the selected folder).",
 		//BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON,
 		//BIF_BROWSEFILEJUNCTIONS | BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON,
@@ -71,7 +71,7 @@ static void app() {
 	for (;;) {
 		window.reset();
 
-		auto root_item = browse();
+		auto root_item = browse(window.get_handle());
 
 		std::vector<std::vector<Duplicate>> duplicate_categories(4);
 
