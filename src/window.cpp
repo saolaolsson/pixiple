@@ -518,7 +518,7 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 	if (msg == WM_DISPLAYCHANGE)
 		debug_log << L"WM_DISPLAYCHANGE" << std::endl;
 
-	D2D1_POINT_2F mouse_position_delta;
+	D2D1_POINT_2F mouse_position_delta{0, 0};
 	if (this) {
 		POINT mp;
 		et = GetCursorPos(&mp);
