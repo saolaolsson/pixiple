@@ -61,7 +61,7 @@ private:
 	std::wstring path;
 	Status status = Status::ok;
 
-	std::size_t file_size;
+	std::size_t file_size = 0;
 	std::chrono::system_clock::time_point file_time;
 
 	std::uint32_t width = 0;

@@ -28,6 +28,13 @@ std::wstring get_windows_path(const std::wstring& path) {
 		return L"\\\\?\\" + path;
 }
 
+std::size_t get_file_size(const std::wstring& path) {
+	WIN32_FILE_ATTRIBUTE_DATA fab;
+	et = GetFileAttributesEx(get_windows_path(path).c_str(), GetFileExInfoStandard, &fab);
+	static_assert(sizeof std::size_t >= 8, "std::size_t must be 64-bit type or larger");
+	return (static_cast<std::size_t>(fab.nFileSizeHigh) << 32) + fab.nFileSizeLow;
+}
+
 std::chrono::system_clock::time_point to_time_point(const FILETIME& filetime) {
 	static_assert(sizeof time_t >= 8, "time_t must be 64-bit type or larger");
 	auto filetime_time_t =
@@ -35,6 +42,12 @@ std::chrono::system_clock::time_point to_time_point(const FILETIME& filetime) {
 		filetime.dwLowDateTime;
 	filetime_time_t = (filetime_time_t - 116444736000000000) / 1000 / 1000 / 10;
 	return std::chrono::system_clock::from_time_t(filetime_time_t);
+}
+
+std::chrono::system_clock::time_point get_file_time(const std::wstring& path) {
+	WIN32_FILE_ATTRIBUTE_DATA fab;
+	et = GetFileAttributesEx(get_windows_path(path).c_str(), GetFileExInfoStandard, &fab);
+	return to_time_point(fab.ftLastWriteTime);
 }
 
 std::wstring widen(const std::string& string) {
@@ -52,11 +65,8 @@ void Image::clear_cache() {
 Image::Image(const std::wstring path) : path(path) {
 	assert(!path.empty());
 
-	WIN32_FILE_ATTRIBUTE_DATA fab;
-	et = GetFileAttributesEx(get_windows_path(path).c_str(), GetFileExInfoStandard, &fab);
-	static_assert(sizeof std::size_t >= 8, "std::size_t must be 64-bit type or larger");
-	file_size = (static_cast<std::size_t>(fab.nFileSizeHigh) << 32) + fab.nFileSizeLow;
-	file_time = to_time_point(fab.ftLastWriteTime);
+	file_size = ::get_file_size(path);
+	file_time = get_file_time();
 
 	std::vector<std::uint8_t> data(file_size);
 	auto frame = get_frame(data);
@@ -758,6 +768,21 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 
 	ComPtr<IWICBitmapFrameDecode> frame;
 	et = decoder->GetFrame(0, &frame);
+
+	// if file has changed since *this was created, fail
+
+	if (file_size != 0)
+		if (::get_file_size(path) != file_size)
+			return nullptr;
+
+	if (width != 0 || height != 0) {
+		std::uint32_t w;
+		std::uint32_t h;
+		et = frame->GetSize(&w, &h);
+		if (w != width || h != height)
+			return nullptr;
+	}
+
 	return frame;
 }
 
