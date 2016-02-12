@@ -5,7 +5,8 @@
 class Edge {
 public:
 	Edge(float relative_position = -1)
-			: relative_position{relative_position}, calculated_position{-1} {
+		: relative_position{relative_position}, calculated_position{-1}
+	{
 		assert(relative_position == -1 || relative_position >= 0 && relative_position <= 1);
 	}
 

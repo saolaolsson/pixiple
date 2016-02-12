@@ -5,14 +5,11 @@
 #include "shared/numeric_cast.h"
 
 #include <cstdint>
-#include <sstream>
 
 class Hash {
-private:
-	std::uint64_t hash[2];
-
 public:
-	Hash() : hash{0, 0} { }
+	Hash() : hash{0, 0} {
+	}
 
 	Hash(const std::uint8_t* const data, const std::size_t length) {
 		assert(data != nullptr);
@@ -32,4 +29,7 @@ public:
 	}
 
 	friend std::wostream& operator<<(std::wostream& os, const Hash rhs);
+
+private:
+	std::uint64_t hash[2];
 };

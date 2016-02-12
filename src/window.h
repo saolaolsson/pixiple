@@ -12,7 +12,7 @@
 #include <d2d1.h>
 
 struct Event {
-	enum class Type { button, drag, key, none, quit, size, wheel } type;
+	enum class Type {button, drag, key, none, quit, size, wheel} type;
 
 	// button
 	int button_id;
@@ -27,7 +27,8 @@ struct Event {
 	// wheel
 	int wheel_count_delta;
 
-	Event(Type type) : type{type} { }
+	Event(Type type) : type{type} {
+	}
 };
 
 class Window {
@@ -40,7 +41,7 @@ public:
 	HWND get_handle() const;
 
 	void reset();
-	void set_dirty();
+	void set_dirty() const;
 
 	void message_box(const std::wstring& text) const;
 

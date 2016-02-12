@@ -110,7 +110,7 @@ private:
 
 	// progressbar
 	HWND progressbar;
-	enum ProgressbarMode { PB_UNKNOWN, PB_INDETERMINATE, PB_NORMAL } progressbar_mode;
+	enum class ProgressbarMode {unknown, indeterminate, normal} progressbar_mode;
 	ComPtr<ITaskbarList3> progressbar_taskbar_list;
 
 	// image

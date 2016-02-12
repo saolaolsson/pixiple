@@ -30,8 +30,8 @@ template<typename T>
 T clamp(
 	const T value,
 	const T min = static_cast<T>(0),
-	const T max = static_cast<T>(1))
-{
+	const T max = static_cast<T>(1)
+) {
 	assert(max >= min);
 
 	if (value < min)
@@ -51,8 +51,8 @@ template<typename TI, typename TO>
 TO map(
 	const TI value,
 	const std::initializer_list<TI>& inputs,
-	const std::initializer_list<TO>& ouputs)
-{
+	const std::initializer_list<TO>& ouputs
+) {
 	assert(inputs.size() >= 2);
 	assert(inputs.size() == ouputs.size());
 

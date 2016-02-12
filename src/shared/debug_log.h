@@ -20,7 +20,9 @@
 
 struct NullStream { };
 template <typename T>
-NullStream& operator<<(NullStream& s, T const&) { return s;	}
+NullStream& operator<<(NullStream& s, T const&) {
+	return s;
+}
 NullStream& operator<<(NullStream& s, std::ostream&(std::ostream&));
 extern NullStream nullstream;
 
@@ -29,7 +31,8 @@ extern DebugLog debug_log_;
 
 class LogInterface : public std::wostream {
 public:
-	LogInterface() : std::wostream{nullptr} { }
+	LogInterface() : std::wostream{nullptr} {
+	}
 	virtual void print_line(const std::wstring& string) = 0;
 };
 
@@ -49,7 +52,7 @@ private:
 	std::map<std::thread::id, std::wstring> thread_buffers;
 	
 	virtual int_type overflow(int_type c = traits_type::eof()) {
-		std::lock_guard<std::mutex> lg(mutex);
+		std::lock_guard<std::mutex> lg{mutex};
 
 		// find existing or create new buffer string for this thread
 		auto r = thread_buffers.insert(std::make_pair(std::this_thread::get_id(), L""));

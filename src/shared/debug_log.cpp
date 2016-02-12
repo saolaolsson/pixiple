@@ -33,15 +33,15 @@ static std::wstring get_time_string() {
 }
 
 static void redirect_console() {
-	const int n_console_lines = 1000;
-	const int n_console_rows = 120;
+	const auto n_console_lines = 1000;
+	const auto n_console_rows = 120;
 
 	et = AllocConsole();
 
-	COORD size = { n_console_rows, n_console_lines };
+	COORD size = {n_console_rows, n_console_lines};
 	et = SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), size);
 
-	SMALL_RECT sr = { 0, 0, n_console_rows-1, 80 };
+	SMALL_RECT sr = {0, 0, n_console_rows-1, 80};
 	et = SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), true, &sr);
 
 	int console;
@@ -49,7 +49,7 @@ static void redirect_console() {
 	int rc;
 
 	// redirect stdout to console
-	HANDLE stdh = GetStdHandle(STD_OUTPUT_HANDLE);
+	auto stdh = GetStdHandle(STD_OUTPUT_HANDLE);
 	assert(stdh != INVALID_HANDLE_VALUE && stdh != nullptr);
 	console = _open_osfhandle((intptr_t)stdh, _O_TEXT);
 	assert(console != -1);

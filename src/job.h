@@ -30,7 +30,9 @@ public:
 		duplicates_visual{duplicates_visual},
 		duplicates_time{duplicates_time},
 		duplicates_location{duplicates_location},
-		duplicates_combined{duplicates_combined} {}
+		duplicates_combined{duplicates_combined}
+	{
+	}
 
 	std::pair<std::shared_ptr<Image>, std::shared_ptr<Image>> get_next_pair();
 	float get_progress() const;

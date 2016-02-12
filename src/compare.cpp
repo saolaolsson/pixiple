@@ -16,17 +16,17 @@
 #include <windowsx.h>
 
 enum {
-	PANE_PAIR_INFO, PANE_PAIR_BUTTONS,
-	//PANE_SCORING_HEADER, PANE_SCORING, PANE_FILTERS_HEADER, PANE_FILTERS,
-	PANE_INFO_HEADER, PANE_INFO_LEFT, PANE_INFO_RIGHT,
-	PANE_SCALE_HEADER, PANE_SCALE_LEFT, PANE_BUTTONS_LEFT, PANE_SCALE_RIGHT, PANE_BUTTONS_RIGHT,
-	PANE_IMAGE_LEFT, PANE_IMAGE_RIGHT };
+	pane_pair_info, pane_pair_buttons,
+	pane_info_header, pane_info_left, pane_info_right,
+	pane_scale_header, pane_scale_left, pane_buttons_left, pane_scale_right, pane_buttons_right,
+	pane_image_left, pane_image_right
+};
 
-const int scale_level_exponent_min = -6;
-const int scale_level_exponent_max = 6;
+const auto scale_level_exponent_min = -6;
+const auto scale_level_exponent_max = 6;
 
 float get_fit_scale(const D2D1_SIZE_F pane_size, const D2D1_SIZE_F bitmap_size) {
-	float fit_scale = std::min(
+	auto fit_scale = std::min(
 		pane_size.width / bitmap_size.width,
 		pane_size.height / bitmap_size.height);
 	return clamp(
@@ -38,8 +38,8 @@ float get_fit_scale(const D2D1_SIZE_F pane_size, const D2D1_SIZE_F bitmap_size) 
 std::vector<std::pair<float, float>> get_scale_levels(
 	const float fit_scale_left,
 	const float fit_scale_right,
-	const float swapped_left_right_scale_ratio) {
-
+	const float swapped_left_right_scale_ratio
+) {
 	std::vector<std::pair<float, float>> scale_level_pairs;
 
 	// add fit scales (with corresponding scale for other image)
@@ -51,18 +51,18 @@ std::vector<std::pair<float, float>> get_scale_levels(
 		fit_scale_right));
 
 	// find smallast scale to include
-	float min_scale = std::min({
+	auto min_scale = std::min({
 		scale_level_pairs[0].first,
 		scale_level_pairs[0].second,
 		scale_level_pairs[1].first,
-		scale_level_pairs[1].second });
+		scale_level_pairs[1].second});
 	min_scale = std::min(min_scale, 1.0f);
 
 	// add fixed scales (with corresponding scale for other image)
-	for (int i = scale_level_exponent_min; i <= scale_level_exponent_max; i++) {
-		float sl = pow(2.0f, i);
-		float sl1 = sl * swapped_left_right_scale_ratio;
-		float sl2 = sl / swapped_left_right_scale_ratio;
+	for (auto i = scale_level_exponent_min; i <= scale_level_exponent_max; i++) {
+		auto sl = pow(2.0f, i);
+		auto sl1 = sl * swapped_left_right_scale_ratio;
+		auto sl2 = sl / swapped_left_right_scale_ratio;
 
 		if (sl >= min_scale && sl1 >= min_scale)
 			scale_level_pairs.push_back(std::make_pair(sl, sl1));
@@ -77,33 +77,34 @@ std::vector<std::pair<float, float>> get_scale_levels(
 
 	#ifdef _DEBUG
 	// assert scales strictly ascending
-	float previous_first = 0;
-	float previous_second = 0;
+	auto previous_first = 0.0f;
+	auto previous_second = 0.0f;
 	for (const auto& slp : scale_level_pairs) {
 		assert(slp.first > previous_first);
 		assert(slp.second > previous_second);
 		previous_first = slp.first;
 		previous_second = slp.second;
 	}
-
-	//for (const auto& slp : scale_level_pairs)
-	//	debug_log << std::fixed << slp.first << " " << slp.second << std::endl;
 	#endif
 
 	return scale_level_pairs;
 }
 
-void zoom(Window& window, const std::vector<std::pair<float, float>> scale_levels, const int wheel_count_delta) {
+void zoom(
+	Window& window,
+	const std::vector<std::pair<float, float>> scale_levels,
+	const int wheel_count_delta
+) {
 	// find pane to zoom in
 
-	int pane = window.get_pane(window.get_mouse_position());
+	auto pane = window.get_pane(window.get_mouse_position());
 	D2D1_POINT_2F zoom_point;
 	if (pane > 0 && window.get_image(pane)) {
 		zoom_point = D2D1::Point2F(
 			window.get_mouse_position().x - (window.content(pane).left + window.content(pane).right) / 2.0f,
 			window.get_mouse_position().y - (window.content(pane).top + window.content(pane).bottom) / 2.0f);
 	} else {
-		pane = PANE_IMAGE_LEFT;
+		pane = pane_image_left;
 		zoom_point = D2D1::Point2F(0, 0);
 	}
 
@@ -115,7 +116,7 @@ void zoom(Window& window, const std::vector<std::pair<float, float>> scale_level
 	if (wheel_count_delta < 0) {
 		// zoom out
 		auto sl_i = std::find_if(scale_levels.crbegin(), scale_levels.crend(), [&](const std::pair<float, float>& scales) {
-			return scales.first < window.get_image_scale(PANE_IMAGE_LEFT);
+			return scales.first < window.get_image_scale(pane_image_left);
 		});
 		if (sl_i == scale_levels.crend())
 			return;
@@ -124,7 +125,7 @@ void zoom(Window& window, const std::vector<std::pair<float, float>> scale_level
 	} else {
 		// zoom in
 		auto sl_i = std::find_if(scale_levels.cbegin(), scale_levels.cend(), [&](const std::pair<float, float>& scales) {
-			return scales.first > window.get_image_scale(PANE_IMAGE_LEFT);
+			return scales.first > window.get_image_scale(pane_image_left);
 		});
 		if (sl_i == scale_levels.cend())
 			return;
@@ -132,12 +133,12 @@ void zoom(Window& window, const std::vector<std::pair<float, float>> scale_level
 		scale_other = sl_i->second;;
 	}
 
-	if (pane == PANE_IMAGE_RIGHT)
+	if (pane == pane_image_right)
 		std::swap(scale, scale_other);
 
 	window.image_zoom_transform(pane, scale, zoom_point);
 
-	int pane_other = pane == PANE_IMAGE_LEFT ? PANE_IMAGE_RIGHT : PANE_IMAGE_LEFT;
+	auto pane_other = pane == pane_image_left ? pane_image_right : pane_image_left;
 	window.set_image_scale(pane_other, scale_other);
 	window.set_image_centre_from_other_pane(pane_other, pane);
 }
@@ -146,12 +147,12 @@ std::size_t get_matching_text_length(
 	const std::wstring& text1,
 	const std::wstring& text2,
 	const std::size_t start1 = 0,
-	const std::size_t start2 = 0) {
-
+	const std::size_t start2 = 0
+) {
 	assert(start1 >= 0 && start1 <= text1.length());
 	assert(start2 >= 0 && start2 <= text2.length());
 
-	std::size_t search_length = std::min(text1.length() - start1, text2.length() - start2);
+	auto search_length = std::min(text1.length() - start1, text2.length() - start2);
 
 	std::size_t i = 0;
 	while (i < search_length && text1[start1 + i] == text2[start2 + i])
@@ -176,11 +177,11 @@ void update_text_image_info(
 	Window& window,
 	const std::shared_ptr<const Image>& image,
 	const std::shared_ptr<const Image>& image_other,
-	int pane,
+	const int pane,
 	const float scale,
 	const float fit_scale,
-	int scale_pane) {
-
+	const int scale_pane
+) {
 	std::wostringstream ss;
 	ss.imbue(std::locale(""));
 
@@ -191,11 +192,11 @@ void update_text_image_info(
 	// filename
 
 	ss << image->get_path() << L"\n";
-	std::size_t matching_length = get_matching_text_length(image->get_path(), image_other->get_path());
+	auto matching_length = get_matching_text_length(image->get_path(), image_other->get_path());
 	bold_ranges.push_back(std::make_pair(index, matching_length));
 
-	std::size_t name_start = image->get_path().find_last_of(L'\\');
-	std::size_t name_start_other = image_other->get_path().find_last_of(L'\\');
+	auto name_start = image->get_path().find_last_of(L'\\');
+	auto name_start_other = image_other->get_path().find_last_of(L'\\');
 	if (name_start != std::string::npos && name_start_other != std::string::npos) {
 		name_start++;
 		name_start_other++;
@@ -241,9 +242,8 @@ void update_text_image_info(
 		ss << to_string(t);
 
 		auto r = std::find(image_other_metadata_times.begin(), image_other_metadata_times.end(), t);
-		if (r != image_other_metadata_times.end()) {
+		if (r != image_other_metadata_times.end())
 			bold_ranges.push_back(std::make_pair(index, ss.str().length() - index));
-		}
 
 		ss << L", ";
 		index = ss.str().length();
@@ -304,7 +304,7 @@ void update_text_image_info(
 	// scale
 
 	if (scale * 100.0f == floor(scale * 100.0f)) {
-		ss << int(scale * 100.0f) << L" % of actual size";
+		ss << static_cast<int>(scale * 100.0f) << L" % of actual size";
 	} else {
 		ss << std::fixed << std::setprecision(1);
 		ss << scale * 100.0f << L" % of actual size";
@@ -317,8 +317,8 @@ void update_text_image_info(
 void update_text(
 	Window& window,
 	const std::vector<Duplicate>& duplicates,
-	const std::vector<Duplicate>::const_iterator& duplicates_it) {
-
+	const std::vector<Duplicate>::const_iterator& duplicates_it
+) {
 	std::wostringstream ss;
 	ss.imbue(std::locale(""));
 	ss << std::fixed;
@@ -337,80 +337,83 @@ void update_text(
 	} else {
 		ss << L"No images";
 	}
-	window.set_text(PANE_PAIR_INFO, ss.str());
+	window.set_text(pane_pair_info, ss.str());
 	ss.str(L"");
 
 	ss << L"Filename\n";
 	ss << L"File\n";
 	ss << L"Pixels\n";
 	ss << L"Metadata";
-	window.set_text(PANE_INFO_HEADER, ss.str());
+	window.set_text(pane_info_header, ss.str());
 	ss.str(L"");
 
 	ss << L"Scale";
-	window.set_text(PANE_SCALE_HEADER, ss.str());
+	window.set_text(pane_scale_header, ss.str());
 	ss.str(L"");
 
-	if (window.get_image(PANE_IMAGE_LEFT)) {
+	if (window.get_image(pane_image_left)) {
 		update_text_image_info(
 			window,
-			window.get_image(PANE_IMAGE_LEFT),
-			window.get_image(PANE_IMAGE_RIGHT),
-			PANE_INFO_LEFT,
-			window.get_image_scale(PANE_IMAGE_LEFT),
+			window.get_image(pane_image_left),
+			window.get_image(pane_image_right),
+			pane_info_left,
+			window.get_image_scale(pane_image_left),
 			get_fit_scale(
-				rect_size(window.content(PANE_IMAGE_LEFT)),
-				window.get_image(PANE_IMAGE_LEFT)->get_bitmap_size(window.get_scale())),
-			PANE_SCALE_LEFT);
+				rect_size(window.content(pane_image_left)),
+				window.get_image(pane_image_left)->get_bitmap_size(window.get_scale())),
+			pane_scale_left);
 	} else {
-		window.set_text(PANE_INFO_LEFT, L"");
-		window.set_text(PANE_SCALE_LEFT, L"");
+		window.set_text(pane_info_left, L"");
+		window.set_text(pane_scale_left, L"");
 	}
 
-	if (window.get_image(PANE_IMAGE_RIGHT)) {
+	if (window.get_image(pane_image_right)) {
 		update_text_image_info(
 			window,
-			window.get_image(PANE_IMAGE_RIGHT),
-			window.get_image(PANE_IMAGE_LEFT),
-			PANE_INFO_RIGHT,
-			window.get_image_scale(PANE_IMAGE_RIGHT),
+			window.get_image(pane_image_right),
+			window.get_image(pane_image_left),
+			pane_info_right,
+			window.get_image_scale(pane_image_right),
 			get_fit_scale(
-				rect_size(window.content(PANE_IMAGE_RIGHT)),
-				window.get_image(PANE_IMAGE_RIGHT)->get_bitmap_size(window.get_scale())),
-			PANE_SCALE_RIGHT);
+				rect_size(window.content(pane_image_right)),
+				window.get_image(pane_image_right)->get_bitmap_size(window.get_scale())),
+			pane_scale_right);
 	} else {
-		window.set_text(PANE_INFO_RIGHT, L"");
-		window.set_text(PANE_SCALE_RIGHT, L"");
+		window.set_text(pane_info_right, L"");
+		window.set_text(pane_scale_right, L"");
 	}
 }
 
 void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicate_categories) {
-	// panes
+	enum {
+		button_swap_images = 100, button_first_pair, button_previous_pair, button_next_pair,
+		button_open_folder_left, button_delete_file_left,
+		button_open_folder_right, button_delete_file_right,
+		button_file_new_scan, button_file_exit,
+		button_scoring_visual, button_scoring_time, button_scoring_location, button_scoring_combined,
+		button_filters_folder_any, button_filters_folder_different, button_filters_folder_same,
+		button_filters_age_any, button_filters_age_year, button_filters_age_month, button_filters_age_week, button_filters_age_day,
+		button_help_website, button_help_license
+	};
 
 	enum {
-		BUTTON_SWAP_IMAGES = 100, BUTTON_FIRST_PAIR, BUTTON_PREVIOUS_PAIR, BUTTON_NEXT_PAIR,
-		BUTTON_OPEN_FOLDER_LEFT, BUTTON_DELETE_FILE_LEFT,
-		BUTTON_OPEN_FOLDER_RIGHT, BUTTON_DELETE_FILE_RIGHT,
-		BUTTON_FILE_NEW_SCAN, BUTTON_FILE_EXIT,
-		BUTTON_SCORING_VISUAL, BUTTON_SCORING_TIME, BUTTON_SCORING_LOCATION, BUTTON_SCORING_COMBINED,
-		BUTTON_FILTERS_FOLDER_ANY, BUTTON_FILTERS_FOLDER_DIFFERENT, BUTTON_FILTERS_FOLDER_SAME,
-		BUTTON_FILTERS_AGE_ANY, BUTTON_FILTERS_AGE_YEAR, BUTTON_FILTERS_AGE_MONTH, BUTTON_FILTERS_AGE_WEEK, BUTTON_FILTERS_AGE_DAY,
-		BUTTON_HELP_WEBSITE, BUTTON_HELP_LICENSE };
+		checkmark_group_scoring, checkmark_group_folder, checkmark_group_age
+	};
 
-	enum { CHECKMARK_GROUP_SCORING, CHECKMARK_GROUP_FOLDER, CHECKMARK_GROUP_AGE };
+	// panes
 
-	const float mx = 12;
-	const float my = 8;
-	const D2D1_RECT_F margin = {mx, my, mx, my};
-	const D2D1_RECT_F margin_short = {mx, 0, mx, my};
-	const D2D1_RECT_F margin_short_narrow = {mx, 0, 0, my};
-	const D2D1_RECT_F margin_narrow = {mx, my, 0, my};
+	const auto mx = 12.0f;
+	const auto my = 8.0f;
+	const auto margin = D2D1::RectF(mx, my, mx, my);
+	const auto margin_short = D2D1::RectF(mx, 0, mx, my);
+	const auto margin_short_narrow = D2D1::RectF(mx, 0, 0, my);
+	const auto margin_narrow = D2D1::RectF(mx, my, 0, my);
 
-	const D2D1_COLOR_F colour_pair = D2D1::ColorF(0xf8f8f8);
-	const D2D1_COLOR_F colour_info_left = D2D1::ColorF(0xe8e8e8);
-	const D2D1_COLOR_F colour_info_right = D2D1::ColorF(0xf0f0f0);
-	const D2D1_COLOR_F colour_image_left = D2D1::ColorF(0xb0b0b0);
-	const D2D1_COLOR_F colour_image_right = D2D1::ColorF(0xb8b8b8);
+	const auto colour_pair = D2D1::ColorF(0xf8f8f8);
+	const auto colour_info_left = D2D1::ColorF(0xe8e8e8);
+	const auto colour_info_right = D2D1::ColorF(0xf0f0f0);
+	const auto colour_image_left = D2D1::ColorF(0xb0b0b0);
+	const auto colour_image_right = D2D1::ColorF(0xb8b8b8);
 
 	window.add_edge(0);
 	window.add_edge(0);
@@ -420,114 +423,70 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 	for (int i = 0; i < 7; i++)
 		window.add_edge();
 
-	window.add_pane(PANE_PAIR_INFO, 0, 1, 8, 9, margin, false, true, colour_pair);
-	window.add_pane(PANE_PAIR_BUTTONS, 8, 1, 2, 9, margin, true, true, colour_pair);
+	window.add_pane(pane_pair_info, 0, 1, 8, 9, margin, false, true, colour_pair);
+	window.add_pane(pane_pair_buttons, 8, 1, 2, 9, margin, true, true, colour_pair);
 
-	#if 0
-	// top edge: 12
-	// left to right edges: 0 13 14 15 2 
-	// bottom edge: 9
-	window.add_pane(PANE_SCORING_HEADER, 0, 12, 13, 9, margin_short_narrow, true, true, colour_pair);
-	window.add_pane(PANE_SCORING, 13, 12, 14, 9, margin_short, true, true, colour_pair);
-	window.add_pane(PANE_FILTERS_HEADER, 14, 12, 15, 9, margin_short_narrow, false, true, colour_pair);
-	window.add_pane(PANE_FILTERS, 15, 12, 2, 9, margin_short, true, true, colour_pair);
-	#endif
+	window.add_pane(pane_info_header, 0, 9, 5, 10, margin_narrow, true, true, colour_info_left);
+	window.add_pane(pane_info_left, 5, 9, 4, 10, margin, false, true, colour_info_left);
+	window.add_pane(pane_info_right, 4, 9, 2, 10, margin, false, true, colour_info_right);
 
-	window.add_pane(PANE_INFO_HEADER, 0, 9, 5, 10, margin_narrow, true, true, colour_info_left);
-	window.add_pane(PANE_INFO_LEFT, 5, 9, 4, 10, margin, false, true, colour_info_left);
-	window.add_pane(PANE_INFO_RIGHT, 4, 9, 2, 10, margin, false, true, colour_info_right);
+	window.add_pane(pane_scale_header, 0, 10, 5, 11, margin_short, true, true, colour_info_left);
+	window.add_pane(pane_scale_left, 5, 10, 6, 11, margin_short_narrow, false, true, colour_info_left);
+	window.add_pane(pane_buttons_left, 6, 10, 4, 11, margin_short, true, true, colour_info_left);
+	window.add_pane(pane_scale_right, 4, 10, 7, 11, margin_short_narrow, false, true, colour_info_right);
+	window.add_pane(pane_buttons_right, 7, 10, 2, 11, margin_short, true, true, colour_info_right);
 
-	window.add_pane(PANE_SCALE_HEADER, 0, 10, 5, 11, margin_short, true, true, colour_info_left);
-	window.add_pane(PANE_SCALE_LEFT, 5, 10, 6, 11, margin_short_narrow, false, true, colour_info_left);
-	window.add_pane(PANE_BUTTONS_LEFT, 6, 10, 4, 11, margin_short, true, true, colour_info_left);
-	window.add_pane(PANE_SCALE_RIGHT, 4, 10, 7, 11, margin_short_narrow, false, true, colour_info_right);
-	window.add_pane(PANE_BUTTONS_RIGHT, 7, 10, 2, 11, margin_short, true, true, colour_info_right);
-
-	window.add_pane(PANE_IMAGE_LEFT, 0, 11, 4, 3, {0, 0, 0, 0}, false, false, colour_image_left);
-	window.add_pane(PANE_IMAGE_RIGHT, 4, 11, 2, 3, {0, 0, 0, 0}, false, false, colour_image_right);
+	window.add_pane(pane_image_left, 0, 11, 4, 3, {0, 0, 0, 0}, false, false, colour_image_left);
+	window.add_pane(pane_image_right, 4, 11, 2, 3, {0, 0, 0, 0}, false, false, colour_image_right);
 
 	// buttons
 
-	window.add_button(PANE_PAIR_BUTTONS, BUTTON_SWAP_IMAGES, L"Swap images");
-	window.add_button(PANE_PAIR_BUTTONS, BUTTON_FIRST_PAIR, L"First pair");
-	window.add_button(PANE_PAIR_BUTTONS, BUTTON_PREVIOUS_PAIR, L"Previous pair");
-	window.add_button(PANE_PAIR_BUTTONS, BUTTON_NEXT_PAIR, L"Next pair");
+	window.add_button(pane_pair_buttons, button_swap_images, L"Swap images");
+	window.add_button(pane_pair_buttons, button_first_pair, L"First pair");
+	window.add_button(pane_pair_buttons, button_previous_pair, L"Previous pair");
+	window.add_button(pane_pair_buttons, button_next_pair, L"Next pair");
 
-	window.add_button(PANE_BUTTONS_LEFT, BUTTON_OPEN_FOLDER_LEFT, L"Open folder");
-	window.add_button(PANE_BUTTONS_LEFT, BUTTON_DELETE_FILE_LEFT, L"Delete file");
+	window.add_button(pane_buttons_left, button_open_folder_left, L"Open folder");
+	window.add_button(pane_buttons_left, button_delete_file_left, L"Delete file");
 
-	window.add_button(PANE_BUTTONS_RIGHT, BUTTON_OPEN_FOLDER_RIGHT, L"Open folder");
-	window.add_button(PANE_BUTTONS_RIGHT, BUTTON_DELETE_FILE_RIGHT, L"Delete file");
+	window.add_button(pane_buttons_right, button_open_folder_right, L"Open folder");
+	window.add_button(pane_buttons_right, button_delete_file_right, L"Delete file");
 
-	window.set_button_focus(BUTTON_NEXT_PAIR);
+	window.set_button_focus(button_next_pair);
 
 	// menu
 
 	window.push_menu_level(L"File");
-	window.add_menu_item(L"New scan...", BUTTON_FILE_NEW_SCAN);
-	window.add_menu_item(L"Exit", BUTTON_FILE_EXIT);
+	window.add_menu_item(L"New scan...", button_file_new_scan);
+	window.add_menu_item(L"Exit", button_file_exit);
 	window.pop_menu_level();
 
 	window.push_menu_level(L"Scoring");
-	window.add_menu_item(L"Visual similarity", BUTTON_SCORING_VISUAL, CHECKMARK_GROUP_SCORING);
-	window.add_menu_item(L"Time difference (metadata)", BUTTON_SCORING_TIME, CHECKMARK_GROUP_SCORING);
-	window.add_menu_item(L"Location distance (metadata)", BUTTON_SCORING_LOCATION, CHECKMARK_GROUP_SCORING);
-	window.add_menu_item(L"Combined", BUTTON_SCORING_COMBINED, CHECKMARK_GROUP_SCORING);
+	window.add_menu_item(L"Visual similarity", button_scoring_visual, checkmark_group_scoring);
+	window.add_menu_item(L"Time difference (metadata)", button_scoring_time, checkmark_group_scoring);
+	window.add_menu_item(L"Location distance (metadata)", button_scoring_location, checkmark_group_scoring);
+	window.add_menu_item(L"Combined", button_scoring_combined, checkmark_group_scoring);
 	window.pop_menu_level();
 
 	window.push_menu_level(L"Filters");
 	window.push_menu_level(L"Folder restrictions");
-	window.add_menu_item(L"Images in a pair can be anywhere", BUTTON_FILTERS_FOLDER_ANY, CHECKMARK_GROUP_FOLDER);
-	window.add_menu_item(L"Images in a pair must be in different folders", BUTTON_FILTERS_FOLDER_DIFFERENT, CHECKMARK_GROUP_FOLDER);
-	window.add_menu_item(L"Images in a pair must be in the same folder", BUTTON_FILTERS_FOLDER_SAME, CHECKMARK_GROUP_FOLDER);
+	window.add_menu_item(L"Images in a pair can be anywhere", button_filters_folder_any, checkmark_group_folder);
+	window.add_menu_item(L"Images in a pair must be in different folders", button_filters_folder_different, checkmark_group_folder);
+	window.add_menu_item(L"Images in a pair must be in the same folder", button_filters_folder_same, checkmark_group_folder);
 	window.pop_menu_level();
 	window.push_menu_level(L"Maximum pair age");
-	window.add_menu_item(L"Unlimited", BUTTON_FILTERS_AGE_ANY, CHECKMARK_GROUP_AGE);
-	window.add_menu_item(L"One year", BUTTON_FILTERS_AGE_YEAR, CHECKMARK_GROUP_AGE);
-	window.add_menu_item(L"One month", BUTTON_FILTERS_AGE_MONTH, CHECKMARK_GROUP_AGE);
-	window.add_menu_item(L"One week", BUTTON_FILTERS_AGE_WEEK, CHECKMARK_GROUP_AGE);
-	window.add_menu_item(L"One day", BUTTON_FILTERS_AGE_DAY, CHECKMARK_GROUP_AGE);
+	window.add_menu_item(L"Unlimited", button_filters_age_any, checkmark_group_age);
+	window.add_menu_item(L"One year", button_filters_age_year, checkmark_group_age);
+	window.add_menu_item(L"One month", button_filters_age_month, checkmark_group_age);
+	window.add_menu_item(L"One week", button_filters_age_week, checkmark_group_age);
+	window.add_menu_item(L"One day", button_filters_age_day, checkmark_group_age);
 	window.pop_menu_level();
 	window.pop_menu_level();
 
 	window.push_menu_level(L"Help");
-	window.add_menu_item(L"Website...", BUTTON_HELP_WEBSITE);
-	window.add_menu_item(L"License...", BUTTON_HELP_LICENSE);
+	window.add_menu_item(L"Website...", button_help_website);
+	window.add_menu_item(L"License...", button_help_license);
 	window.pop_menu_level();
-
-	#if 0
-	window.set_text(PANE_SCORING_HEADER, L"Similarity scoring");
-	window.set_text(PANE_FILTERS_HEADER, L"Filters");
-
-	window.add_combobox(
-		PANE_SCORING, BUTTON_TEST, {
-		L"Combined",
-		L"Visual",
-		L"Metadata time difference",
-		L"Metadata positioning distance"});
-
-	window.add_combobox(
-		PANE_FILTERS, BUTTON_TEST, {
-		L"Minimum score threshold: Exact",
-		L"Minimum score threshold: Excellent",
-		L"Minimum score threshold: Good",
-		L"Minimum score threshold: Fair",
-		L"Minimum score threshold: Poor" });
-
-	window.add_combobox(
-		PANE_FILTERS, BUTTON_TEST, {
-		L"Folder: pair images can be anywhere",
-		L"Folder: pair images must be in different folders",
-		L"Folder: pair images must be in the same folder"});
-
-	window.add_combobox(
-		PANE_FILTERS, BUTTON_TEST, {
-		L"Maximum pair age: unlimited",
-		L"Maximum pair age: one year",
-		L"Maximum pair age: one month",
-		L"Maximum pair age: one week",
-		L"Maximum pair age: one day"});
-	#endif
 
 	// ui settings
 
@@ -535,39 +494,44 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 	static enum class FolderFilter {any, same, different} folder_filter = FolderFilter::any;
 	static auto maximum_pair_age = std::chrono::system_clock::duration::max();
 
-	switch (scoring) {
-		case Scoring::visual: window.set_menu_item_checked(BUTTON_SCORING_VISUAL); break;
-		case Scoring::time: window.set_menu_item_checked(BUTTON_SCORING_TIME); break;
-		case Scoring::location: window.set_menu_item_checked(BUTTON_SCORING_LOCATION); break;
-		case Scoring::combined: window.set_menu_item_checked(BUTTON_SCORING_COMBINED); break;
-		default: assert(false); break;
-	}
+	if (scoring == Scoring::visual)
+		window.set_menu_item_checked(button_scoring_visual);
+	else if (scoring == Scoring::time)
+		window.set_menu_item_checked(button_scoring_time);
+	else if (scoring == Scoring::location)
+		window.set_menu_item_checked(button_scoring_location);
+	else if (scoring == Scoring::combined)
+		window.set_menu_item_checked(button_scoring_combined);
+	else
+		assert(false);
 
-	switch (folder_filter) {
-		case FolderFilter::any: window.set_menu_item_checked(BUTTON_FILTERS_FOLDER_ANY); break;
-		case FolderFilter::same: window.set_menu_item_checked(BUTTON_FILTERS_FOLDER_SAME); break;
-		case FolderFilter::different: window.set_menu_item_checked(BUTTON_FILTERS_FOLDER_DIFFERENT); break;
-		default: assert(false); break;
-	}
+	if (folder_filter == FolderFilter::any)
+		window.set_menu_item_checked(button_filters_folder_any);
+	else if (folder_filter == FolderFilter::same)
+		window.set_menu_item_checked(button_filters_folder_same);
+	else if (folder_filter == FolderFilter::different)
+		window.set_menu_item_checked(button_filters_folder_different);
+	else
+		assert(false);
 
 	if (maximum_pair_age > std::chrono::hours(365*24))
-		window.set_menu_item_checked(BUTTON_FILTERS_AGE_ANY);
+		window.set_menu_item_checked(button_filters_age_any);
 	else if (maximum_pair_age == std::chrono::hours(365*24))
-		window.set_menu_item_checked(BUTTON_FILTERS_AGE_YEAR);
+		window.set_menu_item_checked(button_filters_age_year);
 	else if (maximum_pair_age == std::chrono::hours(30*24))
-		window.set_menu_item_checked(BUTTON_FILTERS_AGE_MONTH);
+		window.set_menu_item_checked(button_filters_age_month);
 	else if (maximum_pair_age == std::chrono::hours(7*24))
-		window.set_menu_item_checked(BUTTON_FILTERS_AGE_WEEK);
+		window.set_menu_item_checked(button_filters_age_week);
 	else if (maximum_pair_age == std::chrono::hours(24))
-		window.set_menu_item_checked(BUTTON_FILTERS_AGE_DAY);
+		window.set_menu_item_checked(button_filters_age_day);
 	else
 		assert(false);
 
 	auto duplicates = duplicate_categories[static_cast<int>(scoring)];
 	auto duplicates_it = duplicates.begin();
 
-	// when text is first updated, layout will change. update
-	// text here so that image fit scale will work for the first pair.
+	// when text is first updated, layout will change. update text
+	// here so that image fit scale will work for the first pair.
 	update_text(window, duplicates, duplicates_it);
 
 	std::vector<std::pair<float, float>> scale_levels;
@@ -597,34 +561,37 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 						duplicate_categories[static_cast<int>(scoring)].cend(),
 						back_inserter(duplicates),
 						[&](const Duplicate& d) {
-							return d.get_age() < maximum_pair_age; });
+							return d.get_age() < maximum_pair_age;
+						});
 				else if (folder_filter == FolderFilter::same)
 					std::copy_if(
 						duplicate_categories[static_cast<int>(scoring)].cbegin(),
 						duplicate_categories[static_cast<int>(scoring)].cend(),
 						back_inserter(duplicates),
 						[&](const Duplicate& d) {
-							return d.get_age() < maximum_pair_age && d.is_in_same_folder(); });
+							return d.get_age() < maximum_pair_age && d.is_in_same_folder();
+						});
 				else if (folder_filter == FolderFilter::different)
 					std::copy_if(
 						duplicate_categories[static_cast<int>(scoring)].cbegin(),
 						duplicate_categories[static_cast<int>(scoring)].cend(),
 						back_inserter(duplicates),
 						[&](const Duplicate& d) {
-							return d.get_age() < maximum_pair_age && !d.is_in_same_folder(); });
+							return d.get_age() < maximum_pair_age && !d.is_in_same_folder();
+						});
 			}
 
 			duplicates_it = duplicates.begin();
 
 			auto buttons = {
-				BUTTON_SWAP_IMAGES, BUTTON_FIRST_PAIR, BUTTON_PREVIOUS_PAIR, BUTTON_NEXT_PAIR,
-				BUTTON_OPEN_FOLDER_LEFT, BUTTON_DELETE_FILE_LEFT,
-				BUTTON_OPEN_FOLDER_RIGHT, BUTTON_DELETE_FILE_RIGHT};
+				button_swap_images, button_first_pair, button_previous_pair, button_next_pair,
+				button_open_folder_left, button_delete_file_left,
+				button_open_folder_right, button_delete_file_right};
 			if (duplicates.empty())
-				for (int b : buttons)
+				for (auto b : buttons)
 					window.set_button_state(b, false);
 			else
-				for (int b : buttons)
+				for (auto b : buttons)
 					window.set_button_state(b, true);
 
 			window.set_dirty();
@@ -632,22 +599,22 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 
 		if (!images_valid) {
 			if (duplicates.empty()) {
-				window.set_image(PANE_IMAGE_LEFT, nullptr);
-				window.set_image(PANE_IMAGE_RIGHT, nullptr);
+				window.set_image(pane_image_left, nullptr);
+				window.set_image(pane_image_right, nullptr);
 			} else {
-				window.set_image(PANE_IMAGE_LEFT, duplicates_it->image_1);
-				window.set_image(PANE_IMAGE_RIGHT, duplicates_it->image_2);
+				window.set_image(pane_image_left, duplicates_it->image_1);
+				window.set_image(pane_image_right, duplicates_it->image_2);
 			}
 			swapped_state = false;
 		}
 
 		if (!scale_levels_valid) {
-			if (window.get_image(PANE_IMAGE_LEFT) && window.get_image(PANE_IMAGE_RIGHT)) {
-				auto bitmap_size_left = window.get_image(PANE_IMAGE_LEFT)->get_bitmap_size(window.get_scale());
-				auto bitmap_size_right = window.get_image(PANE_IMAGE_RIGHT)->get_bitmap_size(window.get_scale());
+			if (window.get_image(pane_image_left) && window.get_image(pane_image_right)) {
+				auto bitmap_size_left = window.get_image(pane_image_left)->get_bitmap_size(window.get_scale());
+				auto bitmap_size_right = window.get_image(pane_image_right)->get_bitmap_size(window.get_scale());
 
-				float fsl = get_fit_scale(rect_size(window.content(PANE_IMAGE_LEFT)), bitmap_size_left);
-				float fsr = get_fit_scale(rect_size(window.content(PANE_IMAGE_RIGHT)), bitmap_size_right);
+				auto fsl = get_fit_scale(rect_size(window.content(pane_image_left)), bitmap_size_left);
+				auto fsr = get_fit_scale(rect_size(window.content(pane_image_right)), bitmap_size_right);
 
 				// left/right scales before swap: (1, 1)
 				// ratio of all left/right scales in un-swapped mode: 1
@@ -655,9 +622,9 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 				// left/right scales after swap: (1*(wl/wr), 1*(wr/wl))
 				// ratio of all left/right scales in swapped mode: (wl/wr) / (wr/wl) = (wl*wl) / (wr*wr)
 				if (swapped_state) {
-					float wl = bitmap_size_left.width;
-					float wr = bitmap_size_right.width;
-					float swapped_left_right_scale_ratio = (wl*wl) / (wr*wr);
+					auto wl = bitmap_size_left.width;
+					auto wr = bitmap_size_right.width;
+					auto swapped_left_right_scale_ratio = (wl*wl) / (wr*wr);
 
 					scale_levels = get_scale_levels(fsl, fsr, swapped_left_right_scale_ratio);
 				} else {
@@ -670,8 +637,8 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 
 		if (!images_valid) {
 			if (!scale_levels.empty()) {
-				window.set_image_scale(PANE_IMAGE_LEFT, scale_levels[0].first);
-				window.set_image_scale(PANE_IMAGE_RIGHT, scale_levels[0].second);
+				window.set_image_scale(pane_image_left, scale_levels[0].first);
+				window.set_image_scale(pane_image_right, scale_levels[0].second);
 			}
 		}
 
@@ -681,7 +648,7 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 		}
 
 		if (!cursor_valid) {
-			for (auto& pane : {PANE_IMAGE_LEFT, PANE_IMAGE_RIGHT}) {
+			for (auto& pane : {pane_image_left, pane_image_right}) {
 				bool image_wider =
 					window.get_image(pane) &&
 					std::floor(window.content(pane).right - window.content(pane).left) <
@@ -700,8 +667,8 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 
 		if (!buttons_valid) {
 			if (!duplicates.empty()) {
-				window.set_button_state(BUTTON_DELETE_FILE_LEFT, window.get_image(PANE_IMAGE_LEFT)->is_deletable());
-				window.set_button_state(BUTTON_DELETE_FILE_RIGHT, window.get_image(PANE_IMAGE_RIGHT)->is_deletable());
+				window.set_button_state(button_delete_file_left, window.get_image(pane_image_left)->is_deletable());
+				window.set_button_state(button_delete_file_right, window.get_image(pane_image_right)->is_deletable());
 			}
 		}
 
@@ -712,11 +679,11 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 		cursor_valid = true;
 		buttons_valid = true;
 
-		Event e = window.get_event();
+		auto e = window.get_event();
 
 		if (e.type == Event::Type::button) {
 			switch(e.button_id) {
-			case BUTTON_NEXT_PAIR:
+			case button_next_pair:
 				if (!duplicates.empty()) {
 					duplicates_it++;
 					if (duplicates_it == duplicates.end())
@@ -729,8 +696,7 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 					buttons_valid = false;
 				}
 				break;
-
-			case BUTTON_PREVIOUS_PAIR:
+			case button_previous_pair:
 				if (!duplicates.empty()) {
 					if (duplicates_it == duplicates.begin())
 						duplicates_it = duplicates.end();
@@ -743,8 +709,7 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 					buttons_valid = false;
 				}
 				break;
-
-			case BUTTON_FIRST_PAIR:
+			case button_first_pair:
 				if (!duplicates.empty()) {
 					duplicates_it = duplicates.begin();
 
@@ -755,9 +720,8 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 					buttons_valid = false;
 				}
 				break;
-
-			case BUTTON_SWAP_IMAGES:
-				if (window.get_image(PANE_IMAGE_LEFT) && window.get_image(PANE_IMAGE_RIGHT)) {
+			case button_swap_images:
+				if (window.get_image(pane_image_left) && window.get_image(pane_image_right)) {
 					// swapping the images of a pair of images (1) swaps the
 					// images themselves and (2) changes the scale of each image
 					// so that the screen-space widths after the swap matches
@@ -792,14 +756,14 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 					// which is not expected by the user. the error will only
 					// happen once per swap however.
 					
-					float wl = window.get_image(PANE_IMAGE_LEFT)->get_bitmap_size(window.get_scale()).width;
-					float wr = window.get_image(PANE_IMAGE_RIGHT)->get_bitmap_size(window.get_scale()).width;
-					window.set_image_scale(PANE_IMAGE_LEFT, (wl / wr) * window.get_image_scale(PANE_IMAGE_LEFT));
-					window.set_image_scale(PANE_IMAGE_RIGHT, (wr / wl) * window.get_image_scale(PANE_IMAGE_RIGHT));
+					auto wl = window.get_image(pane_image_left)->get_bitmap_size(window.get_scale()).width;
+					auto wr = window.get_image(pane_image_right)->get_bitmap_size(window.get_scale()).width;
+					window.set_image_scale(pane_image_left, (wl / wr) * window.get_image_scale(pane_image_left));
+					window.set_image_scale(pane_image_right, (wr / wl) * window.get_image_scale(pane_image_right));
 
-					auto swap = window.get_image(PANE_IMAGE_LEFT);
-					window.set_image(PANE_IMAGE_LEFT, window.get_image(PANE_IMAGE_RIGHT));
-					window.set_image(PANE_IMAGE_RIGHT, swap);
+					auto swap = window.get_image(pane_image_left);
+					window.set_image(pane_image_left, window.get_image(pane_image_right));
+					window.set_image(pane_image_right, swap);
 
 					swapped_state = !swapped_state;
 
@@ -809,12 +773,11 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 					buttons_valid = false;
 				}
 				break;
-
-			case BUTTON_DELETE_FILE_LEFT:
-			case BUTTON_DELETE_FILE_RIGHT:
+			case button_delete_file_left:
+			case button_delete_file_right:
 				{
-					int pane = e.button_id == BUTTON_DELETE_FILE_LEFT ?
-						PANE_IMAGE_LEFT : PANE_IMAGE_RIGHT;
+					auto pane = e.button_id == button_delete_file_left ?
+						pane_image_left : pane_image_right;
 					if (window.get_image(pane)) {
 						window.get_image(pane)->delete_file();
 						window.set_dirty();
@@ -823,60 +786,56 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 					}
 				}
 				break;
-
-			case BUTTON_OPEN_FOLDER_LEFT:
-			case BUTTON_OPEN_FOLDER_RIGHT:
+			case button_open_folder_left:
+			case button_open_folder_right:
 				{
-					int pane = e.button_id == BUTTON_OPEN_FOLDER_LEFT ?
-						PANE_IMAGE_LEFT : PANE_IMAGE_RIGHT;
+					auto pane = e.button_id == button_open_folder_left ?
+						pane_image_left : pane_image_right;
 					if (window.get_image(pane))
 						window.get_image(pane)->open_folder();
 				}
 				break;
-
-			case BUTTON_FILE_NEW_SCAN:
+			case button_file_new_scan:
 				return;
 				break;
-
-			case BUTTON_FILE_EXIT:
+			case button_file_exit:
 				PostQuitMessage(0);
 				break;
-
-			case BUTTON_SCORING_COMBINED:
-			case BUTTON_SCORING_VISUAL:
-			case BUTTON_SCORING_TIME:
-			case BUTTON_SCORING_LOCATION:
-			case BUTTON_FILTERS_FOLDER_ANY:
-			case BUTTON_FILTERS_FOLDER_SAME:
-			case BUTTON_FILTERS_FOLDER_DIFFERENT:
-			case BUTTON_FILTERS_AGE_ANY:
-			case BUTTON_FILTERS_AGE_YEAR:
-			case BUTTON_FILTERS_AGE_MONTH:
-			case BUTTON_FILTERS_AGE_WEEK:
-			case BUTTON_FILTERS_AGE_DAY:
-				if (e.button_id == BUTTON_SCORING_COMBINED)
+			case button_scoring_combined:
+			case button_scoring_visual:
+			case button_scoring_time:
+			case button_scoring_location:
+			case button_filters_folder_any:
+			case button_filters_folder_same:
+			case button_filters_folder_different:
+			case button_filters_age_any:
+			case button_filters_age_year:
+			case button_filters_age_month:
+			case button_filters_age_week:
+			case button_filters_age_day:
+				if (e.button_id == button_scoring_combined)
 					scoring = Scoring::combined;
-				else if (e.button_id == BUTTON_SCORING_VISUAL)
+				else if (e.button_id == button_scoring_visual)
 					scoring = Scoring::visual;
-				else if (e.button_id == BUTTON_SCORING_TIME)
+				else if (e.button_id == button_scoring_time)
 					scoring = Scoring::time;
-				else if (e.button_id == BUTTON_SCORING_LOCATION)
+				else if (e.button_id == button_scoring_location)
 					scoring = Scoring::location;
-				else if (e.button_id == BUTTON_FILTERS_FOLDER_ANY)
+				else if (e.button_id == button_filters_folder_any)
 					folder_filter = FolderFilter::any;
-				else if (e.button_id == BUTTON_FILTERS_FOLDER_SAME)
+				else if (e.button_id == button_filters_folder_same)
 					folder_filter = FolderFilter::same;
-				else if (e.button_id == BUTTON_FILTERS_FOLDER_DIFFERENT)
+				else if (e.button_id == button_filters_folder_different)
 					folder_filter = FolderFilter::different;
-				else if (e.button_id == BUTTON_FILTERS_AGE_ANY)
+				else if (e.button_id == button_filters_age_any)
 					maximum_pair_age = std::chrono::system_clock::duration::max();
-				else if (e.button_id == BUTTON_FILTERS_AGE_YEAR)
+				else if (e.button_id == button_filters_age_year)
 					maximum_pair_age = std::chrono::hours(365*24);
-				else if (e.button_id == BUTTON_FILTERS_AGE_MONTH)
+				else if (e.button_id == button_filters_age_month)
 					maximum_pair_age = std::chrono::hours(30*24);
-				else if (e.button_id == BUTTON_FILTERS_AGE_WEEK)
+				else if (e.button_id == button_filters_age_week)
 					maximum_pair_age = std::chrono::hours(7*24);
-				else if (e.button_id == BUTTON_FILTERS_AGE_DAY)
+				else if (e.button_id == button_filters_age_day)
 					maximum_pair_age = std::chrono::hours(24);
 				else
 					assert(false);
@@ -890,56 +849,48 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 				cursor_valid = false;
 				buttons_valid = false;
 				break;
-
-			case BUTTON_HELP_WEBSITE:
+			case button_help_website:
 				ShellExecute(nullptr, L"open", L"https://github.com/olaolsso/pixiple/", nullptr, nullptr, SW_SHOWNORMAL);
 				break;
-
-			case BUTTON_HELP_LICENSE:
+			case button_help_license:
 				{
 					std::wstring license{L"The MIT License (MIT)\n\nCopyright (c) 2016 Ola Olsson\n\n"
 					"Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\n"
 					"The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\n"
 					"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."};
-					MessageBox(window.get_handle(), license.c_str(), L"License", MB_OK);
+					window.message_box(license.c_str());
 				}
-				break;
-
-			default:
-				debug_log << L"Unknown Event::BUTTON " << e.button_id << std::endl;
 				break;
 			}
 		} else if (e.type == Event::Type::drag) {
-			int pane = window.get_pane(e.drag_mouse_position_start);
+			auto pane = window.get_pane(e.drag_mouse_position_start);
 
 			if (pane > 0 && window.get_image(pane)) {
-				D2D1_POINT_2F translation_isn = D2D1::Point2F(
+				auto translation_isn = D2D1::Point2F(
 					e.drag_mouse_position_delta.x / window.get_image(pane)->get_bitmap_size(window.get_scale()).width / window.get_image_scale(pane),
 					e.drag_mouse_position_delta.y / window.get_image(pane)->get_bitmap_size(window.get_scale()).height / window.get_image_scale(pane));
 				window.translate_image_centre(pane, translation_isn);
 
-				int pane_other = pane == PANE_IMAGE_LEFT ? PANE_IMAGE_RIGHT : PANE_IMAGE_LEFT;
+				auto pane_other = pane == pane_image_left ? pane_image_right : pane_image_left;
 				window.set_image_centre_from_other_pane(pane_other, pane);
 
 				window.set_dirty();
 			}
 		} else if (e.type == Event::Type::key) {
 			if (e.key_code == VK_NEXT || e.key_code == 'N') {
-				window.click_button(BUTTON_NEXT_PAIR);
+				window.click_button(button_next_pair);
 			} else if (e.key_code == VK_PRIOR || e.key_code == 'P') {
-				window.click_button(BUTTON_PREVIOUS_PAIR);
+				window.click_button(button_previous_pair);
 			} else if (e.key_code == 'F') {
-				window.click_button(BUTTON_FIRST_PAIR);
+				window.click_button(button_first_pair);
 			} else if (e.key_code == 'S') {
-				window.click_button(BUTTON_SWAP_IMAGES);
+				window.click_button(button_swap_images);
 			} else if (e.key_code == 'Z' || e.key_code == 'X') {
 				if (!duplicates.empty()) {
 					zoom(window, scale_levels, e.key_code == 'Z' ? 1 : -1);
 					text_valid = false;
 					cursor_valid = false;
 				}
-			} else {
-				debug_log << L"unknown key: " << e.key_code << std::endl;
 			}
 		} else if (e.type == Event::Type::quit) {
 			return;
@@ -957,7 +908,7 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 			assert(false);
 		}
 
-		assert(rect_size(window.content(PANE_IMAGE_LEFT)).width == rect_size(window.content(PANE_IMAGE_RIGHT)).width);
-		assert(rect_size(window.content(PANE_IMAGE_LEFT)).height == rect_size(window.content(PANE_IMAGE_RIGHT)).height);
+		assert(rect_size(window.content(pane_image_left)).width == rect_size(window.content(pane_image_right)).width);
+		assert(rect_size(window.content(pane_image_left)).height == rect_size(window.content(pane_image_right)).height);
 	}
 }

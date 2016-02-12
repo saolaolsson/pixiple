@@ -7,7 +7,8 @@
 #include <memory>
 #include <string>
 
-struct Duplicate {
+class Duplicate {
+public:
 	std::shared_ptr<Image> image_1;
 	std::shared_ptr<Image> image_2;
 	float distance;
@@ -22,13 +23,13 @@ struct Duplicate {
 		distance{distance}
 	{
 		assert(distance >= 0);
-		if (this->image_1->get_file_time() > this->image_2->get_file_time())
+		if (this->image_2->get_file_time() < this->image_1->get_file_time())
 			std::swap(this->image_1, this->image_2);
 	}
 
 	bool is_in_same_folder() const {
-		std::size_t name_start_1 = image_1->get_path().find_last_of(L'\\');
-		std::size_t name_start_2 = image_2->get_path().find_last_of(L'\\');
+		auto name_start_1 = image_1->get_path().find_last_of(L'\\');
+		auto name_start_2 = image_2->get_path().find_last_of(L'\\');
 
 		assert(name_start_1 != std::string::npos && name_start_2 != std::string::npos);
 

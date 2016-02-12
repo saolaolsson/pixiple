@@ -28,16 +28,15 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 static ComPtr<IShellItem> browse(HWND parent) {
 	PIDLIST_ABSOLUTE pidlist;
 
-	#ifdef _DEBUG
-	pidlist = et = ILCreateFromPath(L"c:\\users\\");
-	#else
 	BROWSEINFO bi{
 		parent, nullptr, nullptr,
 		L"Select a folder to scan for similar images (recursively, starting with the images and folders in the selected folder).",
-		//BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON,
-		//BIF_BROWSEFILEJUNCTIONS | BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON,
 		BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON,
 		nullptr, 0, 0};
+
+	#ifdef _DEBUG
+	pidlist = et = ILCreateFromPath(L"c:\\users\\");
+	#else
 	pidlist = SHBrowseForFolder(&bi);
 	if (pidlist == nullptr)
 		return nullptr;
@@ -53,7 +52,7 @@ static ComPtr<IShellItem> browse(HWND parent) {
 static void app() {
 	#define STRINGIZE_(i) L ## # i
 	#define STRINGIZE(i) STRINGIZE_(i)
-	std::wstring window_title = APP_NAME L" R" STRINGIZE(APP_RELEASE);
+	std::wstring window_title = APP_NAME L" (release " STRINGIZE(APP_RELEASE) L")";
 	#ifdef _DEBUG
 	window_title += L" _DEBUG";
 	#endif
@@ -73,7 +72,7 @@ static void app() {
 
 		auto root_item = browse(window.get_handle());
 
-		std::vector<std::vector<Duplicate>> duplicate_categories(4);
+		std::vector<std::vector<Duplicate>> duplicate_categories{4};
 
 		if (root_item != nullptr) {
 			auto paths = scan(window, root_item);

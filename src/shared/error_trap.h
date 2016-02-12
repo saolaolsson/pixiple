@@ -8,19 +8,6 @@
 #define et ErrorTrap(__LINE__, __FILE__)
 
 class ErrorTrap {
-private:
-	static std::atomic<bool> stay_alive;
-	static std::atomic<bool> good;
-
-	const long line;
-	const char* const file;
-
-	#ifndef _DEBUG
-	void __declspec(noreturn) die(HRESULT hr) const;
-	#else
-	void die(HRESULT hr) const;
-	#endif
-
 public:
 	static void set_stay_alive(bool stay_alive_) {
 		ErrorTrap::stay_alive = stay_alive_;
@@ -36,7 +23,8 @@ public:
 		return r;
 	}
 
-	ErrorTrap(const long line, const char* const file) : line{line}, file{file} { }
+	ErrorTrap(const long line, const char* const file) : line{line}, file{file} {
+	}
 
 	template<typename T>
 	const T& operator=(const T& t) const {
@@ -71,4 +59,17 @@ public:
 			#endif
 		}
 	}
+
+private:
+	static std::atomic<bool> stay_alive;
+	static std::atomic<bool> good;
+
+	const long line;
+	const char* const file;
+
+	#ifndef _DEBUG
+	void __declspec(noreturn) die(HRESULT hr) const;
+	#else
+	void die(HRESULT hr) const;
+	#endif
 };

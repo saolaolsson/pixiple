@@ -3,13 +3,13 @@
 #include "d2d.h"
 
 D2D1_SIZE_F rect_size(const D2D1_RECT_F& rect) {
-	return { rect.right - rect.left, rect.bottom - rect.top };
+	return {rect.right - rect.left, rect.bottom - rect.top};
 }
 
 D2D1_RECT_F get_client_rect(const HWND hwnd, const D2D1_POINT_2F& scale) {
 	RECT r;
 	et = GetClientRect(hwnd, &r);
-	return { r.left / scale.x, r.top / scale.y, r.right / scale.x, r.bottom / scale.y };
+	return {r.left / scale.x, r.top / scale.y, r.right / scale.x, r.bottom / scale.y};
 }
 
 D2D1_POINT_2F& operator+=(D2D1_POINT_2F& lhs, const D2D1_POINT_2F& rhs) {

@@ -25,7 +25,7 @@ void ErrorTrap::die(HRESULT hr) const {
 	std::wostringstream oss;
 
 	wchar_t filename[MAX_PATH];
-	DWORD r = GetModuleFileName(nullptr, filename, sizeof(filename) / sizeof(filename[0]));
+	auto r = GetModuleFileName(nullptr, filename, sizeof filename / sizeof filename[0]);
 	if (r != 0) {
 		filename[sizeof(filename) / sizeof(filename[0]) - 1] = L'\0';
 		oss << filename << L" exiting due to error ";
@@ -55,7 +55,7 @@ void ErrorTrap::die(HRESULT hr) const {
 	}
 	#else
 	static std::mutex mutex;
-	std::lock_guard<std::mutex> lg(mutex);
+	std::lock_guard<std::mutex> lg{mutex};
 	MessageBox(nullptr, oss.str().c_str(), nullptr, MB_OK | MB_ICONERROR | MB_SYSTEMMODAL);
 	_exit(EXIT_FAILURE); // exit with limited cleanup
 	#endif

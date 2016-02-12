@@ -62,7 +62,7 @@ void Image::clear_cache() {
 	bitmap_cache.clear();
 }
 
-Image::Image(const std::wstring path) : path(path) {
+Image::Image(const std::wstring& path) : path{path} {
 	assert(!path.empty());
 
 	file_size = ::get_file_size(path);
@@ -133,13 +133,13 @@ D2D1_SIZE_F Image::get_bitmap_size(const D2D1_POINT_2F& scale) const {
 }
 
 Hash Image::get_file_hash() const {
-	if (file_hash == Hash())
+	if (file_hash == Hash{})
 		const_cast<Image*>(this)->calculate_hash();
 	return file_hash;
 }
 
 Hash Image::get_pixel_hash() const {
-	if (pixel_hash == Hash())
+	if (pixel_hash == Hash{})
 		const_cast<Image*>(this)->calculate_hash();
 	return pixel_hash;
 }
@@ -149,8 +149,14 @@ float Image::get_distance(const Image& image, const float maximum_distance) cons
 		return std::numeric_limits<float>::max();
 
 	Transform transforms[] {
-		Transform::none, Transform::rotate_90, Transform::rotate_180, Transform::rotate_270,
-		Transform::flip_h, Transform::flip_v, Transform::flip_nw_se, Transform::flip_sw_ne,
+		Transform::none,
+		Transform::rotate_90,
+		Transform::rotate_180,
+		Transform::rotate_270,
+		Transform::flip_h,
+		Transform::flip_v,
+		Transform::flip_nw_se,
+		Transform::flip_sw_ne,
 	};
 
 	auto sum = std::numeric_limits<float>::max();
@@ -192,13 +198,13 @@ void Image::draw(
 
 		render_target->FillRectangle(rect_dest, brush);
 
-		const D2D1_POINT_2F line_offset{32, 32};
-		const D2D1_POINT_2F square_offset{64, 64};
+		const auto line_offset = D2D1::Point2F(32, 32);
+		const auto square_offset = D2D1::Point2F(64, 64);
 		const auto thickness = 12.0f;
 
-		D2D1_POINT_2F centre{
+		auto centre = D2D1::Point2F(
 			rect_dest.left + (rect_dest.right - rect_dest.left) / 2,
-			rect_dest.top + (rect_dest.bottom - rect_dest.top) / 2};
+			rect_dest.top + (rect_dest.bottom - rect_dest.top) / 2);
 
 		et = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Gray), &brush);
 		render_target->DrawRectangle(
@@ -229,7 +235,7 @@ void Image::delete_file() const {
 		return;
 
 	ComPtr<IShellItem> file;
-	HRESULT hr = SHCreateItemFromParsingName(path.c_str(), nullptr, IID_PPV_ARGS(&file));
+	auto hr = SHCreateItemFromParsingName(path.c_str(), nullptr, IID_PPV_ARGS(&file));
 	if (FAILED(hr))
 		return;
 
@@ -290,14 +296,13 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 		0,
 		WICBitmapPaletteTypeCustom);
 
-	const int pixel_stride = 4;
-	unsigned int pixel_buffer_stride = width * pixel_stride;
+	const auto pixel_stride = 4;
+	auto pixel_buffer_stride = width * pixel_stride;
 	std::size_t pixel_buffer_size = pixel_buffer_stride * height;
 	assert(pixel_buffer_size > 0);
 	std::vector<uint8_t> pixel_buffer(pixel_buffer_size);
 
-	HRESULT hr;
-	hr = format_converter->CopyPixels(
+	auto hr = format_converter->CopyPixels(
 		nullptr,
 		pixel_buffer_stride,
 		numeric_cast<UINT>(pixel_buffer_size),
@@ -313,12 +318,12 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 	bool a_content = false;
 	float alpha[n_intensity_block_divisions][n_intensity_block_divisions];
 
-	for (int by = 0; by < n_intensity_block_divisions; by++) {
-		for (int bx = 0; bx < n_intensity_block_divisions; bx++) {
-			const std::uint32_t offset_x = width * bx / n_intensity_block_divisions;
-			const std::uint32_t offset_y = height * by / n_intensity_block_divisions;
-			const std::uint32_t offset_x_next = width * (bx + 1) / n_intensity_block_divisions;
-			const std::uint32_t offset_y_next = height * (by + 1) / n_intensity_block_divisions;
+	for (auto by = 0; by < n_intensity_block_divisions; by++) {
+		for (auto bx = 0; bx < n_intensity_block_divisions; bx++) {
+			const auto offset_x = width * bx / n_intensity_block_divisions;
+			const auto offset_y = height * by / n_intensity_block_divisions;
+			const auto offset_x_next = width * (bx + 1) / n_intensity_block_divisions;
+			const auto offset_y_next = height * (by + 1) / n_intensity_block_divisions;
 
 			std::uint32_t r = 0;
 			std::uint32_t g = 0;
@@ -348,8 +353,8 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 	// (GUID_WICPixelFormat32bppPBGRA mode seem to zero RGB content if it can
 	// replace it with alpha content alone.)
 	if (a_content && !rgb_content) {
-		for (int y = 0; y < n_intensity_block_divisions; y++) {
-			for (int x = 0; x < n_intensity_block_divisions; x++) {
+		for (auto y = 0; y < n_intensity_block_divisions; y++) {
+			for (auto x = 0; x < n_intensity_block_divisions; x++) {
 				intensities[y][x].r = alpha[y][x];
 				intensities[y][x].g = alpha[y][x];
 				intensities[y][x].b = alpha[y][x];
@@ -359,10 +364,10 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 
 	// normalize
 
-	float intensity_min = std::numeric_limits<float>::max();
-	float intensity_max = 0;
-	for (int y = 0; y < n_intensity_block_divisions; y++) {
-		for (int x = 0; x < n_intensity_block_divisions; x++) {
+	auto intensity_min = std::numeric_limits<float>::max();
+	auto intensity_max = 0.0f;
+	for (auto y = 0; y < n_intensity_block_divisions; y++) {
+		for (auto x = 0; x < n_intensity_block_divisions; x++) {
 			intensity_min = std::min(intensity_min, intensities[y][x].r);
 			intensity_min = std::min(intensity_min, intensities[y][x].g);
 			intensity_min = std::min(intensity_min, intensities[y][x].b);
@@ -373,8 +378,8 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 	}
 
 	if (intensity_max - intensity_min != 0) {
-		for (int y = 0; y < n_intensity_block_divisions; y++) {
-			for (int x = 0; x < n_intensity_block_divisions; x++) {
+		for (auto y = 0; y < n_intensity_block_divisions; y++) {
+			for (auto x = 0; x < n_intensity_block_divisions; x++) {
 				intensities[y][x].r = (intensities[y][x].r - intensity_min) / (intensity_max - intensity_min);
 				intensities[y][x].g = (intensities[y][x].g - intensity_min) / (intensity_max - intensity_min);
 				intensities[y][x].b = (intensities[y][x].b - intensity_min) / (intensity_max - intensity_min);
@@ -453,7 +458,7 @@ std::chrono::system_clock::time_point get_propvariant_time(const PROPVARIANT& pv
 }
 
 float get_propvariant_location(const PROPVARIANT& pv) {
-	ULONG count = PropVariantGetElementCount(pv);
+	auto count = PropVariantGetElementCount(pv);
 	assert(count == 3);
 	if (count != 3)
 		return 0;
@@ -473,63 +478,6 @@ float get_propvariant_location(const PROPVARIANT& pv) {
 
 void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 	HRESULT hr;
-
-	#if 0
-	#include <wincodecsdk.h>
-	ComPtr<IWICMetadataBlockReader> block_reader;
-	et = ice->frame->QueryInterface(IID_IWICMetadataBlockReader, (void**)&block_reader);
-	UINT n_readers;
-	et = block_reader->GetCount(&n_readers);
-
-	std::vector<ComPtr<IWICMetadataReader>> readers;
-	for (UINT i = 0; i < n_readers; i++) {
-		ComPtr<IWICMetadataReader> reader;
-		et = block_reader->GetReaderByIndex(i, &reader);
-		readers.push_back(reader);
-	}
-
-	while (!readers.empty()) {
-		ComPtr<IWICMetadataReader> reader = readers.back();
-		readers.pop_back();
-
-		UINT n_values;
-		et = reader->GetCount(&n_values);
-		for (UINT j = 0; j < n_values; j++) {
-			PROPVARIANT schema;
-			PROPVARIANT id;
-			PROPVARIANT value;
-			PropVariantInit(&schema);
-			PropVariantInit(&id);
-			PropVariantInit(&value);
-			hr = reader->GetValueByIndex(j, &schema, &id, &value);
-			if (SUCCEEDED(hr)) {
-				if (value.vt == VT_UNKNOWN) {
-					ComPtr<IWICMetadataReader> reader2 = nullptr;
-					hr = value.punkVal->QueryInterface(IID_IWICMetadataReader, (void**)&reader2);
-					if (SUCCEEDED(hr))  {
-						readers.push_back(reader2);
-					}
-				} else {
-					if (value.vt == VT_DATE)
-						debug_log << "VT_DATE ";
-					std::wstring ss = prop_to_string(schema);
-					std::wstring si = prop_to_string(id);
-					std::wstring sv = prop_to_string(value);
-
-					if (sv.size() > 0) {
-						if (id.vt == VT_LPSTR || id.vt == VT_LPWSTR)
-							debug_log << si << L": " << sv << std::endl;
-						else if (id.vt == VT_UI2 || id.vt == VT_UI4)
-							debug_log << id.uintVal << L": " << sv << std::endl;
-						else
-							assert(false);
-					}
-				}
-			}
-		}
-	}
-	debug_log << std::endl;
-	#endif
 
 	ComPtr<IWICMetadataQueryReader> reader;
 	hr = frame->GetMetadataQueryReader(&reader);
@@ -607,9 +555,9 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 				std::wstring substring;
 				std::wstring substring_replacement;
 			} metadata_make_model_replacements[] {
-				{ L"NIKON CORPORATION", L"NIKON" } ,
-				{ L"EASTMAN KODAK COMPANY", L"KODAK" },
-				{ L" ZOOM DIGITAL CAMERA", L"" },
+				{L"NIKON CORPORATION", L"NIKON"} ,
+				{L"EASTMAN KODAK COMPANY", L"KODAK"},
+				{L" ZOOM DIGITAL CAMERA", L""},
 			};
 			for (const auto& r : metadata_make_model_replacements) {
 				auto fp = metadata_make_model.find(r.substring);
@@ -685,24 +633,6 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 
 		if (metadata_position.x == 0 || metadata_position.y == 0)
 			metadata_position = {0, 0};
-
-		#if 0
-		// metadata test
-
-		const wchar_t* const tags[] {
-			L"/app1/ifd/exif/{ushort=270}",
-		};
-
-		for (const auto& tag : tags) {
-			hr = reader->GetMetadataByName(tag, &value);
-			if (SUCCEEDED(hr)) {
-				std::wstring s = get_propvariant_string(value);
-				if (s.size() > 0)
-					debug_log << tag << L" " << s << L" " << path << std::endl;
-			}
-			et = PropVariantClear(&value);
-		}
-		#endif
 	}
 }
 
@@ -724,7 +654,7 @@ void Image::calculate_hash() {
 	ComPtr<IWICBitmap> bitmap;
 	et = wic_factory->CreateBitmapFromSource(frame, WICBitmapNoCache, &bitmap);
 	ComPtr<IWICBitmapLock> bitmap_lock;
-	HRESULT hr = bitmap->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
+	auto hr = bitmap->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
 	if (SUCCEEDED(hr)) {
 		UINT size;
 		std::uint8_t* pixel_data;
@@ -755,10 +685,8 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 		buffer.data(),
 		numeric_cast<DWORD>(file_size));
 
-	HRESULT hr;
-
 	ComPtr<IWICBitmapDecoder> decoder;
-	hr = wic_factory->CreateDecoderFromStream(
+	auto hr = wic_factory->CreateDecoderFromStream(
 		stream,
 		nullptr,
 		WICDecodeMetadataCacheOnDemand,
@@ -787,7 +715,7 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 }
 
 ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target) const {
-	const int bitmap_cache_limit = 8;
+	const auto bitmap_cache_limit = 8;
 
 	BitmapCacheEntry bce;
 
@@ -848,45 +776,36 @@ Image::Colour Image::get_intensity(const int x, const int y, const Transform tra
 	switch (transform) {
 	case Transform::none:
 		break;
-
 	case Transform::rotate_90:
 		xt = n_intensity_block_divisions - 1 - y;
 		yt = x;
 		break;
-
 	case Transform::rotate_180:
 		xt = n_intensity_block_divisions - 1 - x;
 		yt = n_intensity_block_divisions - 1 - y;
 		break;
-
 	case Transform::rotate_270:
 		xt = y;
 		yt = n_intensity_block_divisions - 1 - x;
 		break;
-
 	case Transform::flip_h:
 		xt = n_intensity_block_divisions - 1 - x;
 		yt = y;
 		break;
-
 	case Transform::flip_v:
 		xt = x;
 		yt = n_intensity_block_divisions - 1 - y;
 		break;
-
 	case Transform::flip_nw_se:
 		xt = y;
 		yt = x;
 		break;
-
 	case Transform::flip_sw_ne:
 		xt = n_intensity_block_divisions - 1 - y;
 		yt = n_intensity_block_divisions - 1 - x;
 		break;
-
 	default:
 		assert(false);
-		break;
 	}
 
 	return intensities[yt][xt];

@@ -18,8 +18,8 @@ float earth_distance(const D2D1_POINT_2F& p1, const D2D1_POINT_2F& p2) {
 	const auto earth_mean_radius = 6371*1000.0f;
 	const auto pi = 3.14159265358979323846f;
 
-	D2D1_POINT_2F p1r = D2D1::Point2F(p1.x * (pi / 180), p1.y * (pi / 180));
-	D2D1_POINT_2F p2r = D2D1::Point2F(p2.x * (pi / 180), p2.y * (pi / 180));
+	auto p1r = D2D1::Point2F(p1.x * (pi / 180), p1.y * (pi / 180));
+	auto p2r = D2D1::Point2F(p2.x * (pi / 180), p2.y * (pi / 180));
 
 	auto dy = p2r.y - p1r.y;
 	auto dx = p2r.x - p1r.x;
@@ -208,12 +208,12 @@ static void thread_worker(Job* const job) {
 std::vector<std::vector<Duplicate>> process(Window& window, const std::vector<std::wstring>& paths) {
 	// prepare job
 	std::vector<std::vector<Duplicate>> duplicate_categories{4};
-	Job job(
+	Job job{
 		paths,
 		duplicate_categories[0],
 		duplicate_categories[1],
 		duplicate_categories[2],
-		duplicate_categories[3]);
+		duplicate_categories[3]};
 
 	debug_timer_reset();
 

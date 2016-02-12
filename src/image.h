@@ -16,7 +16,7 @@ class Image : public std::enable_shared_from_this<Image> {
 public:
 	static void clear_cache();
 
-	Image(const std::wstring path);
+	Image(const std::wstring& path);
 	~Image();
 
 	enum class Status {ok, open_failed, decode_failed};
