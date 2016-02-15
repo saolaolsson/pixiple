@@ -38,10 +38,10 @@ static void redirect_console() {
 
 	et = AllocConsole();
 
-	COORD size = {n_console_rows, n_console_lines};
+	COORD size{n_console_rows, n_console_lines};
 	et = SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), size);
 
-	SMALL_RECT sr = {0, 0, n_console_rows-1, 80};
+	SMALL_RECT sr{0, 0, n_console_rows-1, 80};
 	et = SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), true, &sr);
 
 	int console;
@@ -90,11 +90,6 @@ DebugLog::DebugLog() {
 
 	stream_buffer = std::make_unique<StreamBuffer>(this);
 	rdbuf(stream_buffer.get());
-
-	log_file.open(L"debug_log.txt", std::ios_base::out | std::ios_base::app);
-	assert(log_file);
-
-	log_file << std::endl;
 }
 
 DebugLog::~DebugLog() {
@@ -105,6 +100,10 @@ void DebugLog::print_line(const std::wstring& string) {
 	std::wostringstream ss;
 	ss << get_time_string() << L" " << string;
 
+	if (!log_file.is_open()) {
+		log_file.open(L"debug_log.txt", std::ios_base::out | std::ios_base::app);
+		log_file << std::endl;
+	}
 	log_file << ss.str();
 	log_file.flush();
 	assert(log_file);
@@ -117,7 +116,6 @@ void DebugLog::print_line(const std::wstring& string) {
 			redirect_console();
 			console_redirected = true;
 		}
-
 		std::wcout << ss.str();
 		std::wcout.flush();
 	}
