@@ -55,7 +55,7 @@ private:
 		std::lock_guard<std::mutex> lg{mutex};
 
 		// find existing or create new buffer string for this thread
-		auto r = thread_buffers.insert(std::make_pair(std::this_thread::get_id(), L""));
+		auto r = thread_buffers.insert({std::this_thread::get_id(), L""});
 		auto buffer_i = r.first;
 		auto& buffer = buffer_i->second;
 

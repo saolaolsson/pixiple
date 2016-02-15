@@ -43,12 +43,8 @@ std::vector<std::pair<float, float>> get_scale_levels(
 	std::vector<std::pair<float, float>> scale_level_pairs;
 
 	// add fit scales (with corresponding scale for other image)
-	scale_level_pairs.push_back(std::make_pair(
-		fit_scale_left,
-		fit_scale_left * swapped_left_right_scale_ratio));
-	scale_level_pairs.push_back(std::make_pair(
-		fit_scale_right / swapped_left_right_scale_ratio,
-		fit_scale_right));
+	scale_level_pairs.push_back({fit_scale_left, fit_scale_left * swapped_left_right_scale_ratio});
+	scale_level_pairs.push_back({fit_scale_right / swapped_left_right_scale_ratio, fit_scale_right});
 
 	// find smallast scale to include
 	auto min_scale = std::min({
@@ -65,9 +61,9 @@ std::vector<std::pair<float, float>> get_scale_levels(
 		auto sl2 = sl / swapped_left_right_scale_ratio;
 
 		if (sl >= min_scale && sl1 >= min_scale)
-			scale_level_pairs.push_back(std::make_pair(sl, sl1));
+			scale_level_pairs.push_back({sl, sl1});
 		if (sl >= min_scale && sl2 >= min_scale)
-			scale_level_pairs.push_back(std::make_pair(sl2, sl));
+			scale_level_pairs.push_back({sl2, sl});
 	}
 
 	// remove duplicates
@@ -183,41 +179,41 @@ void update_text_image_info(
 
 	ss << image->get_path() << L"\n";
 	auto matching_length = get_matching_text_length(image->get_path(), image_other->get_path());
-	bold_ranges.push_back(std::make_pair(index, matching_length));
+	bold_ranges.push_back({index, matching_length});
 
 	matching_length = get_matching_text_length(
 		image->get_path().filename(), image_other->get_path().filename());
-	bold_ranges.push_back(std::make_pair(
-		index + image->get_path().parent_path().wstring().length() + 1, matching_length));
+	bold_ranges.push_back(
+		{index + image->get_path().parent_path().wstring().length() + 1, matching_length});
 	index = ss.str().length();
 
 	// file
 
 	ss << image->get_file_size() << L" bytes, ";
 	if (image->get_file_size() == image_other->get_file_size())
-		bold_ranges.push_back(std::make_pair(index, ss.str().length() - index));
+		bold_ranges.push_back({index, ss.str().length() - index});
 	index = ss.str().length();
 
 	ss << to_string(image->get_file_time()) << L", ";
 	if (image->get_file_time() == image_other->get_file_time())
-		bold_ranges.push_back(std::make_pair(index, ss.str().length() - index));
+		bold_ranges.push_back({index, ss.str().length() - index});
 	index = ss.str().length();
 
 	ss  << L"hash " << image->get_file_hash() << L"\n";
 	if (image->get_file_hash() == image_other->get_file_hash())
-		bold_ranges.push_back(std::make_pair(index, ss.str().length() - index));
+		bold_ranges.push_back({index, ss.str().length() - index});
 	index = ss.str().length();
 
 	// pixels
 
 	ss << image->get_image_size().width << L" \u00d7 " << image->get_image_size().height << L", ";
 	if (image->get_image_size().width == image_other->get_image_size().width && image->get_image_size().height == image_other->get_image_size().height)
-		bold_ranges.push_back(std::make_pair(index, ss.str().length() - index));
+		bold_ranges.push_back({index, ss.str().length() - index});
 	index = ss.str().length();
 
 	ss  << L"hash " << image->get_pixel_hash() << L"\n";
 	if (image->get_pixel_hash() == image_other->get_pixel_hash())
-		bold_ranges.push_back(std::make_pair(index, ss.str().length() - index));
+		bold_ranges.push_back({index, ss.str().length() - index});
 	index = ss.str().length();
 
 	// metadata times
@@ -228,7 +224,7 @@ void update_text_image_info(
 
 		auto r = std::find(image_other_metadata_times.begin(), image_other_metadata_times.end(), t);
 		if (r != image_other_metadata_times.end())
-			bold_ranges.push_back(std::make_pair(index, ss.str().length() - index));
+			bold_ranges.push_back({index, ss.str().length() - index});
 
 		ss << L", ";
 		index = ss.str().length();
@@ -250,7 +246,7 @@ void update_text_image_info(
 			ssco << L" " << image_other->get_metadata_camera_id();
 
 		if (ssc.str() == ssco.str())
-			bold_ranges.push_back(std::make_pair(index, ss.str().length() - index));
+			bold_ranges.push_back({index, ss.str().length() - index});
 		ss << L", ";
 		index = ss.str().length();
 	}
@@ -260,7 +256,7 @@ void update_text_image_info(
 	if (image->get_metadata_position().x != 0 && image->get_metadata_position().y != 0) {
 		ss << L"(" << image->get_metadata_position().y << L", " << image->get_metadata_position().x << L")";
 		if (image->get_metadata_position().x == image_other->get_metadata_position().x && image->get_metadata_position().y == image_other->get_metadata_position().y)
-			bold_ranges.push_back(std::make_pair(index, ss.str().length() - index));
+			bold_ranges.push_back({index, ss.str().length() - index});
 		ss << L", ";
 		index = ss.str().length();
 	}
@@ -270,7 +266,7 @@ void update_text_image_info(
 	if (!image->get_metadata_image_id().empty()) {
 		ss << image->get_metadata_image_id();
 		if (image->get_metadata_image_id() == image_other->get_metadata_image_id())
-			bold_ranges.push_back(std::make_pair(index, ss.str().length() - index));
+			bold_ranges.push_back({index, ss.str().length() - index});
 		ss << L", ";
 		index = ss.str().length();
 	}

@@ -188,7 +188,7 @@ void Window::add_menu_item(const std::wstring& label, const int button_id, const
 	assert(!menu_stack.empty());
 	et = AppendMenu(menu_stack.back(), 0, button_id, label.c_str());
 	if (checkmark_group != -1)
-		menu_groups.push_back(std::make_pair(button_id, checkmark_group));
+		menu_groups.push_back({button_id, checkmark_group});
 }
 
 void Window::set_menu_item_checked(const int button_id) {
