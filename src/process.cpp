@@ -205,7 +205,7 @@ static void thread_worker(Job* const job) {
 	TRACE();
 }
 
-std::vector<std::vector<Duplicate>> process(Window& window, const std::vector<std::wstring>& paths) {
+std::vector<std::vector<Duplicate>> process(Window& window, const std::vector<std::tr2::sys::path>& paths) {
 	// prepare job
 	std::vector<std::vector<Duplicate>> duplicate_categories{4};
 	Job job{

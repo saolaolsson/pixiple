@@ -3,6 +3,7 @@
 #include "duplicate.h"
 
 #include <atomic>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -20,7 +21,7 @@ public:
 
 	std::atomic<bool> force_thread_exit = false;
 
-	Job(const std::vector<std::wstring>& paths,
+	Job(const std::vector<std::tr2::sys::path>& paths,
 		std::vector<Duplicate>& duplicates_visual,
 		std::vector<Duplicate>& duplicates_time,
 		std::vector<Duplicate>& duplicates_location,
@@ -39,7 +40,7 @@ public:
 	bool is_completed() const;
 
 private:
-	const std::vector<std::wstring>& paths;
+	const std::vector<std::tr2::sys::path>& paths;
 	std::vector<std::shared_ptr<Image>> images{paths.size()};
 
 	std::size_t index_minor = 0;

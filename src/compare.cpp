@@ -143,21 +143,11 @@ void zoom(
 	window.set_image_centre_from_other_pane(pane_other, pane);
 }
 
-std::size_t get_matching_text_length(
-	const std::wstring& text1,
-	const std::wstring& text2,
-	const std::size_t start1 = 0,
-	const std::size_t start2 = 0
-) {
-	assert(start1 >= 0 && start1 <= text1.length());
-	assert(start2 >= 0 && start2 <= text2.length());
-
-	auto search_length = std::min(text1.length() - start1, text2.length() - start2);
-
+std::size_t get_matching_text_length(const std::wstring& text1, const std::wstring& text2) {
+	auto search_length = std::min(text1.length(), text2.length());
 	std::size_t i = 0;
-	while (i < search_length && text1[start1 + i] == text2[start2 + i])
+	while (i < search_length && text1[i] == text2[i])
 		i++;
-
 	return i;
 }
 
@@ -195,15 +185,10 @@ void update_text_image_info(
 	auto matching_length = get_matching_text_length(image->get_path(), image_other->get_path());
 	bold_ranges.push_back(std::make_pair(index, matching_length));
 
-	auto name_start = image->get_path().find_last_of(L'\\');
-	auto name_start_other = image_other->get_path().find_last_of(L'\\');
-	if (name_start != std::string::npos && name_start_other != std::string::npos) {
-		name_start++;
-		name_start_other++;
-
-		matching_length = get_matching_text_length(image->get_path(), image_other->get_path(), name_start, name_start_other);
-		bold_ranges.push_back(std::make_pair(index + name_start, matching_length));
-	}
+	matching_length = get_matching_text_length(
+		image->get_path().filename(), image_other->get_path().filename());
+	bold_ranges.push_back(std::make_pair(
+		index + image->get_path().parent_path().wstring().length() + 1, matching_length));
 	index = ss.str().length();
 
 	// file

@@ -21,14 +21,14 @@ std::mutex Image::class_mutex;
 int Image::n_instances;
 std::vector<Image::BitmapCacheEntry> Image::bitmap_cache;
 
-std::wstring get_windows_path(const std::wstring& path) {
-	if (path.length() > 1 && path[0] == L'\\' && path[1] == L'\\')
-		return L"\\\\?\\UNC\\" + path.substr(2);
+std::wstring get_windows_path(const std::tr2::sys::path& path) {
+	if (path.wstring().substr(0, 2) == L"\\\\")
+		return L"\\\\?\\UNC\\" + path.wstring().substr(2);
 	else
-		return L"\\\\?\\" + path;
+		return L"\\\\?\\" + path.wstring();
 }
 
-std::size_t get_file_size(const std::wstring& path) {
+std::size_t get_file_size(const std::tr2::sys::path& path) {
 	WIN32_FILE_ATTRIBUTE_DATA fab;
 	et = GetFileAttributesEx(get_windows_path(path).c_str(), GetFileExInfoStandard, &fab);
 	static_assert(sizeof std::size_t >= 8, "std::size_t must be 64-bit type or larger");
@@ -44,7 +44,7 @@ std::chrono::system_clock::time_point to_time_point(const FILETIME& filetime) {
 	return std::chrono::system_clock::from_time_t(filetime_time_t);
 }
 
-std::chrono::system_clock::time_point get_file_time(const std::wstring& path) {
+std::chrono::system_clock::time_point get_file_time(const std::tr2::sys::path& path) {
 	WIN32_FILE_ATTRIBUTE_DATA fab;
 	et = GetFileAttributesEx(get_windows_path(path).c_str(), GetFileExInfoStandard, &fab);
 	return to_time_point(fab.ftLastWriteTime);
@@ -62,7 +62,7 @@ void Image::clear_cache() {
 	bitmap_cache.clear();
 }
 
-Image::Image(const std::wstring& path) : path{path} {
+Image::Image(const std::tr2::sys::path& path) : path{path} {
 	assert(!path.empty());
 
 	file_size = ::get_file_size(path);
@@ -92,7 +92,7 @@ Image::Status Image::get_status() const {
 	return status;
 }
 
-const std::wstring& Image::get_path() const {
+std::tr2::sys::path Image::get_path() const {
 	return path;
 }
 
@@ -252,12 +252,7 @@ void Image::delete_file() const {
 // Try to open explorer window at containing folder with file
 // selected, or try to open containing folder, or fail silently.
 void Image::open_folder() const {
-	auto r = path.rfind(L'\\');
-	if (r == std::wstring::npos)
-		return;
-	std::wstring folder_string = path.substr(0, r);
-
-	__unaligned auto folder = ILCreateFromPath(folder_string.c_str());
+	__unaligned auto folder = ILCreateFromPath(path.parent_path().c_str());
 	if (folder == nullptr)
 		return;
 

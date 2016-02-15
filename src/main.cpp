@@ -8,6 +8,7 @@
 #include "shared/com.h"
 
 #include <atomic>
+#include <filesystem>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -21,8 +22,8 @@
 
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
-std::vector<std::wstring> scan(Window& window, ComPtr<IShellItem> root);
-std::vector<std::vector<Duplicate>> process(Window& window, const std::vector<std::wstring>& paths);
+std::vector<std::tr2::sys::path> scan(Window& window, ComPtr<IShellItem> root);
+std::vector<std::vector<Duplicate>> process(Window& window, const std::vector<std::tr2::sys::path>& paths);
 void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicate_categories);
 
 static ComPtr<IShellItem> browse(HWND parent) {

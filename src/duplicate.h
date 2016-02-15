@@ -28,14 +28,7 @@ public:
 	}
 
 	bool is_in_same_folder() const {
-		auto name_start_1 = image_1->get_path().find_last_of(L'\\');
-		auto name_start_2 = image_2->get_path().find_last_of(L'\\');
-
-		assert(name_start_1 != std::string::npos && name_start_2 != std::string::npos);
-
-		return
-			image_1->get_path().substr(0, name_start_1) ==
-			image_2->get_path().substr(0, name_start_2);
+		return image_1->get_path().parent_path() == image_2->get_path().parent_path();
 	}
 
 	std::chrono::system_clock::duration get_age() const {

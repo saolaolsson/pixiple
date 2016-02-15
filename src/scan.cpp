@@ -5,6 +5,7 @@
 
 #include "shared/com.h"
 
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -26,7 +27,7 @@ static bool is_image(const std::wstring& filename) {
 	return false;
 }
 
-std::vector<std::wstring> scan(Window& window, ComPtr<IShellItem> root) {
+std::vector<std::tr2::sys::path> scan(Window& window, ComPtr<IShellItem> root) {
 	window.add_edge(0);
 	window.add_edge(0);
 	window.add_edge(1);
@@ -40,7 +41,7 @@ std::vector<std::wstring> scan(Window& window, ComPtr<IShellItem> root) {
 	window.set_cursor(0, IDC_WAIT);
 	window.set_progressbar_progress(0, -1.0f);
 
-	std::vector<std::wstring> paths;
+	std::vector<std::tr2::sys::path> paths;
 	std::vector<decltype(root)> items{root};
 
 	while (!items.empty()) {

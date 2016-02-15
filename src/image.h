@@ -5,6 +5,7 @@
 #include "shared/com.h"
 
 #include <chrono>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -16,13 +17,13 @@ class Image : public std::enable_shared_from_this<Image> {
 public:
 	static void clear_cache();
 
-	Image(const std::wstring& path);
+	Image(const std::tr2::sys::path& path);
 	~Image();
 
 	enum class Status {ok, open_failed, decode_failed};
 	Status get_status() const;
 
-	const std::wstring& get_path() const;
+	std::tr2::sys::path get_path() const;
 	std::size_t get_file_size() const;
 	std::chrono::system_clock::time_point get_file_time() const;
 
@@ -58,7 +59,7 @@ private:
 
 	static const int n_intensity_block_divisions = 8;
 
-	std::wstring path;
+	std::tr2::sys::path path;
 	Status status = Status::ok;
 
 	std::size_t file_size = 0;
