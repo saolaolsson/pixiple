@@ -28,28 +28,6 @@ std::wstring get_windows_path(const std::tr2::sys::path& path) {
 		return L"\\\\?\\" + path.wstring();
 }
 
-std::size_t get_file_size(const std::tr2::sys::path& path) {
-	WIN32_FILE_ATTRIBUTE_DATA fab;
-	et = GetFileAttributesEx(get_windows_path(path).c_str(), GetFileExInfoStandard, &fab);
-	static_assert(sizeof std::size_t >= 8, "std::size_t must be 64-bit type or larger");
-	return (static_cast<std::size_t>(fab.nFileSizeHigh) << 32) + fab.nFileSizeLow;
-}
-
-std::chrono::system_clock::time_point to_time_point(const FILETIME& filetime) {
-	static_assert(sizeof time_t >= 8, "time_t must be 64-bit type or larger");
-	auto filetime_time_t =
-		(numeric_cast<time_t>(filetime.dwHighDateTime) << 32) +
-		filetime.dwLowDateTime;
-	filetime_time_t = (filetime_time_t - 116444736000000000) / 1000 / 1000 / 10;
-	return std::chrono::system_clock::from_time_t(filetime_time_t);
-}
-
-std::chrono::system_clock::time_point get_file_time(const std::tr2::sys::path& path) {
-	WIN32_FILE_ATTRIBUTE_DATA fab;
-	et = GetFileAttributesEx(get_windows_path(path).c_str(), GetFileExInfoStandard, &fab);
-	return to_time_point(fab.ftLastWriteTime);
-}
-
 std::wstring widen(const std::string& string) {
 	std::wostringstream os;
 	auto& f = std::use_facet<std::ctype<wchar_t>>(os.getloc());    
@@ -65,8 +43,8 @@ void Image::clear_cache() {
 Image::Image(const std::tr2::sys::path& path) : path{path} {
 	assert(!path.empty());
 
-	file_size = ::get_file_size(path);
-	file_time = ::get_file_time(path);
+	file_size = std::tr2::sys::file_size(path);
+	file_time = std::tr2::sys::last_write_time(path);
 
 	std::vector<std::uint8_t> data(file_size);
 	auto frame = get_frame(data);
@@ -695,7 +673,7 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 	// if file has changed since *this was created, fail
 
 	if (file_size != 0)
-		if (::get_file_size(path) != file_size)
+		if (std::tr2::sys::file_size(path) != file_size)
 			return nullptr;
 
 	if (width != 0 || height != 0) {

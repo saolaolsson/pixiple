@@ -24,8 +24,8 @@ public:
 	Status get_status() const;
 
 	std::tr2::sys::path get_path() const;
-	std::size_t get_file_size() const;
-	std::chrono::system_clock::time_point get_file_time() const;
+	std::uintmax_t get_file_size() const;
+	std::tr2::sys::file_time_type get_file_time() const;
 
 	std::vector<std::chrono::system_clock::time_point> get_metadata_times() const;
 	std::wstring get_metadata_make_model() const;
@@ -62,8 +62,8 @@ private:
 	std::tr2::sys::path path;
 	Status status = Status::ok;
 
-	std::size_t file_size = 0;
-	std::chrono::system_clock::time_point file_time;
+	std::uintmax_t file_size = 0;
+	std::tr2::sys::file_time_type file_time;
 
 	std::uint32_t width = 0;
 	std::uint32_t height = 0;
