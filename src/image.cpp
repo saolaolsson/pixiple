@@ -21,21 +21,6 @@ std::mutex Image::class_mutex;
 int Image::n_instances;
 std::vector<Image::BitmapCacheEntry> Image::bitmap_cache;
 
-std::wstring get_windows_path(const std::tr2::sys::path& path) {
-	if (path.wstring().substr(0, 2) == L"\\\\")
-		return L"\\\\?\\UNC\\" + path.wstring().substr(2);
-	else
-		return L"\\\\?\\" + path.wstring();
-}
-
-std::wstring widen(const std::string& string) {
-	std::wostringstream os;
-	auto& f = std::use_facet<std::ctype<wchar_t>>(os.getloc());    
-	for (const auto c : string)
-		os << f.widen(c);
-	return os.str();
-}
-
 void Image::clear_cache() {
 	bitmap_cache.clear();
 }
@@ -199,9 +184,16 @@ void Image::draw(
 	}
 }
 
+static std::wstring to_windows_path(const std::tr2::sys::path& path) {
+	if (path.wstring().substr(0, 2) == L"\\\\")
+		return L"\\\\?\\UNC\\" + path.wstring().substr(2);
+	else
+		return L"\\\\?\\" + path.wstring();
+}
+
 bool Image::is_deletable() const {
 	auto h = CreateFile(
-		get_windows_path(path).c_str(), DELETE, FILE_SHARE_DELETE,
+		to_windows_path(path).c_str(), DELETE, FILE_SHARE_DELETE,
 		nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (h != INVALID_HANDLE_VALUE)
 		et = CloseHandle(h);
@@ -359,6 +351,14 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 			}
 		}
 	}
+}
+
+static std::wstring widen(const std::string& string) {
+	std::wostringstream os;
+	auto& f = std::use_facet<std::ctype<wchar_t>>(os.getloc());    
+	for (const auto c : string)
+		os << f.widen(c);
+	return os.str();
 }
 
 std::wstring get_propvariant_string(const PROPVARIANT& pv) {
