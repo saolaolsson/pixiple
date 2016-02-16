@@ -36,7 +36,7 @@ static ComPtr<IShellItem> browse(HWND parent) {
 		nullptr, 0, 0};
 
 	#ifdef _DEBUG
-	pidlist = et = ILCreateFromPath(L"c:\\users\\");
+	pidlist = er = ILCreateFromPath(L"c:\\users\\");
 	#else
 	pidlist = SHBrowseForFolder(&bi);
 	if (pidlist == nullptr)
@@ -44,7 +44,7 @@ static ComPtr<IShellItem> browse(HWND parent) {
 	#endif
 
 	ComPtr<IShellItem> root;
-	et = SHCreateItemFromIDList(pidlist, IID_PPV_ARGS(&root));
+	er = SHCreateItemFromIDList(pidlist, IID_PPV_ARGS(&root));
 	CoTaskMemFree(pidlist);
 
 	return root;
@@ -60,7 +60,7 @@ static void app() {
 
 	Window window(
 		window_title, {800, 600},
-		et = LoadIcon(et = GetModuleHandle(nullptr), MAKEINTRESOURCE(APP_ICON)));
+		er = LoadIcon(er = GetModuleHandle(nullptr), MAKEINTRESOURCE(APP_ICON)));
 
 	window.add_edge(0);
 	window.add_edge(0);
@@ -96,33 +96,40 @@ static void app() {
 int WINAPI WinMain(__in HINSTANCE, __in_opt HINSTANCE, __in LPSTR, __in int) {
 	TRACE();
 
-	#ifdef _DEBUG
-	// _EM_OVERFLOW and _EM_UNDERFLOW (and _EM_DENORMAL?) require /fp:strict
-	// _EM_INEXACT caused when a value cannot be represented exactly as a float
-	unsigned int current_control;
-	et = _controlfp_s(&current_control, 0, 0) == 0;
-	et = _controlfp_s(&current_control, current_control & ~(_EM_INVALID | _EM_DENORMAL | _EM_ZERODIVIDE | _EM_OVERFLOW | _EM_UNDERFLOW), _MCW_EM) == 0;
-	_clearfp();
-	#endif
+	try {
+		#ifdef _DEBUG
+		// _EM_OVERFLOW and _EM_UNDERFLOW (and _EM_DENORMAL?) require /fp:strict
+		// _EM_INEXACT caused when a value cannot be represented exactly as a float
+		unsigned int current_control;
+		er = _controlfp_s(&current_control, 0, 0) == 0;
+		er = _controlfp_s(&current_control, current_control & ~(_EM_INVALID | _EM_DENORMAL | _EM_ZERODIVIDE | _EM_OVERFLOW | _EM_UNDERFLOW), _MCW_EM) == 0;
+		_clearfp();
+		#endif
 
-	#ifdef _DEBUG
-	auto dbg_flags = 0;
-	dbg_flags |= _CRTDBG_ALLOC_MEM_DF;
-	dbg_flags |= _CRTDBG_LEAK_CHECK_DF;
-	//dbg_flags |= _CRTDBG_DELAY_FREE_MEM_DF; // Keep freed memory blocks in the heap's linked list, assign them the _FREE_BLOCK type, and fill them with the byte value 0xDD.
-	//dbg_flags |= _CRTDBG_CHECK_ALWAYS_DF; // Call _CrtCheckMemory at every allocation and deallocation request.
-	//dbg_flags |= _CRTDBG_CHECK_EVERY_128_DF;
-	_CrtSetDbgFlag(dbg_flags);
-	//_CrtSetBreakAlloc(2379);
-	#endif
+		#ifdef _DEBUG
+		auto dbg_flags = 0;
+		dbg_flags |= _CRTDBG_ALLOC_MEM_DF;
+		dbg_flags |= _CRTDBG_LEAK_CHECK_DF;
+		//dbg_flags |= _CRTDBG_DELAY_FREE_MEM_DF; // Keep freed memory blocks in the heap's linked list, assign them the _FREE_BLOCK type, and fill them with the byte value 0xDD.
+		//dbg_flags |= _CRTDBG_CHECK_ALWAYS_DF; // Call _CrtCheckMemory at every allocation and deallocation request.
+		//dbg_flags |= _CRTDBG_CHECK_EVERY_128_DF;
+		_CrtSetDbgFlag(dbg_flags);
+		//_CrtSetBreakAlloc(2379);
+		#endif
 
-	#ifdef _DEBUG
-	tests();
-	#endif
+		#ifdef _DEBUG
+		tests();
+		#endif
 
-	et = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-	app();
-	CoUninitialize();
+		er = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+		app();
+		CoUninitialize();
+
+	} catch (ErrorCodeException& e) {
+		die(e.line, e.file, e.hresult);
+	} catch (...) {
+		die();
+	}
 
 	TRACE();
 	return 0;

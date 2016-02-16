@@ -30,7 +30,7 @@ Pane::Pane(
 
 	this->margin = margin;
 	this->colour = colour;
-	cursor = et = LoadCursor(nullptr, IDC_ARROW);
+	cursor = er = LoadCursor(nullptr, IDC_ARROW);
 
 	text_tooltip_window = nullptr;
 	checkbox = nullptr;
@@ -43,16 +43,16 @@ Pane::Pane(
 	this->edge_right = edge_right;
 	this->edge_bottom = edge_bottom;
 
-	et = DWriteCreateFactory(
+	er = DWriteCreateFactory(
 		DWRITE_FACTORY_TYPE_SHARED,
 		__uuidof(IDWriteFactory),
 		reinterpret_cast<IUnknown**>(&dw_factory));
 			
 	NONCLIENTMETRICS ncm;
 	ncm.cbSize = sizeof NONCLIENTMETRICS;
-	et = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof NONCLIENTMETRICS, &ncm, 0);
+	er = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof NONCLIENTMETRICS, &ncm, 0);
 	float font_height_dip = window->to_dip_y(std::abs(ncm.lfMessageFont.lfHeight));
-	et = dw_factory->CreateTextFormat(
+	er = dw_factory->CreateTextFormat(
 		ncm.lfMessageFont.lfFaceName,
 		nullptr,
 		DWRITE_FONT_WEIGHT_REGULAR,
@@ -64,9 +64,9 @@ Pane::Pane(
 
 	DWRITE_TRIMMING trimming{DWRITE_TRIMMING_GRANULARITY_CHARACTER, L'\\', 2};
 	ComPtr<IDWriteInlineObject> trimming_sign;
-	et = dw_factory->CreateEllipsisTrimmingSign(text_format, &trimming_sign);
-	et = text_format->SetTrimming(&trimming, trimming_sign);
-	et = text_format->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+	er = dw_factory->CreateEllipsisTrimmingSign(text_format, &trimming_sign);
+	er = text_format->SetTrimming(&trimming, trimming_sign);
+	er = text_format->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 }
 
 Pane::~Pane() {
@@ -74,23 +74,23 @@ Pane::~Pane() {
 	dw_factory = nullptr;
 
 	if (button_font) {
-		et = DeleteObject(button_font);
+		er = DeleteObject(button_font);
 		button_font = nullptr;
 	}
 
 	for (auto& button : buttons)
-		et = PostMessage(button, WM_CLOSE, 0, 0);
+		er = PostMessage(button, WM_CLOSE, 0, 0);
 
 	if (checkbox)
-		et = PostMessage(checkbox, WM_CLOSE, 0, 0);;
+		er = PostMessage(checkbox, WM_CLOSE, 0, 0);;
 
 	if (text_tooltip_window)
-		et = DestroyWindow(text_tooltip_window);
+		er = DestroyWindow(text_tooltip_window);
 
 	if (progressbar) {
-		et = KillTimer(window->get_handle(), progressbar_timer_id);
-		et = PostMessage(progressbar, WM_CLOSE, 0, 0);
-		et = progressbar_taskbar_list->SetProgressState(window->get_handle(), TBPF_NOPROGRESS);
+		er = KillTimer(window->get_handle(), progressbar_timer_id);
+		er = PostMessage(progressbar, WM_CLOSE, 0, 0);
+		er = progressbar_taskbar_list->SetProgressState(window->get_handle(), TBPF_NOPROGRESS);
 	}
 }
 
@@ -141,13 +141,13 @@ HCURSOR Pane::get_cursor() const {
 }
 
 void Pane::set_cursor(LPCTSTR cursor_name) {
-	cursor = et = LoadCursor(nullptr, cursor_name);
+	cursor = er = LoadCursor(nullptr, cursor_name);
 }
 
 void Pane::update() {
 	auto x = content().left;
 	for (auto& button : buttons) {
-		et = SetWindowPos(
+		er = SetWindowPos(
 			button, nullptr,
 			window->to_dp_x(x),
 			window->to_dp_y(content().top),
@@ -159,7 +159,7 @@ void Pane::update() {
 		auto content_size = rect_size(content());
 		auto progressbar_size = rect_size(get_client_rect(progressbar, window->get_scale()));
 
-		et = SetWindowPos(
+		er = SetWindowPos(
 			progressbar, nullptr,
 			window->to_dp_x((content_size.width - progressbar_size.width) / 2),
 			window->to_dp_y((content_size.height - progressbar_size.height) / 2),
@@ -167,13 +167,13 @@ void Pane::update() {
 	}
 
 	if (text_tooltip_window) {
-		et = DestroyWindow(text_tooltip_window);
+		er = DestroyWindow(text_tooltip_window);
 		text_tooltip_window = nullptr;
 	}
 
 	if (!text.empty()) {
 		if (content().right - content().left > 0 && content().bottom - content().top > 0) {
-			et = dw_factory->CreateTextLayout(
+			er = dw_factory->CreateTextLayout(
 				text.c_str(),
 				numeric_cast<UINT32>(text.length()),
 				text_format,
@@ -186,23 +186,23 @@ void Pane::update() {
 					numeric_cast<UINT32>(range.first),
 					numeric_cast<UINT32>(range.second)
 				};
-				et = text_layout->SetFontWeight(DWRITE_FONT_WEIGHT_BOLD, dtr);
+				er = text_layout->SetFontWeight(DWRITE_FONT_WEIGHT_BOLD, dtr);
 			}
 
 			// any lines trimmed?
 			BOOL is_trimmed = false;
 			DWRITE_LINE_METRICS lm[8];
 			UINT32 lines;
-			et = text_layout->GetLineMetrics(lm, sizeof lm / sizeof DWRITE_LINE_METRICS, &lines);
+			er = text_layout->GetLineMetrics(lm, sizeof lm / sizeof DWRITE_LINE_METRICS, &lines);
 			for (UINT32 i = 0; i < lines && !is_trimmed; i++)
 				is_trimmed |= lm[i].isTrimmed;
 
 			// add tooltip?
 			if (is_trimmed) {
-				text_tooltip_window = et = CreateWindowEx(
+				text_tooltip_window = er = CreateWindowEx(
 					WS_EX_TOOLWINDOW | WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_NOPREFIX,
 					CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 
-					window->get_handle(), nullptr, et = GetModuleHandle(nullptr), nullptr);
+					window->get_handle(), nullptr, er = GetModuleHandle(nullptr), nullptr);
 
 				// need to copy text to a string that is only modified here
 				// since its data is used directly and not copied by the tooltip
@@ -211,7 +211,7 @@ void Pane::update() {
 				TOOLINFO ti{
 					sizeof TOOLINFO, TTF_SUBCLASS, window->get_handle(), 0,
 					{window->to_dp_x(content().left), window->to_dp_y(content().top), window->to_dp_x(content().right), window->to_dp_y(content().bottom)},
-					et = GetModuleHandle(nullptr), const_cast<LPWSTR>(text_tooltip.c_str()), 0, nullptr};
+					er = GetModuleHandle(nullptr), const_cast<LPWSTR>(text_tooltip.c_str()), 0, nullptr};
 				SendMessage(text_tooltip_window, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&ti));
 				SendMessage(text_tooltip_window, TTM_SETMAXTIPWIDTH, 0, numeric_cast<LPARAM>(window->get_size().width));
 			}
@@ -322,11 +322,11 @@ static D2D1_RECT_F get_destination_rect(
 void Pane::draw(ComPtr<ID2D1HwndRenderTarget> render_target) const {
 	ComPtr<ID2D1SolidColorBrush> brush;
 
-	et = render_target->CreateSolidColorBrush(colour, &brush);
+	er = render_target->CreateSolidColorBrush(colour, &brush);
 	render_target->FillRectangle(container(), brush);
 
 	if (text_layout) {
-		et = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &brush);
+		er = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &brush);
 
 		auto padding = (rect_size(container()).height - height) / 2;
 		padding = std::max(padding, 0.0f);
@@ -352,9 +352,9 @@ void Pane::draw(ComPtr<ID2D1HwndRenderTarget> render_target) const {
 			image_scale < 1.0f ? D2D1_BITMAP_INTERPOLATION_MODE_LINEAR : D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
 
 	#if 0
-	et = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Red), &brush);
+	er = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Red), &brush);
 	render_target->DrawRectangle(content(), brush);
-	et = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue), &brush);
+	er = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue), &brush);
 	render_target->DrawRectangle(container(), brush);
 	#endif
 }
@@ -368,7 +368,7 @@ void Pane::set_text(
 
 	if (fixed_width || fixed_height) {
 		// determine maximum text width and height
-		et = dw_factory->CreateTextLayout(
+		er = dw_factory->CreateTextLayout(
 			text.c_str(),
 			numeric_cast<UINT32>(text.length()),
 			text_format,
@@ -377,7 +377,7 @@ void Pane::set_text(
 			&text_layout);
 
 		DWRITE_TEXT_METRICS tm;
-		et = text_layout->GetMetrics(&tm);
+		er = text_layout->GetMetrics(&tm);
 
 		auto width_new = margin.left + ceil(tm.width) + margin.right;
 		auto height_new = margin.top + ceil(tm.height) + margin.bottom;
@@ -399,21 +399,21 @@ void Pane::set_text(
 void Pane::set_progressbar_progress(const float progress) {
 	if (!progressbar) {
 		//int width = rect.right - rect.left - 2*margin;
-		//int height = et = GetSystemMetrics(SM_CYVSCROLL);
+		//int height = er = GetSystemMetrics(SM_CYVSCROLL);
 		const D2D1_SIZE_F ms_recommended_progressbar_size = {355, 15};
 
-		progressbar = et = CreateWindowEx(
+		progressbar = er = CreateWindowEx(
 			0, PROGRESS_CLASS, nullptr, WS_CHILD | WS_VISIBLE,
 			CW_USEDEFAULT, CW_USEDEFAULT,
 			window->to_dp_x(ms_recommended_progressbar_size.width),
 			window->to_dp_y(ms_recommended_progressbar_size.height),
-			window->get_handle(), 0, et = GetModuleHandle(nullptr), nullptr);
+			window->get_handle(), 0, er = GetModuleHandle(nullptr), nullptr);
 
-		et = CoCreateInstance(
+		er = CoCreateInstance(
 			CLSID_TaskbarList, nullptr, CLSCTX_ALL,
 			IID_ITaskbarList3, reinterpret_cast<void**>(&progressbar_taskbar_list));
 
-		et = SetTimer(window->get_handle(), progressbar_timer_id, progressbar_timer_ms, nullptr);
+		er = SetTimer(window->get_handle(), progressbar_timer_id, progressbar_timer_ms, nullptr);
 
 		progressbar_mode = ProgressbarMode::unknown;
 
@@ -422,58 +422,58 @@ void Pane::set_progressbar_progress(const float progress) {
 
 	if (progress < 0.0f || progress > 1.0f) {
 		if (progressbar_mode != ProgressbarMode::indeterminate) {
-			et = SetWindowLongPtr(progressbar, GWL_STYLE, WS_CHILD | WS_VISIBLE | PBS_MARQUEE);
-			et = PostMessage(progressbar, PBM_SETMARQUEE, true, 0);
-			et = progressbar_taskbar_list->SetProgressState(window->get_handle(), TBPF_INDETERMINATE);
+			er = SetWindowLongPtr(progressbar, GWL_STYLE, WS_CHILD | WS_VISIBLE | PBS_MARQUEE);
+			er = PostMessage(progressbar, PBM_SETMARQUEE, true, 0);
+			er = progressbar_taskbar_list->SetProgressState(window->get_handle(), TBPF_INDETERMINATE);
 			progressbar_mode = ProgressbarMode::indeterminate;
 		}
 	} else {
 		if (progressbar_mode != ProgressbarMode::normal) {
-			et = SetWindowLongPtr(progressbar, GWL_STYLE, WS_CHILD | WS_VISIBLE | PBS_SMOOTH);
-			et = PostMessage(progressbar, PBM_SETMARQUEE, false, 0);
-			et = progressbar_taskbar_list->SetProgressState(window->get_handle(), TBPF_NORMAL);
+			er = SetWindowLongPtr(progressbar, GWL_STYLE, WS_CHILD | WS_VISIBLE | PBS_SMOOTH);
+			er = PostMessage(progressbar, PBM_SETMARQUEE, false, 0);
+			er = progressbar_taskbar_list->SetProgressState(window->get_handle(), TBPF_NORMAL);
 			progressbar_mode = ProgressbarMode::normal;
 		}
 
 		auto max_value = std::numeric_limits<std::int16_t>::max();
 		auto value = std::min(static_cast<decltype(max_value)>(progress * max_value), max_value);
-		et = PostMessage(progressbar, PBM_SETRANGE32, 0, max_value);
-		et = PostMessage(progressbar, PBM_SETPOS, value, 0);
-		et = progressbar_taskbar_list->SetProgressValue(window->get_handle(), value, max_value);
+		er = PostMessage(progressbar, PBM_SETRANGE32, 0, max_value);
+		er = PostMessage(progressbar, PBM_SETPOS, value, 0);
+		er = progressbar_taskbar_list->SetProgressValue(window->get_handle(), value, max_value);
 	}
 }
 
 static LRESULT WINAPI button_window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	if (msg == WM_KEYDOWN)
 		SendMessage(GetParent(hwnd), msg, wparam, lparam);
-	auto wp = et = reinterpret_cast<WNDPROC>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	auto wp = er = reinterpret_cast<WNDPROC>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 	return CallWindowProc(wp, hwnd, msg, wparam, lparam);
 }
 
 void Pane::add_button(const int button_id, const std::wstring& label) {
-	auto bw = et = CreateWindowEx(
+	auto bw = er = CreateWindowEx(
 		0, WC_BUTTON, label.c_str(), WS_CHILD | WS_TABSTOP | WS_VISIBLE | BS_PUSHBUTTON,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 		window->get_handle(), reinterpret_cast<HMENU>(static_cast<std::intptr_t>(button_id)),
-		et = GetModuleHandle(nullptr), nullptr);
+		er = GetModuleHandle(nullptr), nullptr);
 	buttons.push_back(bw);
 
 	// save old window procedure in button window's userdata field and set new window procedure
-	auto wp = et = GetWindowLongPtr(bw, GWLP_WNDPROC);
-	et = SetWindowLongPtr(bw, GWLP_USERDATA, wp) == 0; // 0 is default value AND error code
-	et = SetWindowLongPtr(bw, GWLP_USERDATA, wp) == wp;
-	et = SetWindowLongPtr(bw, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(button_window_procedure));
+	auto wp = er = GetWindowLongPtr(bw, GWLP_WNDPROC);
+	er = SetWindowLongPtr(bw, GWLP_USERDATA, wp) == 0; // 0 is default value AND error code
+	er = SetWindowLongPtr(bw, GWLP_USERDATA, wp) == wp;
+	er = SetWindowLongPtr(bw, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(button_window_procedure));
 
 	// button font
 	NONCLIENTMETRICS ncm;
 	ncm.cbSize = sizeof NONCLIENTMETRICS;
-	et = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof NONCLIENTMETRICS, &ncm, 0);
+	er = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof NONCLIENTMETRICS, &ncm, 0);
 	// reported font height is in DP but increases with windows DPI settings.
 	// revert this increase to get the font height in DIP.
 	auto font_height_dip = window->to_dip_y(std::abs(ncm.lfMessageFont.lfHeight));
 	if (button_font == nullptr) {
 		ncm.lfMessageFont.lfHeight = -window->to_dp_y(font_height_dip);
-		button_font = et = CreateFontIndirect(&ncm.lfMessageFont);
+		button_font = er = CreateFontIndirect(&ncm.lfMessageFont);
 	}
 	SendMessage(bw, WM_SETFONT, reinterpret_cast<WPARAM>(button_font), MAKELPARAM(true, 0));
 
@@ -485,7 +485,7 @@ void Pane::add_button(const int button_id, const std::wstring& label) {
 	auto size_max = D2D1::SizeF(0, 0);
 	for (auto& button : buttons) {
 		SIZE size_dp;
-		et = Button_GetIdealSize(button, &size_dp);
+		er = Button_GetIdealSize(button, &size_dp);
 		size_max.width = std::max(window->to_dip_x(size_dp.cx), size_max.width);
 		size_max.height = std::max(window->to_dip_x(size_dp.cy), size_max.height);
 	}
@@ -495,7 +495,7 @@ void Pane::add_button(const int button_id, const std::wstring& label) {
 		size_max.height + 2*button_vertical_size_margin);
 
 	for (auto& button : buttons)
-		et = SetWindowPos(
+		er = SetWindowPos(
 			button, nullptr, 0, 0,
 			window->to_dp_x(button_size.width),
 			window->to_dp_y(button_size.height),
@@ -513,11 +513,11 @@ void Pane::add_button(const int button_id, const std::wstring& label) {
 }
 
 void Pane::add_combobox(const int button_id, const std::vector<std::wstring>& items) {
-	auto bw = et = CreateWindowEx(
+	auto bw = er = CreateWindowEx(
 		0, WC_COMBOBOX, L"", WS_CHILD | WS_TABSTOP | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_HASSTRINGS,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 		window->get_handle(), reinterpret_cast<HMENU>(static_cast<std::intptr_t>(button_id)),
-		et = GetModuleHandle(nullptr), nullptr);
+		er = GetModuleHandle(nullptr), nullptr);
 	buttons.push_back(bw);
 
 	for (auto& item : items)
@@ -525,21 +525,21 @@ void Pane::add_combobox(const int button_id, const std::vector<std::wstring>& it
 	SendMessage(bw, CB_SETCURSEL, 0, 0);
 
 	// save old window procedure in button window's userdata field and set new window procedure
-	auto wp = et = GetWindowLongPtr(bw, GWLP_WNDPROC);
-	et = SetWindowLongPtr(bw, GWLP_USERDATA, wp) == 0; // 0 is default value AND error code
-	et = SetWindowLongPtr(bw, GWLP_USERDATA, wp) == wp;
-	et = SetWindowLongPtr(bw, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(button_window_procedure));
+	auto wp = er = GetWindowLongPtr(bw, GWLP_WNDPROC);
+	er = SetWindowLongPtr(bw, GWLP_USERDATA, wp) == 0; // 0 is default value AND error code
+	er = SetWindowLongPtr(bw, GWLP_USERDATA, wp) == wp;
+	er = SetWindowLongPtr(bw, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(button_window_procedure));
 
 	// button font
 	NONCLIENTMETRICS ncm;
 	ncm.cbSize = sizeof NONCLIENTMETRICS;
-	et = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof NONCLIENTMETRICS, &ncm, 0);
+	er = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof NONCLIENTMETRICS, &ncm, 0);
 	// reported font height is in DP but increases with windows DPI settings.
 	// revert this increase to get the font height in DIP.
 	float font_height_dip = window->to_dip_y(std::abs(ncm.lfMessageFont.lfHeight));
 	if (button_font == nullptr) {
 		ncm.lfMessageFont.lfHeight = -window->to_dp_y(font_height_dip);
-		button_font = et = CreateFontIndirect(&ncm.lfMessageFont);
+		button_font = er = CreateFontIndirect(&ncm.lfMessageFont);
 	}
 	SendMessage(bw, WM_SETFONT, reinterpret_cast<WPARAM>(button_font), MAKELPARAM(true, 0));
 
@@ -551,7 +551,7 @@ void Pane::add_combobox(const int button_id, const std::vector<std::wstring>& it
 	auto size_max = D2D1::SizeF(0, 0);
 	for (auto& button : buttons) {
 		SIZE size_dp;
-		et = Button_GetIdealSize(button, &size_dp);
+		er = Button_GetIdealSize(button, &size_dp);
 		size_max.width = std::max(window->to_dip_x(size_dp.cx), size_max.width);
 		size_max.height = std::max(window->to_dip_x(size_dp.cy), size_max.height);
 	}
@@ -561,7 +561,7 @@ void Pane::add_combobox(const int button_id, const std::vector<std::wstring>& it
 		size_max.height + 2*button_vertical_size_margin);
 
 	for (auto& button : buttons)
-		et = SetWindowPos(
+		er = SetWindowPos(
 			button, nullptr, 0, 0,
 			window->to_dp_x(button_size.width),
 			window->to_dp_y(button_size.height),

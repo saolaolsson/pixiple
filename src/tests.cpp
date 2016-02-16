@@ -26,73 +26,73 @@ void test_numeric_cast() {
 	// char
 
 	numeric_cast<unsigned char>(unsigned char(127));
-	assert(ErrorTrap::is_good_and_reset());
+	assert(ErrorReflector::is_good_and_reset());
 
 	numeric_cast<signed char>(unsigned char(127));
-	assert(ErrorTrap::is_good_and_reset());
+	assert(ErrorReflector::is_good_and_reset());
 
 	numeric_cast<unsigned char>(unsigned char(255));
-	assert(ErrorTrap::is_good_and_reset());
+	assert(ErrorReflector::is_good_and_reset());
 
 	numeric_cast<signed char>(unsigned char(255));
-	assert(!ErrorTrap::is_good_and_reset());
+	assert(!ErrorReflector::is_good_and_reset());
 
 	numeric_cast<unsigned char>(signed char(-128));
-	assert(!ErrorTrap::is_good_and_reset());
+	assert(!ErrorReflector::is_good_and_reset());
 
 	numeric_cast<signed char>(signed char(-128));
-	assert(ErrorTrap::is_good_and_reset());
+	assert(ErrorReflector::is_good_and_reset());
 
 	// int
 
 	numeric_cast<int>(signed char(-128));
-	assert(ErrorTrap::is_good_and_reset());
+	assert(ErrorReflector::is_good_and_reset());
 
 	numeric_cast<unsigned int>(signed char(-128));
-	assert(!ErrorTrap::is_good_and_reset());
+	assert(!ErrorReflector::is_good_and_reset());
 
 	numeric_cast<signed char>(-128);
-	assert(ErrorTrap::is_good_and_reset());
+	assert(ErrorReflector::is_good_and_reset());
 
 	numeric_cast<unsigned char>(-128);
-	assert(!ErrorTrap::is_good_and_reset());
+	assert(!ErrorReflector::is_good_and_reset());
 
 	numeric_cast<signed char>(255);
-	assert(!ErrorTrap::is_good_and_reset());
+	assert(!ErrorReflector::is_good_and_reset());
 
 	numeric_cast<unsigned char>(255);
-	assert(ErrorTrap::is_good_and_reset());
+	assert(ErrorReflector::is_good_and_reset());
 
 	numeric_cast<signed char>(256);
-	assert(!ErrorTrap::is_good_and_reset());
+	assert(!ErrorReflector::is_good_and_reset());
 
 	numeric_cast<unsigned char>(256);
-	assert(!ErrorTrap::is_good_and_reset());
+	assert(!ErrorReflector::is_good_and_reset());
 
 	// long long
 
 	numeric_cast<int>(-1LL);
-	assert(ErrorTrap::is_good_and_reset());
+	assert(ErrorReflector::is_good_and_reset());
 
 	numeric_cast<unsigned int>(1LL<<31);
-	assert(ErrorTrap::is_good_and_reset());
+	assert(ErrorReflector::is_good_and_reset());
 
 	numeric_cast<unsigned int>(1LL<<32);
-	assert(!ErrorTrap::is_good_and_reset());
+	assert(!ErrorReflector::is_good_and_reset());
 
 	// floating point
 
 	numeric_cast<signed char>(-128.0);
-	assert(ErrorTrap::is_good_and_reset());
+	assert(ErrorReflector::is_good_and_reset());
 
 	numeric_cast<signed char>(-128.1);
-	assert(!ErrorTrap::is_good_and_reset());
+	assert(!ErrorReflector::is_good_and_reset());
 
 	numeric_cast<signed char>(127.0);
-	assert(ErrorTrap::is_good_and_reset());
+	assert(ErrorReflector::is_good_and_reset());
 
 	numeric_cast<signed char>(127.1);
-	assert(!ErrorTrap::is_good_and_reset());
+	assert(!ErrorReflector::is_good_and_reset());
 }
 
 void test_earth_distance() {
@@ -122,12 +122,12 @@ void test_earth_distance() {
 void tests() {
 	#ifdef _DEBUG
 	TRACE();
-	ErrorTrap::set_stay_alive(true);
+	ErrorReflector::quiesce(true);
 
 	test_floating_point_exceptions();
 	test_numeric_cast();
 
-	ErrorTrap::set_stay_alive(false);
+	ErrorReflector::quiesce(false);
 	TRACE();
 	#endif
 }

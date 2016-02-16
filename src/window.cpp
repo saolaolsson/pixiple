@@ -10,7 +10,7 @@
 #include <WindowsX.h>
 
 Window::Window(const std::wstring& title, const D2D1_SIZE_U& size_min, const HICON icon) {
-	et = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &d2d_factory);
+	er = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &d2d_factory);
 
 	D2D1_POINT_2F dpi;
 	d2d_factory->GetDesktopDpi(&dpi.x, &dpi.y);
@@ -28,15 +28,15 @@ Window::Window(const std::wstring& title, const D2D1_SIZE_U& size_min, const HIC
 	INITCOMMONCONTROLSEX icc;
 	icc.dwICC = ICC_PROGRESS_CLASS | ICC_STANDARD_CLASSES;
 	icc.dwSize = sizeof INITCOMMONCONTROLSEX;
-	et = InitCommonControlsEx(&icc);
+	er = InitCommonControlsEx(&icc);
 
 	WNDCLASSEX window_class{
 		sizeof WNDCLASSEX, CS_CLASSDC, static_window_procedure, 0, 0,
-		et = GetModuleHandle(nullptr), icon, nullptr, nullptr,
+		er = GetModuleHandle(nullptr), icon, nullptr, nullptr,
 		nullptr, title.c_str(), nullptr};
-	et = RegisterClassEx(&window_class);
+	er = RegisterClassEx(&window_class);
 
-	hwnd = et = CreateWindowEx(
+	hwnd = er = CreateWindowEx(
 		0, title.c_str(), title.c_str(),
 		WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -45,11 +45,11 @@ Window::Window(const std::wstring& title, const D2D1_SIZE_U& size_min, const HIC
 
 	// make window at least as large as size_min
 	RECT r;
-	et = GetWindowRect(hwnd, &r);
+	er = GetWindowRect(hwnd, &r);
 	auto s = D2D1::SizeF(
 		std::max(to_dip_x(r.right - r.left), this->size_min.width),
 		std::max(to_dip_y(r.bottom - r.top), this->size_min.height));
-	et = SetWindowPos(
+	er = SetWindowPos(
 		hwnd, nullptr, 0, 0, to_dp_x(s.width), to_dp_y(s.height),
 		SWP_NOMOVE | SWP_SHOWWINDOW | SWP_NOZORDER);
 }
@@ -57,10 +57,10 @@ Window::Window(const std::wstring& title, const D2D1_SIZE_U& size_min, const HIC
 Window::~Window() {
 	reset();
 
-	et = DestroyWindow(hwnd);
+	er = DestroyWindow(hwnd);
 	hwnd = nullptr;
 
-	et = UnregisterClass(title.c_str(), et = GetModuleHandle(nullptr));
+	er = UnregisterClass(title.c_str(), er = GetModuleHandle(nullptr));
 }
 
 HWND Window::get_handle() const {
@@ -76,18 +76,18 @@ void Window::reset() {
 
 	assert(menu_stack.size() == 0 || menu_stack.size() == 1);
 	if (!menu_stack.empty()) {
-		et = SetMenu(hwnd, nullptr);
-		et = DestroyMenu(menu_stack.front());
+		er = SetMenu(hwnd, nullptr);
+		er = DestroyMenu(menu_stack.front());
 		menu_stack.clear();
 	}
 }
 
 void Window::set_dirty() const {
-	et = InvalidateRect(hwnd, nullptr, false);
+	er = InvalidateRect(hwnd, nullptr, false);
 }
 
 void Window::message_box(const std::wstring& text) const {
-	et = MessageBox(hwnd, text.c_str(), title.c_str(), MB_OK);
+	er = MessageBox(hwnd, text.c_str(), title.c_str(), MB_OK);
 }
 
 bool Window::has_event() const {
@@ -107,7 +107,7 @@ bool Window::has_event() const {
 Event Window::get_event() const {
 	while (!has_event()) {
 		MSG msg;
-		et = GetMessage(&msg, nullptr, 0, 0) != -1;
+		er = GetMessage(&msg, nullptr, 0, 0) != -1;
 		if (msg.message == WM_QUIT) {
 			queue_event(Event(Event::Type::quit));
 			ShowWindow(hwnd, SW_HIDE);
@@ -167,12 +167,12 @@ void Window::push_menu_level(const std::wstring& label) {
 	HMENU menu;
 
 	if (menu_stack.empty()) {
-		menu = et = CreateMenu();
+		menu = er = CreateMenu();
 		menu_stack.push_back(menu);
 	}
 
-	menu = et = CreateMenu();
-	et = AppendMenu(menu_stack.back(), MF_POPUP, reinterpret_cast<UINT_PTR>(menu), label.c_str());
+	menu = er = CreateMenu();
+	er = AppendMenu(menu_stack.back(), MF_POPUP, reinterpret_cast<UINT_PTR>(menu), label.c_str());
 	menu_stack.push_back(menu);
 }
 
@@ -181,12 +181,12 @@ void Window::pop_menu_level() {
 	menu_stack.pop_back();
 
 	if (menu_stack.size() == 1)
-		et = SetMenu(hwnd, menu_stack.front());
+		er = SetMenu(hwnd, menu_stack.front());
 }
 
 void Window::add_menu_item(const std::wstring& label, const int button_id, const int checkmark_group) {
 	assert(!menu_stack.empty());
-	et = AppendMenu(menu_stack.back(), 0, button_id, label.c_str());
+	er = AppendMenu(menu_stack.back(), 0, button_id, label.c_str());
 	if (checkmark_group != -1)
 		menu_groups.push_back({button_id, checkmark_group});
 }
@@ -219,7 +219,7 @@ void Window::set_menu_item_checked(const int button_id) {
 	assert(button_id_last != -1);
 	assert(button_id_first < button_id_last);
 
-	et = CheckMenuRadioItem(menu_stack.front(), button_id_first, button_id_last, button_id, MF_BYCOMMAND | MF_CHECKED) != -1;
+	er = CheckMenuRadioItem(menu_stack.front(), button_id_first, button_id_last, button_id, MF_BYCOMMAND | MF_CHECKED) != -1;
 }
 
 void Window::add_edge(float relative_position) {
@@ -266,7 +266,7 @@ int Window::get_pane(const D2D1_POINT_2F& mouse_position) const {
 }
 
 void Window::click_button(const int button_index) {
-	et = PostMessage(hwnd, WM_COMMAND, MAKEWPARAM(button_index, BN_CLICKED), 0);
+	er = PostMessage(hwnd, WM_COMMAND, MAKEWPARAM(button_index, BN_CLICKED), 0);
 }
 
 D2D1_RECT_F Window::content(const int pane_index) const {
@@ -296,7 +296,7 @@ void Window::add_combobox(const int pane_index, const int button_id, const std::
 }
 
 void Window::set_button_state(const int button_id, const bool enable) {
-	auto bw = et = GetDlgItem(hwnd, button_id);
+	auto bw = er = GetDlgItem(hwnd, button_id);
 
 	if (enable) {
 		EnableWindow(bw, true);
@@ -314,8 +314,8 @@ void Window::set_button_state(const int button_id, const bool enable) {
 }
 
 void Window::set_button_focus(const int button_id) {
-	auto bw = et = GetDlgItem(hwnd, button_id);
-	auto w = et = GetWindow(hwnd, GW_CHILD);
+	auto bw = er = GetDlgItem(hwnd, button_id);
+	auto w = er = GetWindow(hwnd, GW_CHILD);
 	while (w) {
 		auto style = GetWindowLongPtr(w, GWL_STYLE);
 		bool is_button =
@@ -330,7 +330,7 @@ void Window::set_button_focus(const int button_id) {
 			} else {
 				style |= BS_PUSHBUTTON;
 			}
-			et = SetWindowLongPtr(w, GWL_STYLE, style);
+			er = SetWindowLongPtr(w, GWL_STYLE, style);
 		}
 		w = GetNextWindow(w, GW_HWNDNEXT);
 	}
@@ -396,8 +396,8 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 	auto mouse_position_delta = D2D1::Point2F(0, 0);
 	if (this) {
 		POINT mp;
-		et = GetCursorPos(&mp);
-		et = ScreenToClient(hwnd, &mp);
+		er = GetCursorPos(&mp);
+		er = ScreenToClient(hwnd, &mp);
 		auto mouse_position_new = D2D1::Point2F(to_dip_x(mp.x), to_dip_y(mp.y));
 		mouse_position_delta = {mouse_position.x - mouse_position_new.x, mouse_position.y - mouse_position_new.y};
 		mouse_position = mouse_position_new;
@@ -431,7 +431,7 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 	} else if (msg == WM_LBUTTONDOWN) {
 		SetCapture(hwnd);
 	} else if (msg == WM_LBUTTONUP) {
-		et = ReleaseCapture();
+		er = ReleaseCapture();
 	} else if (msg == WM_MOUSEMOVE) {
 		if (wparam & MK_LBUTTON && !lmb_down)
 			lmb_down_mouse_position = mouse_position;
@@ -461,7 +461,7 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 		auto s = D2D1::SizeU(LOWORD(lparam), HIWORD(lparam));
 		if (s.width != 0 && s.height != 0) {
 			if (render_target) {
-				et = render_target->Resize(s);
+				er = render_target->Resize(s);
 				size = render_target->GetSize();
 			}
 
@@ -571,8 +571,8 @@ void Window::paint() const {
 	assert(menu_stack.size() <= 1);
 	if (render_target == nullptr) {
 		RECT r;
-		et = GetClientRect(hwnd, &r);
-		et = d2d_factory->CreateHwndRenderTarget(
+		er = GetClientRect(hwnd, &r);
+		er = d2d_factory->CreateHwndRenderTarget(
 			D2D1::RenderTargetProperties(),
 			D2D1::HwndRenderTargetProperties(hwnd, D2D1::SizeU(r.right - r.left, r.bottom - r.top)),
 			&render_target);
@@ -595,7 +595,7 @@ void Window::paint() const {
 	}
 
 	PAINTSTRUCT ps;
-	et = BeginPaint(hwnd, &ps);
+	er = BeginPaint(hwnd, &ps);
 	render_target->BeginDraw();
 
 	for (auto& pane : panes)
@@ -618,6 +618,6 @@ void Window::paint() const {
 		render_target = nullptr;
 		set_dirty();
 	} else {
-		et = hr;
+		er = hr;
 	}
 }

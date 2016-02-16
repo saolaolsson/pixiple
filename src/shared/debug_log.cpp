@@ -1,6 +1,6 @@
 #include "debug_log.h"
 
-#include "error_trap.h"
+#include "error_reflector.h"
 
 #include <chrono>
 #include <iomanip>
@@ -22,7 +22,7 @@ static std::wstring get_time_string() {
 	// time (excluding milliseconds)
 	auto t = std::chrono::system_clock::to_time_t(now);
 	tm tm;
-	et = localtime_s(&tm, &t) == 0;
+	er = localtime_s(&tm, &t) == 0;
 	ss << std::put_time(&tm, L"%X");
 
 	// milliseconds
@@ -36,13 +36,13 @@ static void redirect_console() {
 	const auto n_console_lines = 1000;
 	const auto n_console_rows = 120;
 
-	et = AllocConsole();
+	er = AllocConsole();
 
 	COORD size{n_console_rows, n_console_lines};
-	et = SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), size);
+	er = SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), size);
 
 	SMALL_RECT sr{0, 0, n_console_rows-1, 80};
-	et = SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), true, &sr);
+	er = SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), true, &sr);
 
 	int console;
 	FILE* fp;

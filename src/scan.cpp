@@ -49,7 +49,7 @@ std::vector<std::tr2::sys::path> scan(Window& window, ComPtr<IShellItem> root) {
 		items.pop_back();
 
 		SFGAOF a;
-		et = item->GetAttributes(
+		er = item->GetAttributes(
 			SFGAO_HIDDEN | SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM, &a);
 
 		// skip if not file or folder or if hidden
@@ -59,14 +59,14 @@ std::vector<std::tr2::sys::path> scan(Window& window, ComPtr<IShellItem> root) {
 		if (a & SFGAO_FOLDER) {
 			// folder
 			ComPtr<IEnumShellItems> item_enum;
-			et = item->BindToHandler(nullptr, BHID_EnumItems, IID_PPV_ARGS(&item_enum));
+			er = item->BindToHandler(nullptr, BHID_EnumItems, IID_PPV_ARGS(&item_enum));
 			ComPtr<IShellItem> i;
 			while (item_enum->Next(1, &i, nullptr) == S_OK)
 				items.push_back(i);
 		} else {
 			// file
 			LPWSTR path;
-			et = item->GetDisplayName(SIGDN_FILESYSPATH, &path);
+			er = item->GetDisplayName(SIGDN_FILESYSPATH, &path);
 			if (is_image(path))
 				paths.push_back(path);
 			CoTaskMemFree(path);

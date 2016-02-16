@@ -156,7 +156,7 @@ void Image::draw(
 		render_target->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 
 		ComPtr<ID2D1SolidColorBrush> brush;
-		et = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &brush);
+		er = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &brush);
 		brush->SetOpacity(1.0f / 16);
 
 		render_target->FillRectangle(rect_dest, brush);
@@ -169,7 +169,7 @@ void Image::draw(
 			rect_dest.left + (rect_dest.right - rect_dest.left) / 2,
 			rect_dest.top + (rect_dest.bottom - rect_dest.top) / 2);
 
-		et = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Gray), &brush);
+		er = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Gray), &brush);
 		render_target->DrawRectangle(
 			{centre.x - square_offset.x, centre.y - square_offset.y,
 			 centre.x + square_offset.x, centre.y + square_offset.y}, brush, thickness);
@@ -196,7 +196,7 @@ bool Image::is_deletable() const {
 		to_windows_path(path).c_str(), DELETE, FILE_SHARE_DELETE,
 		nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (h != INVALID_HANDLE_VALUE)
-		et = CloseHandle(h);
+		er = CloseHandle(h);
 	return h != INVALID_HANDLE_VALUE;
 }
 
@@ -212,11 +212,11 @@ void Image::delete_file() const {
 	clear_cache();
 
 	ComPtr<IFileOperation> fo;
-	et = CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&fo));
+	er = CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&fo));
 
-	et = fo->SetOperationFlags(FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NORECURSION);
-	et = fo->DeleteItem(file, nullptr);
-	et = fo->PerformOperations();
+	er = fo->SetOperationFlags(FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NORECURSION);
+	er = fo->DeleteItem(file, nullptr);
+	er = fo->PerformOperations();
 }
 
 // Try to open explorer window at containing folder with file
@@ -229,31 +229,31 @@ void Image::open_folder() const {
 	__unaligned auto file = ILCreateFromPath(path.c_str());
 	if (file) {
 		__unaligned const ITEMIDLIST* selection[]{file};
-		et = SHOpenFolderAndSelectItems(folder, 1, selection, 0);
+		er = SHOpenFolderAndSelectItems(folder, 1, selection, 0);
 		CoTaskMemFree(file);
 	}
 	else {
 		__unaligned const ITEMIDLIST* selection[]{folder};
-		et = SHOpenFolderAndSelectItems(folder, 1, selection, 0);
+		er = SHOpenFolderAndSelectItems(folder, 1, selection, 0);
 	}
 
 	CoTaskMemFree(folder);
 }
 
 void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
-	et = frame->GetSize(&width, &height);
+	er = frame->GetSize(&width, &height);
 	assert(width > 0 && height > 0);
 
 	ComPtr<IWICImagingFactory> wic_factory;
-	et = CoCreateInstance(
+	er = CoCreateInstance(
 		CLSID_WICImagingFactory,
 		nullptr,
 		CLSCTX_INPROC_SERVER,
 		IID_PPV_ARGS(&wic_factory));
 
 	ComPtr<IWICFormatConverter> format_converter;
-	et = wic_factory->CreateFormatConverter(&format_converter);
-	et = format_converter->Initialize(
+	er = wic_factory->CreateFormatConverter(&format_converter);
+	er = format_converter->Initialize(
 		frame,
 		GUID_WICPixelFormat32bppPBGRA,
 		WICBitmapDitherTypeNone,
@@ -437,9 +437,9 @@ float get_propvariant_location(const PROPVARIANT& pv) {
 		return 0;
 
 	ULONGLONG data[3];
-	et = PropVariantGetUInt64Elem(pv, 0, &data[0]);
-	et = PropVariantGetUInt64Elem(pv, 1, &data[1]);
-	et = PropVariantGetUInt64Elem(pv, 2, &data[2]);
+	er = PropVariantGetUInt64Elem(pv, 0, &data[0]);
+	er = PropVariantGetUInt64Elem(pv, 1, &data[1]);
+	er = PropVariantGetUInt64Elem(pv, 2, &data[2]);
 
 	auto ul_data = reinterpret_cast<ULONG*>(data);
 	auto d = static_cast<float>(ul_data[0]) / ul_data[1];
@@ -504,7 +504,7 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 				if (t > std::chrono::system_clock::time_point::min())
 					metadata_times.push_back(t);
 			}
-			et = PropVariantClear(&value);
+			er = PropVariantClear(&value);
 		}
 		sort(metadata_times.begin(), metadata_times.end());
 		auto new_end = std::unique(metadata_times.begin(), metadata_times.end());
@@ -515,11 +515,11 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 		hr = reader->GetMetadataByName(L"/app1/ifd/{ushort=271}", &value);
 		if (SUCCEEDED(hr))
 			metadata_make_model += get_propvariant_string(value);
-		et = PropVariantClear(&value);
+		er = PropVariantClear(&value);
 		hr = reader->GetMetadataByName(L"/app1/ifd/{ushort=272}", &value);
 		if (SUCCEEDED(hr))
 			metadata_make_model += L" " + get_propvariant_string(value);
-		et = PropVariantClear(&value);
+		er = PropVariantClear(&value);
 		hr = reader->GetMetadataByName(L"/app1/ifd/exif/{ushort=42033}", &value);
 
 		if (!metadata_make_model.empty()) {
@@ -557,21 +557,21 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 
 		if (SUCCEEDED(hr))
 			metadata_camera_id += get_propvariant_string(value);
-		et = PropVariantClear(&value);
+		er = PropVariantClear(&value);
 
 		// metadata image id
 
 		hr = reader->GetMetadataByName(L"/app1/ifd/exif/{ushort=42016}", &value);
 		if (SUCCEEDED(hr))
 			metadata_image_id = get_propvariant_string(value);
-		et = PropVariantClear(&value);
+		er = PropVariantClear(&value);
 
 		// metadata position
 
 		hr = reader->GetMetadataByName(L"/app1/ifd/gps/{ushort=2}", &value);
 		if (SUCCEEDED(hr)) {
 			metadata_position.y = get_propvariant_location(value);
-			et = PropVariantClear(&value);
+			er = PropVariantClear(&value);
 
 			hr = reader->GetMetadataByName(L"/app1/ifd/gps/{ushort=1}", &value);
 			if (SUCCEEDED(hr)) {
@@ -584,12 +584,12 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 				metadata_position.y = 0;
 			}
 		}
-		et = PropVariantClear(&value);
+		er = PropVariantClear(&value);
 
 		hr = reader->GetMetadataByName(L"/app1/ifd/gps/{ushort=4}", &value);
 		if (SUCCEEDED(hr)) {
 			metadata_position.x = get_propvariant_location(value);
-			et = PropVariantClear(&value);
+			er = PropVariantClear(&value);
 
 			hr = reader->GetMetadataByName(L"/app1/ifd/gps/{ushort=3}", &value);
 			if (SUCCEEDED(hr)) {
@@ -602,7 +602,7 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 				metadata_position.x = 0;
 			}
 		}
-		et = PropVariantClear(&value);
+		er = PropVariantClear(&value);
 
 		if (metadata_position.x == 0 || metadata_position.y == 0)
 			metadata_position = {0, 0};
@@ -618,20 +618,20 @@ void Image::calculate_hash() {
 	file_hash = Hash(data.data(), data.size());
 
 	ComPtr<IWICImagingFactory> wic_factory;
-	et = CoCreateInstance(
+	er = CoCreateInstance(
 		CLSID_WICImagingFactory,
 		nullptr,
 		CLSCTX_INPROC_SERVER,
 		IID_PPV_ARGS(&wic_factory));
 
 	ComPtr<IWICBitmap> bitmap;
-	et = wic_factory->CreateBitmapFromSource(frame, WICBitmapNoCache, &bitmap);
+	er = wic_factory->CreateBitmapFromSource(frame, WICBitmapNoCache, &bitmap);
 	ComPtr<IWICBitmapLock> bitmap_lock;
 	auto hr = bitmap->Lock(nullptr, WICBitmapLockRead, &bitmap_lock);
 	if (SUCCEEDED(hr)) {
 		UINT size;
 		std::uint8_t* pixel_data;
-		et = bitmap_lock->GetDataPointer(&size, static_cast<BYTE**>(&pixel_data));
+		er = bitmap_lock->GetDataPointer(&size, static_cast<BYTE**>(&pixel_data));
 		pixel_hash = Hash(pixel_data, size);
 	}
 }
@@ -645,16 +645,16 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 	ifs.close();
 
 	ComPtr<IWICImagingFactory> wic_factory;
-	et = CoCreateInstance(
+	er = CoCreateInstance(
 		CLSID_WICImagingFactory,
 		nullptr,
 		CLSCTX_INPROC_SERVER,
 		IID_PPV_ARGS(&wic_factory));
 
 	ComPtr<IWICStream> stream;
-	et = wic_factory->CreateStream(&stream);
+	er = wic_factory->CreateStream(&stream);
 
-	et = stream->InitializeFromMemory(
+	er = stream->InitializeFromMemory(
 		buffer.data(),
 		numeric_cast<DWORD>(file_size));
 
@@ -668,7 +668,7 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 		return nullptr;
 
 	ComPtr<IWICBitmapFrameDecode> frame;
-	et = decoder->GetFrame(0, &frame);
+	er = decoder->GetFrame(0, &frame);
 
 	// if file has changed since *this was created, fail
 
@@ -679,7 +679,7 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 	if (width != 0 || height != 0) {
 		std::uint32_t w;
 		std::uint32_t h;
-		et = frame->GetSize(&w, &h);
+		er = frame->GetSize(&w, &h);
 		if (w != width || h != height)
 			return nullptr;
 	}
@@ -710,7 +710,7 @@ ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target
 			return nullptr;
 
 		ComPtr<IWICImagingFactory> wic_factory;
-		et = CoCreateInstance(
+		er = CoCreateInstance(
 			CLSID_WICImagingFactory,
 			nullptr,
 			CLSCTX_INPROC_SERVER,
@@ -721,14 +721,14 @@ ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target
 		const auto d2d_pf = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
 
 		ComPtr<IWICFormatConverter> format_converter;
-		et = wic_factory->CreateFormatConverter(&format_converter);
-		et = format_converter->Initialize(
+		er = wic_factory->CreateFormatConverter(&format_converter);
+		er = format_converter->Initialize(
 			frame, wic_pf,	WICBitmapDitherTypeNone,
 			nullptr, 0, WICBitmapPaletteTypeCustom);
 
 		D2D1_POINT_2F dpi;
 		render_target->GetDpi(&dpi.x, &dpi.y);
-		et = render_target->CreateBitmapFromWicBitmap(
+		er = render_target->CreateBitmapFromWicBitmap(
 			format_converter, D2D1::BitmapProperties(d2d_pf, dpi.x, dpi.y), &bce.bitmap);
 	}
 

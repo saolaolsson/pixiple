@@ -40,7 +40,7 @@ float earth_distance(const D2D1_POINT_2F& p1, const D2D1_POINT_2F& p2) {
 static void thread_worker(Job* const job) {
 	TRACE();
 
-	et = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+	er = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
 	for (;;) {
 		auto ip = job->get_next_pair();
@@ -51,7 +51,7 @@ static void thread_worker(Job* const job) {
 			image_1 == nullptr ||
 			image_2 == nullptr ||
 			job->force_thread_exit ||
-			!ErrorTrap::is_good();
+			!ErrorReflector::is_good();
 		if (quit)
 			break;
 

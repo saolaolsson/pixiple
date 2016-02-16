@@ -153,7 +153,7 @@ std::wstring to_string(const std::chrono::system_clock::time_point& tp) {
 
 	auto t = std::chrono::system_clock::to_time_t(tp);
 	tm tm;
-	et = localtime_s(&tm, &t) == 0;
+	er = localtime_s(&tm, &t) == 0;
 	ss << std::put_time(&tm, L"%c");
 
 	return ss.str();

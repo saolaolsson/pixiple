@@ -175,7 +175,7 @@
     <ClCompile Include="..\src\scan.cpp" />
     <ClCompile Include="..\src\shared\debug_log.cpp" />
     <ClCompile Include="..\src\shared\debug_timer.cpp" />
-    <ClCompile Include="..\src\shared\error_trap.cpp" />
+    <ClCompile Include="..\src\shared\error_reflector.cpp" />
     <ClCompile Include="..\src\shared\trim.cpp" />
     <ClCompile Include="..\src\tests.cpp" />
     <ClCompile Include="..\src\window.cpp" />
@@ -195,7 +195,7 @@
     <ClInclude Include="..\src\shared\com.h" />
     <ClInclude Include="..\src\shared\debug_log.h" />
     <ClInclude Include="..\src\shared\debug_timer.h" />
-    <ClInclude Include="..\src\shared\error_trap.h" />
+    <ClInclude Include="..\src\shared\error_reflector.h" />
     <ClInclude Include="..\src\shared\map.h" />
     <ClInclude Include="..\src\shared\numeric_cast.h" />
     <ClInclude Include="..\src\shared\trim.h" />

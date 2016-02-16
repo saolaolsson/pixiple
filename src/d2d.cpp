@@ -8,7 +8,7 @@ D2D1_SIZE_F rect_size(const D2D1_RECT_F& rect) {
 
 D2D1_RECT_F get_client_rect(const HWND hwnd, const D2D1_POINT_2F& scale) {
 	RECT r;
-	et = GetClientRect(hwnd, &r);
+	er = GetClientRect(hwnd, &r);
 	return {r.left / scale.x, r.top / scale.y, r.right / scale.x, r.bottom / scale.y};
 }
 
