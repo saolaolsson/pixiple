@@ -11,13 +11,13 @@
 void die(const long line = 0, const char* const filename = "", HRESULT hresult = S_OK);
 
 struct ErrorCodeException : public std::runtime_error {
-	const long line;
-	const char* const file;
+	long line;
+	const char* file;
 	HRESULT hresult;
 
 	ErrorCodeException(
 		const long line,
-		const char* const file,
+		const char* file,
 		const HRESULT hresult = S_OK)
 		:
 		line{line},
