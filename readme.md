@@ -2,11 +2,15 @@
 
 ## What's Pixiple?
 
-Pixiple searches for and lets you compare and manipulate a list of image file pairs sorted according to how similar their pixel and/or metadata content are.
+Pixiple is a Windows application that searches your files for images that are similar in pixel and metadata content and presents you with a sorted list of similar image pairs to compare.
 
 ## Screenshot
 
 ![Screenshot](screenshot.jpg)
+
+## Download
+
+Download the executable from [Releases](https://github.com/olaolsso/pixiple/releases).
 
 ## Features
 
@@ -16,7 +20,7 @@ Pixiple searches for and lets you compare and manipulate a list of image file pa
 ## Misfeatures
 
 - Simple, idiosyncratic UI with rough edges.
-- Only image file formats supported by Windows Imaging Component (PNG, JPEG, GIF, TIFF, BMP) are processed.
+- Support for image file formats supported by Windows Imaging Component (PNG, JPEG, GIF, TIFF, BMP) only.
 - Only one folder (and all folders below this folder, recursively) is scanned at a time.
 - No installer.
 
