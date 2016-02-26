@@ -3,5 +3,6 @@ vs_output/
 *.sln
 *.sdf
 *.vc.opendb
+*.VC.db
 *.vcxproj.user
 debug_log.txt
