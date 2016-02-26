@@ -31,7 +31,7 @@ Image::Image(const std::tr2::sys::path& path) : path{path} {
 	file_size = std::tr2::sys::file_size(path);
 	file_time = std::tr2::sys::last_write_time(path);
 
-	std::vector<std::uint8_t> data(file_size);
+	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size));
 	auto frame = get_frame(data);
 	if (frame) {
 		load_pixels(frame);
@@ -59,7 +59,7 @@ std::tr2::sys::path Image::get_path() const {
 	return path;
 }
 
-std::size_t Image::get_file_size() const {
+std::uintmax_t Image::get_file_size() const {
 	return file_size;
 }
 
@@ -610,7 +610,7 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 }
 
 void Image::calculate_hash() {
-	std::vector<std::uint8_t> data(file_size);
+	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size));
 	auto frame = get_frame(data);
 	if (frame == nullptr)
 		return;
@@ -704,7 +704,7 @@ ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target
 		// bitmap not cached so create bitmap
 		bce.image = shared_from_this();
 
-		std::vector<std::uint8_t> data(file_size);
+		std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size));
 		auto frame = get_frame(data);
 		if (frame == nullptr)
 			return nullptr;
