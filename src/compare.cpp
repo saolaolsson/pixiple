@@ -889,7 +889,7 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 			assert(false);
 		}
 
-		assert(rect_size(window.content(pane_image_left)).width == rect_size(window.content(pane_image_right)).width);
-		assert(rect_size(window.content(pane_image_left)).height == rect_size(window.content(pane_image_right)).height);
+		assert(rect_size(window.content(pane_image_left)).w == rect_size(window.content(pane_image_right)).w);
+		assert(rect_size(window.content(pane_image_left)).h == rect_size(window.content(pane_image_right)).h);
 	}
 }
