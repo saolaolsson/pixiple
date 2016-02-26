@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/ctf2wj6im4d05c0s?svg=true)](https://ci.appveyor.com/project/olaolsso/pixiple)
+
 # Pixiple
 
 ## What's Pixiple?
