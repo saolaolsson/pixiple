@@ -1,6 +1,7 @@
 #pragma once
 
 #include "shared/com.h"
+#include "shared/vector.h"
 
 #include <limits>
 #include <memory>
@@ -33,7 +34,7 @@ public:
 		const D2D1_RECT_F margin,
 		const bool fixed_width,
 		const bool fixed_height,
-		const D2D1_COLOR_F colour);
+		const Colour colour);
 	Pane(const Pane&) = delete;
 	Pane(Pane&& other) = default;
 
@@ -50,7 +51,7 @@ public:
 
 	D2D1_RECT_F container() const;
 	D2D1_RECT_F content() const;
-	bool is_inside(const D2D1_POINT_2F& position) const;
+	bool is_inside(const Point2f& position) const;
 
 	HCURSOR get_cursor() const;
 	void set_cursor(LPCTSTR cursor_name);
@@ -69,9 +70,9 @@ public:
 	void set_image(const std::shared_ptr<Image> image);
 	float get_image_scale() const;
 	void set_image_scale(const float scale);
-	void image_zoom_transform(const float scale, const D2D1_POINT_2F& zoom_point_ss, const D2D1_POINT_2F& dpi_scale);
-	void set_image_centre_from_other_pane(const Pane& pane_other, const D2D1_POINT_2F& dpi_scale);
-	void translate_image_centre(const D2D1_POINT_2F& translation_isn, const D2D1_POINT_2F& dpi_scale);
+	void image_zoom_transform(const float scale, const Point2f& zoom_point_ss, const Vector2f& dpi_scale);
+	void set_image_centre_from_other_pane(const Pane& pane_other, const Vector2f& dpi_scale);
+	void translate_image_centre(const Vector2f& translation_isn, const Vector2f& dpi_scale);
 
 private:
 	static const int progressbar_timer_id = 1;
@@ -90,7 +91,7 @@ private:
 	bool fixed_height;
 
 	D2D1_RECT_F margin;
-	D2D1_COLOR_F colour;
+	Colour colour;
 	HCURSOR cursor;
 
 	// text
@@ -102,7 +103,7 @@ private:
 
 	// button
 	std::vector<HWND> buttons;
-	D2D1_SIZE_F button_size;
+	Size2f button_size;
 	float button_stride;
 
 	// checkbox
@@ -115,6 +116,6 @@ private:
 
 	// image
 	std::shared_ptr<Image> image;
-	D2D1_POINT_2F image_centre;
+	Point2f image_centre;
 	float image_scale;
 };

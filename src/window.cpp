@@ -12,7 +12,7 @@
 Window::Window(const std::wstring& title, const D2D1_SIZE_U& size_min, const HICON icon) {
 	er = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &d2d_factory);
 
-	D2D1_POINT_2F dpi;
+	Point2f dpi;
 	d2d_factory->GetDesktopDpi(&dpi.x, &dpi.y);
 	scale = {dpi.x / 96, dpi.y / 96};
 	debug_log << L"dpi: " << dpi << std::endl;
@@ -46,11 +46,11 @@ Window::Window(const std::wstring& title, const D2D1_SIZE_U& size_min, const HIC
 	// make window at least as large as size_min
 	RECT r;
 	er = GetWindowRect(hwnd, &r);
-	auto s = D2D1::SizeF(
-		std::max(to_dip_x(r.right - r.left), this->size_min.width),
-		std::max(to_dip_y(r.bottom - r.top), this->size_min.height));
+	auto s = Size2f{
+		std::max(to_dip_x(r.right - r.left), this->size_min.w),
+		std::max(to_dip_y(r.bottom - r.top), this->size_min.h)};
 	er = SetWindowPos(
-		hwnd, nullptr, 0, 0, to_dp_x(s.width), to_dp_y(s.height),
+		hwnd, nullptr, 0, 0, to_dp_x(s.w), to_dp_y(s.h),
 		SWP_NOMOVE | SWP_SHOWWINDOW | SWP_NOZORDER);
 }
 
@@ -127,11 +127,11 @@ bool Window::quit_event_seen() const {
 	return !(style & WS_VISIBLE);
 }
 
-D2D1_SIZE_F Window::get_size() const {
+Size2f Window::get_size() const {
 	return size;
 }
 
-D2D1_POINT_2F Window::get_scale() const {
+Vector2f Window::get_scale() const {
 	return scale;
 }
 
@@ -151,7 +151,7 @@ float Window::to_dip_y(const int& dp_y) const {
 	return static_cast<float>(dp_y / scale.y);
 }
 
-D2D1_POINT_2F Window::get_mouse_position() const {
+Point2f Window::get_mouse_position() const {
 	return mouse_position;
 }
 
@@ -227,22 +227,19 @@ void Window::add_edge(float relative_position) {
 }
 
 void Window::add_pane(
-	const int index,
 	const int left,
 	const int top,
 	const int right,
 	const int bottom,
 	const D2D1_RECT_F margin,
-	bool fixed_width,
-	bool fixed_height,
-	D2D1_COLOR_F colour
+	const bool fixed_width,
+	const bool fixed_height,
+	const Colour colour
 ) {
 	assert(left < int(edges.size()));
 	assert(top < int(edges.size()));
 	assert(right < int(edges.size()));
 	assert(bottom < int(edges.size()));
-
-	assert(std::size_t(index) == panes.size());
 
 	panes.push_back({
 		this,
@@ -253,7 +250,7 @@ void Window::add_pane(
 	set_dirty();
 }
 
-int Window::get_pane(const D2D1_POINT_2F& mouse_position) const {
+int Window::get_pane(const Point2f& mouse_position) const {
 	const_cast<Window*>(this)->update_layout();
 
 	auto i = 0;
@@ -359,7 +356,7 @@ void Window::set_image_scale(const int pane_index, const float scale) {
 void Window::image_zoom_transform(
 	const int pane_index,
 	const float scale,
-	const D2D1_POINT_2F& zoom_point_ss
+	const Point2f& zoom_point_ss
 ) {
 	assert(pane_index < int(edges.size()));
 	panes[pane_index].image_zoom_transform(scale, zoom_point_ss, get_scale());
@@ -370,7 +367,7 @@ void Window::set_image_centre_from_other_pane(const int pane_index, const int pa
 	panes[pane_index].set_image_centre_from_other_pane(panes[pane_index_other], get_scale());
 }
 
-void Window::translate_image_centre(const int pane_index, const D2D1_POINT_2F& translation_isn) {
+void Window::translate_image_centre(const int pane_index, const Vector2f& translation_isn) {
 	assert(pane_index < int(edges.size()));
 	panes[pane_index].translate_image_centre(translation_isn, get_scale());
 }
@@ -393,12 +390,12 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 	if (msg == WM_DISPLAYCHANGE)
 		debug_log << L"WM_DISPLAYCHANGE" << std::endl;
 
-	auto mouse_position_delta = D2D1::Point2F(0, 0);
+	auto mouse_position_delta = Vector2f{0, 0};
 	if (this) {
 		POINT mp;
 		er = GetCursorPos(&mp);
 		er = ScreenToClient(hwnd, &mp);
-		auto mouse_position_new = D2D1::Point2F(to_dip_x(mp.x), to_dip_y(mp.y));
+		auto mouse_position_new = Point2f{to_dip_x(mp.x), to_dip_y(mp.y)};
 		mouse_position_delta = {mouse_position.x - mouse_position_new.x, mouse_position.y - mouse_position_new.y};
 		mouse_position = mouse_position_new;
 	}
@@ -462,7 +459,7 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 		if (s.width != 0 && s.height != 0) {
 			if (render_target) {
 				er = render_target->Resize(s);
-				size = render_target->GetSize();
+				size = Size2f{render_target->GetSize()};
 			}
 
 			queue_event(Event{Event::Type::size});
@@ -476,8 +473,8 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 			assert(false);
 	} else if (msg == WM_WINDOWPOSCHANGING) {
 		auto wp = reinterpret_cast<WINDOWPOS*>(lparam);
-		wp->cx = std::max(to_dp_x(size_min.width), wp->cx + wp->cx%2);
-		wp->cy = std::max(to_dp_y(size_min.height), wp->cy);
+		wp->cx = std::max(to_dp_x(size_min.w), wp->cx + wp->cx%2);
+		wp->cy = std::max(to_dp_y(size_min.h), wp->cy);
 	} else {
 		return DefWindowProc(hwnd, msg, wparam, lparam);
 	}
@@ -492,9 +489,9 @@ void Window::queue_event(const Event& event) const {
 			[&](const Event& e) { return e.type == event.type;
 		});
 		if (i != events.end()) {
-			i->drag_mouse_position_delta = D2D1::Point2F(
+			i->drag_mouse_position_delta = {
 				i->drag_mouse_position_delta.x + event.drag_mouse_position_delta.x,
-				i->drag_mouse_position_delta.y + event.drag_mouse_position_delta.y);
+				i->drag_mouse_position_delta.y + event.drag_mouse_position_delta.y};
 			return;
 		}
 	} else if(event.type == Event::Type::button) {
@@ -528,30 +525,30 @@ void Window::update_layout() {
 	for (auto& pane : panes) {
 		if (pane.has_width()) {
 			if (pane.edge_left->has_position()) {
-				auto p = pane.edge_left->get_position(size.width) + pane.get_width();
+				auto p = pane.edge_left->get_position(size.w) + pane.get_width();
 				if (pane.edge_right->has_position())
-					pane.edge_right->set_position(std::max(p, pane.edge_right->get_position(size.width)));
+					pane.edge_right->set_position(std::max(p, pane.edge_right->get_position(size.w)));
 				else
 					pane.edge_right->set_position(p);
 			} else if (pane.edge_right->has_position()) {
-				auto p = pane.edge_right->get_position(size.width) - pane.get_width();
+				auto p = pane.edge_right->get_position(size.w) - pane.get_width();
 				if (pane.edge_left->has_position())
-					pane.edge_left->set_position(std::min(p, pane.edge_left->get_position(size.width)));
+					pane.edge_left->set_position(std::min(p, pane.edge_left->get_position(size.w)));
 				else
 					pane.edge_left->set_position(p);
 			}
 		}
 		if (pane.has_height()) {
 			if (pane.edge_top->has_position()) {
-				auto p = pane.edge_top->get_position(size.height) + pane.get_height();
+				auto p = pane.edge_top->get_position(size.h) + pane.get_height();
 				if (pane.edge_bottom->has_position())
-					pane.edge_bottom->set_position(std::max(p, pane.edge_bottom->get_position(size.height)));
+					pane.edge_bottom->set_position(std::max(p, pane.edge_bottom->get_position(size.h)));
 				else
 					pane.edge_bottom->set_position(p);
 			} else if (pane.edge_bottom->has_position()) {
-				auto p = pane.edge_bottom->get_position(size.height) - pane.get_height();
+				auto p = pane.edge_bottom->get_position(size.h) - pane.get_height();
 				if (pane.edge_top->has_position())
-					pane.edge_top->set_position(std::min(p, pane.edge_top->get_position(size.height)));
+					pane.edge_top->set_position(std::min(p, pane.edge_top->get_position(size.h)));
 				else
 					pane.edge_top->set_position(p);
 			}
@@ -577,7 +574,7 @@ void Window::paint() const {
 			D2D1::HwndRenderTargetProperties(hwnd, D2D1::SizeU(r.right - r.left, r.bottom - r.top)),
 			&render_target);
 		render_target->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
-		size = render_target->GetSize();
+		size = Size2f{render_target->GetSize()};
 		Image::clear_cache();
 	}
 

@@ -19,7 +19,7 @@ Pane::Pane(
 	const D2D1_RECT_F margin,
 	const bool fixed_width,
 	const bool fixed_height,
-	const D2D1_COLOR_F colour
+	const Colour colour
 ) {
 	this->window = window;
 
@@ -114,21 +114,21 @@ float Pane::get_height() const {
 
 D2D1_RECT_F Pane::container() const {
 	return {
-		edge_left->get_position(window->get_size().width),
-		edge_top->get_position(window->get_size().height),
-		edge_right->get_position(window->get_size().width),
-		edge_bottom->get_position(window->get_size().height)};
+		edge_left->get_position(window->get_size().w),
+		edge_top->get_position(window->get_size().h),
+		edge_right->get_position(window->get_size().w),
+		edge_bottom->get_position(window->get_size().h)};
 }
 
 D2D1_RECT_F Pane::content() const {
 	return {
-		margin.left + edge_left->get_position(window->get_size().width),
-		margin.top + edge_top->get_position(window->get_size().height),
-		edge_right->get_position(window->get_size().width) - margin.right,
-		edge_bottom->get_position(window->get_size().height) - margin.bottom};
+		margin.left + edge_left->get_position(window->get_size().w),
+		margin.top + edge_top->get_position(window->get_size().h),
+		edge_right->get_position(window->get_size().w) - margin.right,
+		edge_bottom->get_position(window->get_size().h) - margin.bottom};
 }
 
-bool Pane::is_inside(const D2D1_POINT_2F& position) const {
+bool Pane::is_inside(const Point2f& position) const {
 	return
 		position.x >= container().left &&
 		position.x <= container().right &&
@@ -161,8 +161,8 @@ void Pane::update() {
 
 		er = SetWindowPos(
 			progressbar, nullptr,
-			window->to_dp_x((content_size.width - progressbar_size.width) / 2),
-			window->to_dp_y((content_size.height - progressbar_size.height) / 2),
+			window->to_dp_x((content_size.w - progressbar_size.w) / 2),
+			window->to_dp_y((content_size.h - progressbar_size.h) / 2),
 			0, 0, SWP_NOCOPYBITS | SWP_NOSIZE | SWP_NOZORDER);
 	}
 
@@ -213,7 +213,7 @@ void Pane::update() {
 					{window->to_dp_x(content().left), window->to_dp_y(content().top), window->to_dp_x(content().right), window->to_dp_y(content().bottom)},
 					er = GetModuleHandle(nullptr), const_cast<LPWSTR>(text_tooltip.c_str()), 0, nullptr};
 				SendMessage(text_tooltip_window, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&ti));
-				SendMessage(text_tooltip_window, TTM_SETMAXTIPWIDTH, 0, numeric_cast<LPARAM>(window->get_size().width));
+				SendMessage(text_tooltip_window, TTM_SETMAXTIPWIDTH, 0, numeric_cast<LPARAM>(window->get_size().w));
 			}
 		}
 	}
@@ -223,22 +223,22 @@ void Pane::update() {
  * normalised centre coordinate in image space to a
  * offset from top left offset in image space
  */
-static D2D1_POINT_2F centre_isn_to_offset_is(
-	const D2D1_POINT_2F& centre,
-	const D2D1_SIZE_F& bitmap_size,
-	const D2D1_SIZE_F& pane_size,
+static Point2f centre_isn_to_offset_is(
+	const Point2f& centre,
+	const Size2f& bitmap_size,
+	const Size2f& pane_size,
 	const float scale
 ) {
-	D2D1_POINT_2F centre_is{
-		centre.x * bitmap_size.width,
-		centre.y * bitmap_size.height};
-	D2D1_POINT_2F centre_ss{
+	auto centre_is = Point2f{
+		centre.x * bitmap_size.w,
+		centre.y * bitmap_size.h};
+	auto centre_ss = Point2f{
 		centre_is.x * scale,
 		centre_is.y * scale};
-	D2D1_POINT_2F offset_ss{
-		centre_ss.x - pane_size.width / 2.0f,
-		centre_ss.y - pane_size.height / 2.0f};
-	D2D1_POINT_2F offset_is{
+	auto offset_ss = Point2f{
+		centre_ss.x - pane_size.w / 2.0f,
+		centre_ss.y - pane_size.h / 2.0f};
+	auto offset_is = Point2f{
 		offset_ss.x / scale,
 		offset_ss.y / scale};
 	return offset_is;
@@ -249,29 +249,29 @@ static D2D1_POINT_2F centre_isn_to_offset_is(
  * ss, screen space (as image space but scaled)
  */
 
-static D2D1_SIZE_F get_source_rect_size(
-	const D2D1_SIZE_F& bitmap_size,
-	const D2D1_SIZE_F& pane_size,
+static Size2f get_source_rect_size(
+	const Size2f& bitmap_size,
+	const Size2f& pane_size,
 	const float scale
 ) {
 	// calculate width/height of source rectangle,
 	// correcting for aspect ratio of destination rectangle
-	auto width = bitmap_size.width * scale;
-	auto height = bitmap_size.height * scale;
-	auto width_new = std::min(width, pane_size.width);
-	auto height_new = std::min(height, pane_size.height);
+	auto width = bitmap_size.w * scale;
+	auto height = bitmap_size.h * scale;
+	auto width_new = std::min(width, pane_size.w);
+	auto height_new = std::min(height, pane_size.h);
 	auto scale_width = width_new / width;
 	auto scale_height = height_new / height;
-	auto bitmap_width = bitmap_size.width * scale_width;
-	auto bitmap_height = bitmap_size.height * scale_height;
+	auto bitmap_width = bitmap_size.w * scale_width;
+	auto bitmap_height = bitmap_size.h * scale_height;
 
 	return {bitmap_width, bitmap_height};
 }
 
 static D2D1_RECT_F get_source_rect(
-	const D2D1_POINT_2F& centre,
-	const D2D1_SIZE_F& bitmap_size,
-	const D2D1_SIZE_F& pane_size,
+	const Point2f& centre,
+	const Size2f& bitmap_size,
+	const Size2f& pane_size,
 	const float scale
 ) {
 	auto offset_is = centre_isn_to_offset_is(
@@ -284,27 +284,27 @@ static D2D1_RECT_F get_source_rect(
 	offset_is.x = clamp(
 		offset_is.x,
 		0.0f,
-		bitmap_size.width - source_rect_size.width);
+		bitmap_size.w - source_rect_size.w);
 	offset_is.y = clamp(
 		offset_is.y,
 		0.0f,
-		bitmap_size.height - source_rect_size.height);
+		bitmap_size.h - source_rect_size.h);
 
 	return {
 		offset_is.x,
 		offset_is.y,
-		offset_is.x + source_rect_size.width,
-		offset_is.y + source_rect_size.height};
+		offset_is.x + source_rect_size.w,
+		offset_is.y + source_rect_size.h};
 }
 
 static D2D1_RECT_F get_destination_rect(
-	const D2D1_SIZE_F& bitmap_size,
+	const Size2f& bitmap_size,
 	const D2D1_RECT_F& pane_rect,
 	const float scale
 ) {
 	// make rectangle as large as scaled bitmap
-	auto width = bitmap_size.width * scale;
-	auto height = bitmap_size.height * scale;
+	auto width = bitmap_size.w * scale;
+	auto height = bitmap_size.h * scale;
 
 	// crop rectangle to pane size
 	auto width_max = pane_rect.right - pane_rect.left;
@@ -322,13 +322,13 @@ static D2D1_RECT_F get_destination_rect(
 void Pane::draw(ComPtr<ID2D1HwndRenderTarget> render_target) const {
 	ComPtr<ID2D1SolidColorBrush> brush;
 
-	er = render_target->CreateSolidColorBrush(colour, &brush);
+	er = render_target->CreateSolidColorBrush(colour.d2d(), &brush);
 	render_target->FillRectangle(container(), brush);
 
 	if (text_layout) {
 		er = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &brush);
 
-		auto padding = (rect_size(container()).height - height) / 2;
+		auto padding = (rect_size(container()).h - height) / 2;
 		padding = std::max(padding, 0.0f);
 
 		render_target->DrawTextLayout(
@@ -400,13 +400,13 @@ void Pane::set_progressbar_progress(const float progress) {
 	if (!progressbar) {
 		//int width = rect.right - rect.left - 2*margin;
 		//int height = er = GetSystemMetrics(SM_CYVSCROLL);
-		const D2D1_SIZE_F ms_recommended_progressbar_size = {355, 15};
+		const Size2f ms_recommended_progressbar_size = {355, 15};
 
 		progressbar = er = CreateWindowEx(
 			0, PROGRESS_CLASS, nullptr, WS_CHILD | WS_VISIBLE,
 			CW_USEDEFAULT, CW_USEDEFAULT,
-			window->to_dp_x(ms_recommended_progressbar_size.width),
-			window->to_dp_y(ms_recommended_progressbar_size.height),
+			window->to_dp_x(ms_recommended_progressbar_size.w),
+			window->to_dp_y(ms_recommended_progressbar_size.h),
 			window->get_handle(), 0, er = GetModuleHandle(nullptr), nullptr);
 
 		er = CoCreateInstance(
@@ -482,32 +482,32 @@ void Pane::add_button(const int button_id, const std::wstring& label) {
 	const auto button_margin = 8.0f;
 	const auto button_vertical_size_margin = 1.0f;
 
-	auto size_max = D2D1::SizeF(0, 0);
+	auto size_max = Size2f{0, 0};
 	for (auto& button : buttons) {
 		SIZE size_dp;
 		er = Button_GetIdealSize(button, &size_dp);
-		size_max.width = std::max(window->to_dip_x(size_dp.cx), size_max.width);
-		size_max.height = std::max(window->to_dip_x(size_dp.cy), size_max.height);
+		size_max.w = std::max(window->to_dip_x(size_dp.cx), size_max.w);
+		size_max.h = std::max(window->to_dip_x(size_dp.cy), size_max.h);
 	}
 
-	auto button_size = D2D1::SizeF(
-		size_max.width + font_height_dip,
-		size_max.height + 2*button_vertical_size_margin);
+	auto button_size = Size2f{
+		size_max.w + font_height_dip,
+		size_max.h + 2*button_vertical_size_margin};
 
 	for (auto& button : buttons)
 		er = SetWindowPos(
 			button, nullptr, 0, 0,
-			window->to_dp_x(button_size.width),
-			window->to_dp_y(button_size.height),
+			window->to_dp_x(button_size.w),
+			window->to_dp_y(button_size.h),
 			SWP_NOMOVE | SWP_NOZORDER);
 
-	button_stride = button_size.width + button_margin;
+	button_stride = button_size.w + button_margin;
 
-	width = button_size.width * buttons.size();
+	width = button_size.w * buttons.size();
 	width += button_margin * (buttons.size() - 1);
 	width += margin.left + margin.right;
 
-	height = margin.top + button_size.height + margin.bottom;
+	height = margin.top + button_size.h + margin.bottom;
 
 	window->layout_valid = false;
 }
@@ -548,32 +548,32 @@ void Pane::add_combobox(const int button_id, const std::vector<std::wstring>& it
 	const auto button_margin = 8.0f;
 	const auto button_vertical_size_margin = 1.0f;
 
-	auto size_max = D2D1::SizeF(0, 0);
+	auto size_max = Size2f{0, 0};
 	for (auto& button : buttons) {
 		SIZE size_dp;
 		er = Button_GetIdealSize(button, &size_dp);
-		size_max.width = std::max(window->to_dip_x(size_dp.cx), size_max.width);
-		size_max.height = std::max(window->to_dip_x(size_dp.cy), size_max.height);
+		size_max.w = std::max(window->to_dip_x(size_dp.cx), size_max.w);
+		size_max.h = std::max(window->to_dip_x(size_dp.cy), size_max.h);
 	}
 
-	auto button_size = D2D1::SizeF(
-		size_max.width + font_height_dip,
-		size_max.height + 2*button_vertical_size_margin);
+	auto button_size = Size2f{
+		size_max.w + font_height_dip,
+		size_max.h + 2*button_vertical_size_margin};
 
 	for (auto& button : buttons)
 		er = SetWindowPos(
 			button, nullptr, 0, 0,
-			window->to_dp_x(button_size.width),
-			window->to_dp_y(button_size.height),
+			window->to_dp_x(button_size.w),
+			window->to_dp_y(button_size.h),
 			SWP_NOMOVE | SWP_NOZORDER);
 
-	button_stride = button_size.width + button_margin;
+	button_stride = button_size.w + button_margin;
 
-	width = button_size.width * buttons.size();
+	width = button_size.w * buttons.size();
 	width += button_margin * (buttons.size() - 1);
 	width += margin.left + margin.right;
 
-	height = margin.top + button_size.height + margin.bottom;
+	height = margin.top + button_size.h + margin.bottom;
 
 	window->layout_valid = false;
 }
@@ -594,11 +594,11 @@ void Pane::set_image_scale(const float scale) {
 	image_scale = scale;
 }
 
-static D2D1_POINT_2F clamp_centre(
-	const D2D1_SIZE_F& pane_size,
-	const D2D1_SIZE_F& bitmap_size,
+static Point2f clamp_centre(
+	const Size2f& pane_size,
+	const Size2f& bitmap_size,
 	const float scale,
-	const D2D1_POINT_2F& centre
+	const Point2f& centre
 ) {
 	// calculate margins for both images and clamp centre to these.
 	// returned centre position should be inside the margins of both images.
@@ -608,15 +608,15 @@ static D2D1_POINT_2F clamp_centre(
 	// normalised margin size is
 	// (half the pane size) / (entire image size adjusted by scale)
 
-	auto margin = D2D1::SizeF(
-		(pane_size.width / 2.0f) / (bitmap_size.width * scale),
-		(pane_size.height / 2.0f) / (bitmap_size.height * scale));
-	margin = D2D1::SizeF(
-		std::min(margin.width, 0.5f),
-		std::min(margin.height, 0.5f));
+	auto margin = Size2f{
+		(pane_size.w / 2.0f) / (bitmap_size.w * scale),
+		(pane_size.h / 2.0f) / (bitmap_size.h * scale)};
+	margin = {
+		std::min(margin.w, 0.5f),
+		std::min(margin.h, 0.5f)};
 
-	auto centre_min = D2D1::Point2F(margin.width, margin.height);
-	auto centre_max = D2D1::Point2F(1.0f - margin.width, 1.0f - margin.height);
+	auto centre_min = Point2f{margin.w, margin.h};
+	auto centre_max = Point2f{1.0f - margin.w, 1.0f - margin.h};
 	return {
 		clamp(centre.x, centre_min.x, centre_max.x),
 		clamp(centre.y, centre_min.y, centre_max.y)};
@@ -624,8 +624,8 @@ static D2D1_POINT_2F clamp_centre(
 
 void Pane::image_zoom_transform(
 	const float scale,
-	const D2D1_POINT_2F& zoom_point_ss,
-	const D2D1_POINT_2F& dpi_scale
+	const Point2f& zoom_point_ss,
+	const Vector2f& dpi_scale
 ) {
 	// zoom point is position relative to centre of content rect
 
@@ -646,29 +646,29 @@ void Pane::image_zoom_transform(
 		image_scale);
 
 	// clamp offset to image (taking pane size into account)
-	auto offset_max_is = D2D1::Point2F(
-		std::max(0.0f, bitmap_size.width - rect_size(content()).width / image_scale),
-		std::max(0.0f, bitmap_size.height - rect_size(content()).height / image_scale));
-	offset_is = D2D1::Point2F(
+	auto offset_max_is = Point2f{
+		std::max(0.0f, bitmap_size.w - rect_size(content()).w / image_scale),
+		std::max(0.0f, bitmap_size.h - rect_size(content()).h / image_scale)};
+	offset_is = {
 		clamp(offset_is.x, 0.0f, offset_max_is.x),
-		clamp(offset_is.y, 0.0f, offset_max_is.y));
+		clamp(offset_is.y, 0.0f, offset_max_is.y)};
 
 	// calculate actual centre
 	// using pane size OR image size (whichever is smaller)
-	auto image_extent = D2D1::SizeF(
-		std::min(rect_size(content()).width, bitmap_size.width * image_scale),
-		std::min(rect_size(content()).height, bitmap_size.height * image_scale));
-	auto centre_ss = D2D1::Point2F(
-		offset_is.x*image_scale + image_extent.width/2.0f,
-		offset_is.y*image_scale + image_extent.height/2.0f);
-	image_centre = D2D1::Point2F(
-			centre_ss.x / image_scale / bitmap_size.width,
-			centre_ss.y / image_scale / bitmap_size.height);
+	auto image_extent = Size2f{
+		std::min(rect_size(content()).w, bitmap_size.w * image_scale),
+		std::min(rect_size(content()).h, bitmap_size.h * image_scale)};
+	auto centre_ss = Point2f{
+		offset_is.x*image_scale + image_extent.w/2.0f,
+		offset_is.y*image_scale + image_extent.h/2.0f};
+	image_centre = {
+			centre_ss.x / image_scale / bitmap_size.w,
+			centre_ss.y / image_scale / bitmap_size.h};
 
 	// transform centre in old scale to centre in new scale
-	image_centre = D2D1::Point2F(
-		image_centre.x + zoom_point_ss.x / bitmap_size.width * (1.0f / image_scale - 1.0f / scale),
-		image_centre.y + zoom_point_ss.y / bitmap_size.height * (1.0f / image_scale - 1.0f / scale));
+	image_centre = {
+		image_centre.x + zoom_point_ss.x / bitmap_size.w * (1.0f / image_scale - 1.0f / scale),
+		image_centre.y + zoom_point_ss.y / bitmap_size.h * (1.0f / image_scale - 1.0f / scale)};
 
 	image_scale = scale;
 
@@ -677,50 +677,50 @@ void Pane::image_zoom_transform(
 
 void Pane::set_image_centre_from_other_pane(
 	const Pane& pane_other,
-	const D2D1_POINT_2F& dpi_scale
+	const Vector2f& dpi_scale
 ) {
-	auto margin_other = D2D1::SizeF(
-		rect_size(pane_other.content()).width / 2,
-		rect_size(pane_other.content()).height / 2);
-	auto margin_this = D2D1::SizeF(
-		rect_size(content()).width / 2,
-		rect_size(content()).height / 2);
+	auto margin_other = Size2f{
+		rect_size(pane_other.content()).w / 2,
+		rect_size(pane_other.content()).h / 2};
+	auto margin_this = Size2f{
+		rect_size(content()).w / 2,
+		rect_size(content()).h / 2};
 
 	auto bitmap_size = image->get_bitmap_size(dpi_scale);
 	auto bitmap_size_other = pane_other.image->get_bitmap_size(dpi_scale);
 
-	auto centre_other_ss = D2D1::Point2F(
-		pane_other.image_centre.x * bitmap_size_other.width * pane_other.image_scale,
-		pane_other.image_centre.y * bitmap_size_other.height * pane_other.image_scale);
+	auto centre_other_ss = Point2f{
+		pane_other.image_centre.x * bitmap_size_other.w * pane_other.image_scale,
+		pane_other.image_centre.y * bitmap_size_other.h * pane_other.image_scale};
 
-	auto panning_freedom_other = D2D1::SizeF(
-		std::max(0.0f, bitmap_size_other.width * pane_other.image_scale - 2 * margin_other.width),
-		std::max(0.0f, bitmap_size_other.height * pane_other.image_scale - 2 * margin_other.height));
-	auto panning_freedom_this = D2D1::SizeF(
-		std::max(0.0f, bitmap_size.width * image_scale - 2 * margin_this.width),
-		std::max(0.0f, bitmap_size.height * image_scale - 2 * margin_this.height));
+	auto panning_freedom_other = Size2f{
+		std::max(0.0f, bitmap_size_other.w * pane_other.image_scale - 2 * margin_other.w),
+		std::max(0.0f, bitmap_size_other.h * pane_other.image_scale - 2 * margin_other.h)};
+	auto panning_freedom_this = Size2f{
+		std::max(0.0f, bitmap_size.w * image_scale - 2 * margin_this.w),
+		std::max(0.0f, bitmap_size.h * image_scale - 2 * margin_this.h)};
 
 	// if other image cannot be panned, don't bother copying its
 	// centre since it will always be placed at (0.5, 0.5)
-	if (panning_freedom_other.width == 0 && panning_freedom_other.height == 0)
+	if (panning_freedom_other.w == 0 && panning_freedom_other.h == 0)
 		return;
 
-	auto panning_normalized = D2D1::Point2F(
-		panning_freedom_other.width == 0 ? 0.5f : (centre_other_ss.x - margin_other.width) / panning_freedom_other.width,
-		panning_freedom_other.height == 0 ? 0.5f : (centre_other_ss.y - margin_other.height) / panning_freedom_other.height);
+	auto panning_normalized = Point2f{
+		panning_freedom_other.w == 0 ? 0.5f : (centre_other_ss.x - margin_other.w) / panning_freedom_other.w,
+		panning_freedom_other.h == 0 ? 0.5f : (centre_other_ss.y - margin_other.h) / panning_freedom_other.h};
 
-	auto centre_this_ss = D2D1::Point2F(
-		panning_normalized.x * panning_freedom_this.width + margin_this.width,
-		panning_normalized.y * panning_freedom_this.height + margin_this.height);
+	auto centre_this_ss = Point2f{
+		panning_normalized.x * panning_freedom_this.w + margin_this.w,
+		panning_normalized.y * panning_freedom_this.h + margin_this.h};
 
-	image_centre = D2D1::Point2F(
-		centre_this_ss.x / bitmap_size.width / image_scale,
-		centre_this_ss.y / bitmap_size.height / image_scale);
+	image_centre = {
+		centre_this_ss.x / bitmap_size.w / image_scale,
+		centre_this_ss.y / bitmap_size.h / image_scale};
 
 	image_centre = clamp_centre(rect_size(content()), image->get_bitmap_size(dpi_scale), image_scale, image_centre);
 }
 
-void Pane::translate_image_centre(const D2D1_POINT_2F& translation_isn, const D2D1_POINT_2F& dpi_scale) {
+void Pane::translate_image_centre(const Vector2f& translation_isn, const Vector2f& dpi_scale) {
 	image_centre += translation_isn;
 	image_centre = clamp_centre(rect_size(content()), image->get_bitmap_size(dpi_scale), image_scale, image_centre);
 }

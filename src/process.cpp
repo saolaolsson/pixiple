@@ -5,11 +5,13 @@
 #include "job.h"
 #include "window.h"
 
+#include "shared/vector.h"
+
 #include <algorithm>
 #include <mutex>
 #include <vector>
 
-float earth_distance(const D2D1_POINT_2F& p1, const D2D1_POINT_2F& p2) {
+float earth_distance(const Point2f& p1, const Point2f& p2) {
 	assert(p1.x >= -180 && p1.x <= 180);
 	assert(p2.x >= -180 && p2.x <= 180);
 	assert(p1.y >= -90 && p1.y <= 90);
@@ -18,8 +20,8 @@ float earth_distance(const D2D1_POINT_2F& p1, const D2D1_POINT_2F& p2) {
 	const auto earth_mean_radius = 6371*1000.0f;
 	const auto pi = 3.14159265358979323846f;
 
-	auto p1r = D2D1::Point2F(p1.x * (pi / 180), p1.y * (pi / 180));
-	auto p2r = D2D1::Point2F(p2.x * (pi / 180), p2.y * (pi / 180));
+	auto p1r = Point2f{p1.x * (pi / 180), p1.y * (pi / 180)};
+	auto p2r = Point2f{p2.x * (pi / 180), p2.y * (pi / 180)};
 
 	auto dy = p2r.y - p1r.y;
 	auto dx = p2r.x - p1r.x;

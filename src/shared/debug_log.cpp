@@ -81,8 +81,7 @@ static void redirect_console() {
 	rc = setvbuf(stderr, nullptr, _IONBF, 0);
 	assert(rc == 0);
 
-	bool b = std::ios::sync_with_stdio();
-	assert(b);
+	std::ios::sync_with_stdio();
 }
 
 DebugLog::DebugLog() {

@@ -3,6 +3,7 @@
 #include "d2d.h"
 
 #include "shared/numeric_cast.h"
+#include "shared/vector.h"
 
 void test_floating_point_exceptions() {
 	// _EM_ZERODIVIDE
@@ -96,26 +97,26 @@ void test_numeric_cast() {
 }
 
 void test_earth_distance() {
-	float earth_distance(const D2D1_POINT_2F& p1, const D2D1_POINT_2F& p2);
+	float earth_distance(const Point2f& p1, const Point2f& p2);
 
 	float d;
 
-	d = earth_distance(D2D1::Point2F(0, 0), D2D1::Point2F(0, 0));
+	d = earth_distance({0, 0}, {0, 0});
 	assert(abs(d - 0) < 100);
 
-	d = earth_distance(D2D1::Point2F(0, 90), D2D1::Point2F(0, 0));
+	d = earth_distance({0, 90}, {0, 0});
 	assert(abs(d - 10*1000*1000) < 10000);
 
-	d = earth_distance(D2D1::Point2F(0, 0), D2D1::Point2F(0, 90));
+	d = earth_distance({0, 0}, {0, 90});
 	assert(abs(d - 10*1000*1000) < 10000);
 
-	d = earth_distance(D2D1::Point2F(0, -90), D2D1::Point2F(0, 90));
+	d = earth_distance({0, -90}, {0, 90});
 	assert(abs(d - 20*1000*1000) < 20000);
 
-	d = earth_distance(D2D1::Point2F(0, 0), D2D1::Point2F(180, 0));
+	d = earth_distance({0, 0}, {180, 0});
 	assert(abs(d - 20*1000*1000) < 20000);
 
-	d = earth_distance(D2D1::Point2F(0, 0), D2D1::Point2F(-180, 0));
+	d = earth_distance({0, 0}, {-180, 0});
 	assert(abs(d - 20*1000*1000) < 20000);
 }
 

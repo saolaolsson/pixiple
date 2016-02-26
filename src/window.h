@@ -4,6 +4,7 @@
 #include "pane.h"
 
 #include "shared/com.h"
+#include "shared/vector.h"
 
 #include <future>
 #include <list>
@@ -18,8 +19,8 @@ struct Event {
 	int button_id;
 
 	// drag
-	D2D1_POINT_2F drag_mouse_position_delta;
-	D2D1_POINT_2F drag_mouse_position_start;
+	Vector2f drag_mouse_position_delta;
+	Point2f drag_mouse_position_start;
 
 	//  key
 	uint8_t key_code;
@@ -49,15 +50,15 @@ public:
 	Event get_event() const;
 	bool quit_event_seen() const;
 
-	D2D1_SIZE_F get_size() const;
+	Size2f get_size() const;
 
-	D2D1_POINT_2F get_scale() const;
+	Vector2f get_scale() const;
 	int to_dp_x(const float& dip_x) const;
 	int to_dp_y(const float& dip_y) const;
 	float to_dip_x(const int& dp_x) const;
 	float to_dip_y(const int& dp_y) const;
 
-	D2D1_POINT_2F get_mouse_position() const;
+	Point2f get_mouse_position() const;
 
 	void set_cursor(const int pane, LPCTSTR cursor_name);
 
@@ -68,16 +69,15 @@ public:
 
 	void add_edge(float relative_position = -1);
 	void add_pane(
-		const int index,
 		const int left, const int top, const int right, const int bottom,
 		const D2D1_RECT_F margin,
-		bool fixed_width, bool fixed_height,
-		D2D1_COLOR_F colour);
+		const bool fixed_width, const bool fixed_height,
+		const Colour colour);
 
 	D2D1_RECT_F container(const int pane_index) const;
 	D2D1_RECT_F content(const int pane_index) const;
 
-	int get_pane(const D2D1_POINT_2F& mouse_position) const;
+	int get_pane(const Point2f& mouse_position) const;
 
 	void click_button(const int button_index);
 
@@ -96,13 +96,13 @@ public:
 	void image_zoom_transform(
 		const int pane_index,
 		const float scale,
-		const D2D1_POINT_2F& zoom_point_ss);
+		const Point2f& zoom_point_ss);
 	void set_image_centre_from_other_pane(
 		const int pane_index,
 		const int pane_index_other);
 	void translate_image_centre(
 		const int pane_index,
-		const D2D1_POINT_2F& translation_isn);
+		const Vector2f& translation_isn);
 
 private:
 	static const int progressbar_timer_id = 1;
@@ -112,17 +112,17 @@ private:
 
 	mutable std::list<Event> events;
 
-	mutable D2D1_SIZE_F size{0, 0};
-	D2D1_SIZE_F size_min;
-	D2D1_POINT_2F scale;
-	D2D1_POINT_2F mouse_position;
+	mutable Size2f size{0, 0};
+	Size2f size_min;
+	Vector2f scale;
+	Point2f mouse_position;
 	HCURSOR cursor;
 	HWND focus;
 
 	std::wstring title;
 
 	bool lmb_down;
-	D2D1_POINT_2F lmb_down_mouse_position;
+	Point2f lmb_down_mouse_position;
 
 	std::vector<HMENU> menu_stack;
 	std::vector<std::pair<int, int>> menu_groups;

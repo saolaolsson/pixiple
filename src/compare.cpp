@@ -25,10 +25,10 @@ enum {
 const auto scale_level_exponent_min = -6;
 const auto scale_level_exponent_max = 6;
 
-float get_fit_scale(const D2D1_SIZE_F pane_size, const D2D1_SIZE_F bitmap_size) {
+float get_fit_scale(const Size2f pane_size, const Size2f bitmap_size) {
 	auto fit_scale = std::min(
-		pane_size.width / bitmap_size.width,
-		pane_size.height / bitmap_size.height);
+		pane_size.w / bitmap_size.w,
+		pane_size.h / bitmap_size.h);
 	return clamp(
 		fit_scale,
 		pow(2.0f, scale_level_exponent_min),
@@ -94,14 +94,14 @@ void zoom(
 	// find pane to zoom in
 
 	auto pane = window.get_pane(window.get_mouse_position());
-	D2D1_POINT_2F zoom_point;
+	Point2f zoom_point;
 	if (pane > 0 && window.get_image(pane)) {
-		zoom_point = D2D1::Point2F(
+		zoom_point = {
 			window.get_mouse_position().x - (window.content(pane).left + window.content(pane).right) / 2.0f,
-			window.get_mouse_position().y - (window.content(pane).top + window.content(pane).bottom) / 2.0f);
+			window.get_mouse_position().y - (window.content(pane).top + window.content(pane).bottom) / 2.0f};
 	} else {
 		pane = pane_image_left;
-		zoom_point = D2D1::Point2F(0, 0);
+		zoom_point = {0, 0};
 	}
 
 	// get the new scale
@@ -390,11 +390,11 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 	const auto margin_short_narrow = D2D1::RectF(mx, 0, 0, my);
 	const auto margin_narrow = D2D1::RectF(mx, my, 0, my);
 
-	const auto colour_pair = D2D1::ColorF(0xf8f8f8);
-	const auto colour_info_left = D2D1::ColorF(0xe8e8e8);
-	const auto colour_info_right = D2D1::ColorF(0xf0f0f0);
-	const auto colour_image_left = D2D1::ColorF(0xb0b0b0);
-	const auto colour_image_right = D2D1::ColorF(0xb8b8b8);
+	const auto colour_pair = Colour{0xfff8f8f8};
+	const auto colour_info_left = Colour{0xffe8e8e8};
+	const auto colour_info_right = Colour{0xfff0f0f0};
+	const auto colour_image_left = Colour{0xffb0b0b0};
+	const auto colour_image_right = Colour{0xffb8b8b8};
 
 	window.add_edge(0);
 	window.add_edge(0);
@@ -404,21 +404,21 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 	for (int i = 0; i < 7; i++)
 		window.add_edge();
 
-	window.add_pane(pane_pair_info, 0, 1, 8, 9, margin, false, true, colour_pair);
-	window.add_pane(pane_pair_buttons, 8, 1, 2, 9, margin, true, true, colour_pair);
+	window.add_pane(0, 1, 8, 9, margin, false, true, colour_pair); // pane_pair_info
+	window.add_pane(8, 1, 2, 9, margin, true, true, colour_pair); // pane_pair_buttons
 
-	window.add_pane(pane_info_header, 0, 9, 5, 10, margin_narrow, true, true, colour_info_left);
-	window.add_pane(pane_info_left, 5, 9, 4, 10, margin, false, true, colour_info_left);
-	window.add_pane(pane_info_right, 4, 9, 2, 10, margin, false, true, colour_info_right);
+	window.add_pane(0, 9, 5, 10, margin_narrow, true, true, colour_info_left); // pane_info_header
+	window.add_pane(5, 9, 4, 10, margin, false, true, colour_info_left); // pane_info_left
+	window.add_pane(4, 9, 2, 10, margin, false, true, colour_info_right); // pane_info_right
 
-	window.add_pane(pane_scale_header, 0, 10, 5, 11, margin_short, true, true, colour_info_left);
-	window.add_pane(pane_scale_left, 5, 10, 6, 11, margin_short_narrow, false, true, colour_info_left);
-	window.add_pane(pane_buttons_left, 6, 10, 4, 11, margin_short, true, true, colour_info_left);
-	window.add_pane(pane_scale_right, 4, 10, 7, 11, margin_short_narrow, false, true, colour_info_right);
-	window.add_pane(pane_buttons_right, 7, 10, 2, 11, margin_short, true, true, colour_info_right);
+	window.add_pane(0, 10, 5, 11, margin_short, true, true, colour_info_left); // pane_scale_header
+	window.add_pane(5, 10, 6, 11, margin_short_narrow, false, true, colour_info_left); // pane_scale_left
+	window.add_pane(6, 10, 4, 11, margin_short, true, true, colour_info_left); // pane_buttons_left
+	window.add_pane(4, 10, 7, 11, margin_short_narrow, false, true, colour_info_right); // pane_scale_right
+	window.add_pane(7, 10, 2, 11, margin_short, true, true, colour_info_right); // pane_buttons_right
 
-	window.add_pane(pane_image_left, 0, 11, 4, 3, {0, 0, 0, 0}, false, false, colour_image_left);
-	window.add_pane(pane_image_right, 4, 11, 2, 3, {0, 0, 0, 0}, false, false, colour_image_right);
+	window.add_pane(0, 11, 4, 3, {0, 0, 0, 0}, false, false, colour_image_left); // pane_image_left
+	window.add_pane(4, 11, 2, 3, {0, 0, 0, 0}, false, false, colour_image_right); // pane_image_right
 
 	// buttons
 
@@ -603,8 +603,8 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 				// left/right scales after swap: (1*(wl/wr), 1*(wr/wl))
 				// ratio of all left/right scales in swapped mode: (wl/wr) / (wr/wl) = (wl*wl) / (wr*wr)
 				if (swapped_state) {
-					auto wl = bitmap_size_left.width;
-					auto wr = bitmap_size_right.width;
+					auto wl = bitmap_size_left.w;
+					auto wr = bitmap_size_right.w;
 					auto swapped_left_right_scale_ratio = (wl*wl) / (wr*wr);
 
 					scale_levels = get_scale_levels(fsl, fsr, swapped_left_right_scale_ratio);
@@ -633,11 +633,11 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 				bool image_wider =
 					window.get_image(pane) &&
 					std::floor(window.content(pane).right - window.content(pane).left) <
-					std::floor(window.get_image_scale(pane) * window.get_image(pane)->get_bitmap_size(window.get_scale()).width);
+					std::floor(window.get_image_scale(pane) * window.get_image(pane)->get_bitmap_size(window.get_scale()).w);
 				bool image_taller =
 					window.get_image(pane) &&
 					std::floor(window.content(pane).bottom - window.content(pane).top) <
-					std::floor(window.get_image_scale(pane) * window.get_image(pane)->get_bitmap_size(window.get_scale()).height);
+					std::floor(window.get_image_scale(pane) * window.get_image(pane)->get_bitmap_size(window.get_scale()).h);
 
 				if (image_wider || image_taller)
 					window.set_cursor(pane, IDC_SIZEALL);
@@ -737,8 +737,8 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 					// which is not expected by the user. the error will only
 					// happen once per swap however.
 					
-					auto wl = window.get_image(pane_image_left)->get_bitmap_size(window.get_scale()).width;
-					auto wr = window.get_image(pane_image_right)->get_bitmap_size(window.get_scale()).width;
+					auto wl = window.get_image(pane_image_left)->get_bitmap_size(window.get_scale()).w;
+					auto wr = window.get_image(pane_image_right)->get_bitmap_size(window.get_scale()).w;
 					window.set_image_scale(pane_image_left, (wl / wr) * window.get_image_scale(pane_image_left));
 					window.set_image_scale(pane_image_right, (wr / wl) * window.get_image_scale(pane_image_right));
 
@@ -847,9 +847,9 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 			auto pane = window.get_pane(e.drag_mouse_position_start);
 
 			if (pane > 0 && window.get_image(pane)) {
-				auto translation_isn = D2D1::Point2F(
-					e.drag_mouse_position_delta.x / window.get_image(pane)->get_bitmap_size(window.get_scale()).width / window.get_image_scale(pane),
-					e.drag_mouse_position_delta.y / window.get_image(pane)->get_bitmap_size(window.get_scale()).height / window.get_image_scale(pane));
+				auto translation_isn = Vector2f{
+					e.drag_mouse_position_delta.x / window.get_image(pane)->get_bitmap_size(window.get_scale()).w / window.get_image_scale(pane),
+					e.drag_mouse_position_delta.y / window.get_image(pane)->get_bitmap_size(window.get_scale()).h / window.get_image_scale(pane)};
 				window.translate_image_centre(pane, translation_isn);
 
 				auto pane_other = pane == pane_image_left ? pane_image_right : pane_image_left;

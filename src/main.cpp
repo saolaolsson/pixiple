@@ -66,7 +66,7 @@ static void app() {
 	window.add_edge(0);
 	window.add_edge(1);
 	window.add_edge(1);
-	window.add_pane(0, 0, 1, 2, 3, {0, 0, 0,0 }, false, false, D2D1::ColorF(0xf8f8f8));
+	window.add_pane(0, 1, 2, 3, {0, 0, 0,0 }, false, false, Colour{0xfff8f8f8});
 
 	for (;;) {
 		window.reset();

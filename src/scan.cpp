@@ -37,7 +37,7 @@ std::vector<std::tr2::sys::path> scan(Window& window, ComPtr<IShellItem> root) {
 	const auto my = 8.0f;
 	const auto margin = D2D1::RectF(mx, my, mx, my);
 
-	window.add_pane(0, 0, 1, 2, 3, margin, false, false, D2D1::ColorF(0xf8f8f8));
+	window.add_pane(0, 1, 2, 3, margin, false, false, Colour{0xfff8f8f8});
 	window.set_cursor(0, IDC_WAIT);
 	window.set_progressbar_progress(0, -1.0f);
 

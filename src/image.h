@@ -3,6 +3,7 @@
 #include "hash.h"
 
 #include "shared/com.h"
+#include "shared/vector.h"
 
 #include <chrono>
 #include <filesystem>
@@ -31,10 +32,10 @@ public:
 	std::wstring get_metadata_make_model() const;
 	std::wstring get_metadata_camera_id() const;
 	std::wstring get_metadata_image_id() const;
-	D2D1_POINT_2F get_metadata_position() const;
+	Point2f get_metadata_position() const;
 
 	D2D1_SIZE_U get_image_size() const;
-	D2D1_SIZE_F get_bitmap_size(const D2D1_POINT_2F& scale) const;
+	Size2f get_bitmap_size(const Vector2f& scale) const;
 
 	Hash get_file_hash() const;
 	Hash get_pixel_hash() const;
@@ -78,7 +79,7 @@ private:
 	std::wstring metadata_make_model;
 	std::wstring metadata_camera_id;
 	std::wstring metadata_image_id;
-	D2D1_POINT_2F metadata_position{0, 0};
+	Point2f metadata_position{0, 0};
 	
 	Hash file_hash;
 	Hash pixel_hash;

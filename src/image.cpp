@@ -83,7 +83,7 @@ std::wstring Image::get_metadata_image_id() const {
 	return metadata_image_id;
 }
 
-D2D1_POINT_2F Image::get_metadata_position() const {
+Point2f Image::get_metadata_position() const {
 	return metadata_position;
 }
 
@@ -91,7 +91,7 @@ D2D1_SIZE_U Image::get_image_size() const {
 	return {width, height};
 }
 
-D2D1_SIZE_F Image::get_bitmap_size(const D2D1_POINT_2F& scale) const {
+Size2f Image::get_bitmap_size(const Vector2f& scale) const {
 	return {width / scale.x, height / scale.y};
 }
 
@@ -161,13 +161,13 @@ void Image::draw(
 
 		render_target->FillRectangle(rect_dest, brush);
 
-		const auto line_offset = D2D1::Point2F(32, 32);
-		const auto square_offset = D2D1::Point2F(64, 64);
+		const auto line_offset = Point2f{32, 32};
+		const auto square_offset = Point2f{64, 64};
 		const auto thickness = 12.0f;
 
-		auto centre = D2D1::Point2F(
+		auto centre = Point2f{
 			rect_dest.left + (rect_dest.right - rect_dest.left) / 2,
-			rect_dest.top + (rect_dest.bottom - rect_dest.top) / 2);
+			rect_dest.top + (rect_dest.bottom - rect_dest.top) / 2};
 
 		er = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Gray), &brush);
 		render_target->DrawRectangle(
@@ -726,7 +726,7 @@ ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target
 			frame, wic_pf,	WICBitmapDitherTypeNone,
 			nullptr, 0, WICBitmapPaletteTypeCustom);
 
-		D2D1_POINT_2F dpi;
+		Point2f dpi;
 		render_target->GetDpi(&dpi.x, &dpi.y);
 		er = render_target->CreateBitmapFromWicBitmap(
 			format_converter, D2D1::BitmapProperties(d2d_pf, dpi.x, dpi.y), &bce.bitmap);
