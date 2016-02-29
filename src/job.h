@@ -31,7 +31,8 @@ public:
 		duplicates_visual{duplicates_visual},
 		duplicates_time{duplicates_time},
 		duplicates_location{duplicates_location},
-		duplicates_combined{duplicates_combined}
+		duplicates_combined{duplicates_combined},
+		progress{paths.empty() ? 1.0f : 0.0f}
 	{
 	}
 
