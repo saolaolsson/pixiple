@@ -60,6 +60,12 @@ static void thread_worker(Job* const job) {
 		if (image_1 == image_2)
 			continue;
 
+		auto images_ok =
+			image_1->get_status() == Image::Status::ok &&
+			image_2->get_status() == Image::Status::ok;
+		if (!images_ok)
+			continue;
+
 		auto distance_combined = 0.0f;
 		auto distance_combined_min = 0.0f;
 		auto distance_combined_max = 0.0f;
@@ -164,8 +170,8 @@ static void thread_worker(Job* const job) {
 		distance_combined_max += 10;
 
 		// score dimensions
-		auto ar1 = static_cast<float>(image_1->get_image_size().width) / image_1->get_image_size().height;
-		auto ar2 = static_cast<float>(image_2->get_image_size().width) / image_2->get_image_size().height;
+		auto ar1 = static_cast<float>(image_1->get_image_size().w) / image_1->get_image_size().h;
+		auto ar2 = static_cast<float>(image_2->get_image_size().w) / image_2->get_image_size().h;
 		ar1 = std::max(ar1, 1/ar1);
 		ar2 = std::max(ar2, 1/ar2);
 		if (abs(ar1 - ar2) > 0.01f)
@@ -183,13 +189,6 @@ static void thread_worker(Job* const job) {
 		auto distance_visual = std::numeric_limits<float>::max();
 		distance_visual = image_1->get_distance(*image_2, distance_visual_max);
 		distance_combined += distance_visual;
-
-		// check status late so that attempts to decode pixels/metadata have been made
-		auto images_ok =
-			image_1->get_status() == Image::Status::ok &&
-			image_2->get_status() == Image::Status::ok;
-		if (!images_ok)
-			continue;
 
 		std::lock_guard<std::mutex> lg{job->duplicates_mutex};
 
@@ -222,7 +221,7 @@ std::vector<std::vector<Duplicate>> process(Window& window, const std::vector<st
 	// create workers
 	std::vector<std::thread> threads{std::thread::hardware_concurrency()};
 	for (auto& t : threads)
-		t = std::thread(thread_worker, &job); // 44 byte one-time memory leak: https://connect.microsoft.com/VisualStudio/feedback/details/757212/vs-2012-rc-std-thread-reports-memory-leak-even-on-stack
+		t = std::thread(thread_worker, &job);
 
 	// update progress bar until no more work or window requests that work be stopped
 	while (!job.is_completed()) {

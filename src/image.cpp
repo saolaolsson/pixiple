@@ -87,12 +87,12 @@ Point2f Image::get_metadata_position() const {
 	return metadata_position;
 }
 
-D2D1_SIZE_U Image::get_image_size() const {
-	return {width, height};
+Size2u Image::get_image_size() const {
+	return image_size;
 }
 
 Size2f Image::get_bitmap_size(const Vector2f& scale) const {
-	return {width / scale.x, height / scale.y};
+	return {image_size.w / scale.x, image_size.h / scale.y};
 }
 
 Hash Image::get_file_hash() const {
@@ -241,8 +241,8 @@ void Image::open_folder() const {
 }
 
 void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
-	er = frame->GetSize(&width, &height);
-	assert(width > 0 && height > 0);
+	er = frame->GetSize(&image_size.w, &image_size.h);
+	assert(image_size.w > 0 && image_size.h > 0);
 
 	ComPtr<IWICImagingFactory> wic_factory;
 	er = CoCreateInstance(
@@ -262,8 +262,8 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 		WICBitmapPaletteTypeCustom);
 
 	const auto pixel_stride = 4;
-	auto pixel_buffer_stride = width * pixel_stride;
-	std::size_t pixel_buffer_size = pixel_buffer_stride * height;
+	auto pixel_buffer_stride = image_size.w * pixel_stride;
+	std::size_t pixel_buffer_size = pixel_buffer_stride * image_size.h;
 	assert(pixel_buffer_size > 0);
 	std::vector<uint8_t> pixel_buffer(pixel_buffer_size);
 
@@ -285,10 +285,10 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 
 	for (auto by = 0; by < n_intensity_block_divisions; by++) {
 		for (auto bx = 0; bx < n_intensity_block_divisions; bx++) {
-			const auto offset_x = width * bx / n_intensity_block_divisions;
-			const auto offset_y = height * by / n_intensity_block_divisions;
-			const auto offset_x_next = width * (bx + 1) / n_intensity_block_divisions;
-			const auto offset_y_next = height * (by + 1) / n_intensity_block_divisions;
+			const auto offset_x = image_size.w * bx / n_intensity_block_divisions;
+			const auto offset_y = image_size.h * by / n_intensity_block_divisions;
+			const auto offset_x_next = image_size.w * (bx + 1) / n_intensity_block_divisions;
+			const auto offset_y_next = image_size.h * (by + 1) / n_intensity_block_divisions;
 
 			std::uint32_t r = 0;
 			std::uint32_t g = 0;
@@ -676,11 +676,11 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 		if (std::tr2::sys::file_size(path) != file_size)
 			return nullptr;
 
-	if (width != 0 || height != 0) {
+	if (image_size.w != 0 || image_size.h != 0) {
 		std::uint32_t w;
 		std::uint32_t h;
 		er = frame->GetSize(&w, &h);
-		if (w != width || h != height)
+		if (w != image_size.w || h != image_size.h)
 			return nullptr;
 	}
 

@@ -34,7 +34,7 @@ public:
 	std::wstring get_metadata_image_id() const;
 	Point2f get_metadata_position() const;
 
-	D2D1_SIZE_U get_image_size() const;
+	Size2u get_image_size() const;
 	Size2f get_bitmap_size(const Vector2f& scale) const;
 
 	Hash get_file_hash() const;
@@ -60,14 +60,13 @@ private:
 
 	static const int n_intensity_block_divisions = 8;
 
-	std::tr2::sys::path path;
 	Status status = Status::ok;
 
-	std::uintmax_t file_size = 0;
+	std::tr2::sys::path path;
 	std::tr2::sys::file_time_type file_time;
+	std::uintmax_t file_size = 0;
 
-	std::uint32_t width = 0;
-	std::uint32_t height = 0;
+	Size2u image_size{0, 0};
 
 	struct Colour {
 		float r;

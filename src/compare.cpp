@@ -206,8 +206,8 @@ void update_text_image_info(
 
 	// pixels
 
-	ss << image->get_image_size().width << L" \u00d7 " << image->get_image_size().height << L", ";
-	if (image->get_image_size().width == image_other->get_image_size().width && image->get_image_size().height == image_other->get_image_size().height)
+	ss << image->get_image_size().w << L" \u00d7 " << image->get_image_size().h << L", ";
+	if (image->get_image_size().w == image_other->get_image_size().w && image->get_image_size().h == image_other->get_image_size().h)
 		bold_ranges.push_back({index, ss.str().length() - index});
 	index = ss.str().length();
 
@@ -321,7 +321,7 @@ void update_text(
 	window.set_text(pane_pair_info, ss.str());
 	ss.str(L"");
 
-	ss << L"Filename\n";
+	ss << L"Path\n";
 	ss << L"File\n";
 	ss << L"Pixels\n";
 	ss << L"Metadata";
