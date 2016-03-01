@@ -606,7 +606,8 @@ void Window::paint() const {
 	render_target->BeginDraw();
 
 	if (panes.empty()) {
-		render_target->Clear(Colour{0xfff8f8f8}.d2d());
+		auto c = GetSysColor(COLOR_WINDOW);
+		render_target->Clear(Colour{GetRValue(c)/255.0f, GetGValue(c)/255.0f, GetBValue(c)/255.0f}.d2d());
 	} else {
 		for (auto& pane : panes)
 			pane.draw(render_target);
