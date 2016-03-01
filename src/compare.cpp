@@ -862,8 +862,8 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 
 				window.set_dirty();
 			}
-		} else if (e.type == Event::Type::folders) {
-			return e.folders;
+		} else if (e.type == Event::Type::items) {
+			return e.items;
 		} else if (e.type == Event::Type::key) {
 			if (e.key_code == VK_NEXT || e.key_code == 'N') {
 				window.click_button(button_next_pair);

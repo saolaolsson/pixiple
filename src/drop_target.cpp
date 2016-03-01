@@ -36,7 +36,7 @@ ULONG __stdcall DropTarget::Release() {
 	return n_refs;
 }
 
-std::vector<ComPtr<IShellItem>> get_folders(IDataObject* object) {
+std::vector<ComPtr<IShellItem>> get_shell_items(IDataObject* object) {
 	auto format = FORMATETC{CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
 	STGMEDIUM stgm;
 	if (FAILED(object->GetData(&format, &stgm)))
@@ -63,7 +63,7 @@ std::vector<ComPtr<IShellItem>> get_folders(IDataObject* object) {
 }
 
 HRESULT __stdcall DropTarget::DragEnter(IDataObject* object, DWORD, POINTL, DWORD*) {
-	drop_enabled = !get_folders(object).empty();
+	drop_enabled = !get_shell_items(object).empty();
 	return S_OK;
 }
 
@@ -80,9 +80,9 @@ HRESULT __stdcall DropTarget::DragLeave() {
 }
 
 HRESULT __stdcall DropTarget::Drop(IDataObject* object, DWORD, POINTL, DWORD*) {
-	Event e{Event::Type::folders};
-	e.folders = get_folders(object);
-	if (!e.folders.empty())
+	Event e{Event::Type::items};
+	e.items = get_shell_items(object);
+	if (!e.items.empty())
 		window.queue_event(e);
 	return S_OK;
 }

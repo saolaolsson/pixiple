@@ -14,7 +14,7 @@
 #include <d2d1.h>
 
 struct Event {
-	enum class Type {button, drag, folders, key, none, quit, size, wheel} type;
+	enum class Type {button, drag, items, key, none, quit, size, wheel} type;
 
 	// button
 	int button_id;
@@ -23,8 +23,8 @@ struct Event {
 	Vector2f drag_mouse_position_delta;
 	Point2f drag_mouse_position_start;
 
-	// folders
-	std::vector<ComPtr<IShellItem>> folders;
+	// items
+	std::vector<ComPtr<IShellItem>> items;
 
 	//  key
 	uint8_t key_code;
