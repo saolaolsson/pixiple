@@ -22,11 +22,11 @@
 
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
-std::vector<std::tr2::sys::path> scan(Window& window, ComPtr<IShellItem> root);
+std::vector<std::tr2::sys::path> scan(Window& window, const std::vector<ComPtr<IShellItem>>& shell_items);
 std::vector<std::vector<Duplicate>> process(Window& window, const std::vector<std::tr2::sys::path>& paths);
-void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicate_categories);
+std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicate_categories);
 
-static ComPtr<IShellItem> browse(HWND parent) {
+std::vector<ComPtr<IShellItem>> browse(HWND parent) {
 	PIDLIST_ABSOLUTE pidlist;
 
 	BROWSEINFO bi{
@@ -40,14 +40,14 @@ static ComPtr<IShellItem> browse(HWND parent) {
 	#else
 	pidlist = SHBrowseForFolder(&bi);
 	if (pidlist == nullptr)
-		return nullptr;
+		return {};
 	#endif
 
 	ComPtr<IShellItem> root;
 	er = SHCreateItemFromIDList(pidlist, IID_PPV_ARGS(&root));
 	CoTaskMemFree(pidlist);
 
-	return root;
+	return {root};
 }
 
 static void app() {
@@ -58,9 +58,9 @@ static void app() {
 	window_title += L" _DEBUG";
 	#endif
 
-	Window window(
+	Window window{
 		window_title, {800, 600},
-		er = LoadIcon(er = GetModuleHandle(nullptr), MAKEINTRESOURCE(APP_ICON)));
+		er = LoadIcon(er = GetModuleHandle(nullptr), MAKEINTRESOURCE(APP_ICON))};
 
 	window.add_edge(0);
 	window.add_edge(0);
@@ -68,15 +68,15 @@ static void app() {
 	window.add_edge(1);
 	window.add_pane(0, 1, 2, 3, {0, 0, 0,0 }, false, false, Colour{0xfff8f8f8});
 
+	auto items = browse(window.get_handle());
+
 	for (;;) {
-		window.reset();
-
-		auto root_item = browse(window.get_handle());
-
 		std::vector<std::vector<Duplicate>> duplicate_categories{4};
 
-		if (root_item != nullptr) {
-			auto paths = scan(window, root_item);
+		window.reset();
+
+		if (!items.empty()) {
+			auto paths = scan(window, items);
 			if (window.quit_event_seen())
 				return;
 
@@ -87,7 +87,10 @@ static void app() {
 			paths.clear();
 		}
 
-		compare(window, duplicate_categories);
+		window.set_drop_target(true);
+		items = compare(window, duplicate_categories);
+		window.set_drop_target(false);
+
 		if (window.quit_event_seen())
 			return;
 	}
@@ -121,10 +124,9 @@ int WINAPI WinMain(__in HINSTANCE, __in_opt HINSTANCE, __in LPSTR, __in int) {
 		tests();
 		#endif
 
-		er = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+		er = OleInitialize(nullptr);
 		app();
-		CoUninitialize();
-
+		OleUninitialize();
 	} catch (ErrorCodeException& e) {
 		die(e.line, e.file, e.hresult);
 	} catch (...) {

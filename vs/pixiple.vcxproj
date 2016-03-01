@@ -165,6 +165,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\compare.cpp" />
     <ClCompile Include="..\src\d2d.cpp" />
+    <ClCompile Include="..\src\drop_target.cpp" />
     <ClCompile Include="..\src\external\murmurhash3.cpp" />
     <ClCompile Include="..\src\hash.cpp" />
     <ClCompile Include="..\src\image.cpp" />
@@ -183,6 +184,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\d2d.h" />
+    <ClInclude Include="..\src\drop_target.h" />
     <ClInclude Include="..\src\duplicate.h" />
     <ClInclude Include="..\src\edge.h" />
     <ClInclude Include="..\src\external\murmurhash3.h" />

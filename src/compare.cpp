@@ -365,7 +365,7 @@ void update_text(
 	}
 }
 
-void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicate_categories) {
+std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicate_categories) {
 	enum {
 		button_swap_images = 100, button_first_pair, button_previous_pair, button_next_pair,
 		button_open_folder_left, button_delete_file_left,
@@ -777,7 +777,12 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 				}
 				break;
 			case button_file_new_scan:
-				return;
+				{
+					std::vector<ComPtr<IShellItem>> browse(HWND parent);
+					auto items = browse(window.get_handle());
+					if (!items.empty())
+						return items;
+				}
 				break;
 			case button_file_exit:
 				PostQuitMessage(0);
@@ -857,6 +862,8 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 
 				window.set_dirty();
 			}
+		} else if (e.type == Event::Type::folders) {
+			return e.folders;
 		} else if (e.type == Event::Type::key) {
 			if (e.key_code == VK_NEXT || e.key_code == 'N') {
 				window.click_button(button_next_pair);
@@ -874,7 +881,7 @@ void compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicat
 				}
 			}
 		} else if (e.type == Event::Type::quit) {
-			return;
+			return {};
 		} else if (e.type == Event::Type::wheel) {
 			if (!duplicates.empty()) {
 				zoom(window, scale_levels, e.wheel_count_delta);

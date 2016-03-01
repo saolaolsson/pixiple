@@ -163,6 +163,16 @@ void Window::set_cursor(const int pane, LPCTSTR cursor_name) {
 		SetCursor(panes[pane].get_cursor());
 }
 
+void Window::set_drop_target(bool enable) {
+	if (enable) {
+		if (drop_target == nullptr)
+			drop_target = create_drop_target(*this);
+		er = RegisterDragDrop(hwnd, drop_target);
+	} else {
+		er = RevokeDragDrop(hwnd);
+	}
+}
+
 void Window::push_menu_level(const std::wstring& label) {
 	HMENU menu;
 

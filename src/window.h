@@ -1,5 +1,6 @@
 #pragma once
 
+#include "drop_target.h"
 #include "edge.h"
 #include "pane.h"
 
@@ -13,7 +14,7 @@
 #include <d2d1.h>
 
 struct Event {
-	enum class Type {button, drag, key, none, quit, size, wheel} type;
+	enum class Type {button, drag, folders, key, none, quit, size, wheel} type;
 
 	// button
 	int button_id;
@@ -21,6 +22,9 @@ struct Event {
 	// drag
 	Vector2f drag_mouse_position_delta;
 	Point2f drag_mouse_position_start;
+
+	// folders
+	std::vector<ComPtr<IShellItem>> folders;
 
 	//  key
 	uint8_t key_code;
@@ -61,6 +65,8 @@ public:
 	Point2f get_mouse_position() const;
 
 	void set_cursor(const int pane, LPCTSTR cursor_name);
+
+	void set_drop_target(bool enable);
 
 	void push_menu_level(const std::wstring& label);
 	void pop_menu_level();
@@ -133,10 +139,14 @@ private:
 	std::vector<Pane> panes;
 	std::vector<Edge> edges;
 
+	ComPtr<IDropTarget> drop_target;
+
 	static LRESULT WINAPI static_window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 	LRESULT WINAPI window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 	void queue_event(const Event& event) const;
 
 	void update_layout();
 	void paint() const;
+
+	friend class DropTarget;
 };
