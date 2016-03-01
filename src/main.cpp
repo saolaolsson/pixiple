@@ -62,12 +62,6 @@ static void app() {
 		window_title, {800, 600},
 		er = LoadIcon(er = GetModuleHandle(nullptr), MAKEINTRESOURCE(APP_ICON))};
 
-	window.add_edge(0);
-	window.add_edge(0);
-	window.add_edge(1);
-	window.add_edge(1);
-	window.add_pane(0, 1, 2, 3, {0, 0, 0,0 }, false, false, Colour{0xfff8f8f8});
-
 	auto items = browse(window.get_handle());
 
 	for (;;) {

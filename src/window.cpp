@@ -605,8 +605,12 @@ void Window::paint() const {
 	er = BeginPaint(hwnd, &ps);
 	render_target->BeginDraw();
 
-	for (auto& pane : panes)
-		pane.draw(render_target);
+	if (panes.empty()) {
+		render_target->Clear(Colour{0xfff8f8f8}.d2d());
+	} else {
+		for (auto& pane : panes)
+			pane.draw(render_target);
+	}
 
 	auto hr = render_target->EndDraw();
 	EndPaint(hwnd, &ps);
