@@ -1,6 +1,6 @@
 #pragma once
 
-#include "duplicate.h"
+#include "image_pair.h"
 
 #include <atomic>
 #include <filesystem>
@@ -13,30 +13,30 @@ class Image;
 
 class Job {
 public:
-	std::vector<Duplicate>& duplicates_visual;
-	std::vector<Duplicate>& duplicates_time;
-	std::vector<Duplicate>& duplicates_location;
-	std::vector<Duplicate>& duplicates_combined;
-	std::mutex duplicates_mutex;
+	std::vector<ImagePair>& pairs_visual;
+	std::vector<ImagePair>& pairs_time;
+	std::vector<ImagePair>& pairs_location;
+	std::vector<ImagePair>& pairs_combined;
+	std::mutex pairs_mutex;
 
 	std::atomic<bool> force_thread_exit = false;
 
 	Job(const std::vector<std::tr2::sys::path>& paths,
-		std::vector<Duplicate>& duplicates_visual,
-		std::vector<Duplicate>& duplicates_time,
-		std::vector<Duplicate>& duplicates_location,
-		std::vector<Duplicate>& duplicates_combined)
+		std::vector<ImagePair>& pairs_visual,
+		std::vector<ImagePair>& pairs_time,
+		std::vector<ImagePair>& pairs_location,
+		std::vector<ImagePair>& pairs_combined)
 		:
 		paths{paths},
-		duplicates_visual{duplicates_visual},
-		duplicates_time{duplicates_time},
-		duplicates_location{duplicates_location},
-		duplicates_combined{duplicates_combined},
+		pairs_visual{pairs_visual},
+		pairs_time{pairs_time},
+		pairs_location{pairs_location},
+		pairs_combined{pairs_combined},
 		progress{paths.empty() ? 1.0f : 0.0f}
 	{
 	}
 
-	std::pair<std::shared_ptr<Image>, std::shared_ptr<Image>> get_next_pair();
+	ImagePair get_next_pair();
 	float get_progress() const;
 	bool is_completed() const;
 

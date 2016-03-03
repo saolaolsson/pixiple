@@ -173,6 +173,7 @@
     <ClCompile Include="..\src\external\murmurhash3.cpp" />
     <ClCompile Include="..\src\hash.cpp" />
     <ClCompile Include="..\src\image.cpp" />
+    <ClCompile Include="..\src\image_pair.cpp" />
     <ClCompile Include="..\src\job.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\pane.cpp" />
@@ -189,11 +190,11 @@
   <ItemGroup>
     <ClInclude Include="..\src\d2d.h" />
     <ClInclude Include="..\src\drop_target.h" />
-    <ClInclude Include="..\src\duplicate.h" />
     <ClInclude Include="..\src\edge.h" />
     <ClInclude Include="..\src\external\murmurhash3.h" />
     <ClInclude Include="..\src\hash.h" />
     <ClInclude Include="..\src\image.h" />
+    <ClInclude Include="..\src\image_pair.h" />
     <ClInclude Include="..\src\job.h" />
     <ClInclude Include="..\src\pane.h" />
     <ClInclude Include="..\src\resource.h" />

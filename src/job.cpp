@@ -4,7 +4,7 @@
 
 #include "image.h"
 
-std::pair<std::shared_ptr<Image>, std::shared_ptr<Image>> Job::get_next_pair() {
+ImagePair Job::get_next_pair() {
 	std::unique_lock<std::mutex> ul{index_mutex};
 
 	if (is_completed())

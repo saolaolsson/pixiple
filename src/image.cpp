@@ -605,7 +605,7 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 		er = PropVariantClear(&value);
 
 		if (metadata_position.x == 0 || metadata_position.y == 0)
-			metadata_position = {0, 0};
+			metadata_position = {0, 0}; // TODO: bad way to indicate invalid position
 	}
 }
 

@@ -1,8 +1,8 @@
 #include "shared.h"
 
 #include "d2d.h"
-#include "duplicate.h"
 #include "image.h"
+#include "image_pair.h"
 #include "window.h"
 
 #include "shared/map.h"
@@ -66,7 +66,7 @@ std::vector<std::pair<float, float>> get_scale_levels(
 			scale_level_pairs.push_back({sl2, sl});
 	}
 
-	// remove duplicates
+	// remove pairs
 	std::sort(scale_level_pairs.begin(), scale_level_pairs.end());
 	scale_level_pairs.erase(std::unique(scale_level_pairs.begin(), scale_level_pairs.end()), scale_level_pairs.end());
 	assert(!scale_level_pairs.empty());
@@ -297,24 +297,16 @@ void update_text_image_info(
 
 void update_text(
 	Window& window,
-	const std::vector<Duplicate>& duplicates,
-	const std::vector<Duplicate>::const_iterator& duplicates_it
+	const std::vector<ImagePair>& pairs,
+	const std::vector<ImagePair>::const_iterator& pairs_it
 ) {
 	std::wostringstream ss;
 	ss.imbue(std::locale(""));
 	ss << std::fixed;
 
-	if (!duplicates.empty()) {
-		ss << L"Image pair " << 1 + distance(duplicates.begin(), duplicates_it) << L" of " << duplicates.size();
-		ss << std::setprecision(3);
-		float score = duplicates_it->distance;
-		ss << L": Distance ";
-		if (score == std::numeric_limits<float>::max())
-			ss << L"\u221e";
-		else
-			ss << score;
-		//ss << std::setprecision(5);
-		//ss << L" (distance = " << duplicates_it->get_distance() << ", distance_colour = " << duplicates_it->get_distance_colour() << L")";
+	if (!pairs.empty()) {
+		ss << L"Image pair " << 1 + distance(pairs.begin(), pairs_it) << L" of " << pairs.size() << L": ";
+		ss << pairs_it->description();
 	} else {
 		ss << L"No images";
 	}
@@ -365,7 +357,7 @@ void update_text(
 	}
 }
 
-std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicate_categories) {
+std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::vector<ImagePair>>& pair_categories) {
 	enum {
 		button_swap_images = 100, button_first_pair, button_previous_pair, button_next_pair,
 		button_open_folder_left, button_delete_file_left,
@@ -508,16 +500,16 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 	else
 		assert(false);
 
-	auto duplicates = duplicate_categories[static_cast<int>(scoring)];
-	auto duplicates_it = duplicates.begin();
+	auto pairs = pair_categories[static_cast<int>(scoring)];
+	auto pairs_it = pairs.begin();
 
 	// when text is first updated, layout will change. update text
 	// here so that image fit scale will work for the first pair.
-	update_text(window, duplicates, duplicates_it);
+	update_text(window, pairs, pairs_it);
 
 	std::vector<std::pair<float, float>> scale_levels;
 
-	bool duplicates_valid = false;
+	bool pairs_valid = false;
 	bool images_valid = false;
 	bool scale_levels_valid = false;
 	bool text_valid = false;
@@ -527,48 +519,48 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 	bool swapped_state = false;
 
 	for (;;) {
-		if (!duplicates_valid) {
+		if (!pairs_valid) {
 			bool copy_all =
 				folder_filter == FolderFilter::any &&
 				maximum_pair_age == std::chrono::system_clock::duration::max();
 			if (copy_all) {
-				duplicates = duplicate_categories[static_cast<int>(scoring)];
+				pairs = pair_categories[static_cast<int>(scoring)];
 			} else {
-				duplicates.clear();
+				pairs.clear();
 
 				if (folder_filter == FolderFilter::any)
 					std::copy_if(
-						duplicate_categories[static_cast<int>(scoring)].cbegin(),
-						duplicate_categories[static_cast<int>(scoring)].cend(),
-						back_inserter(duplicates),
-						[&](const Duplicate& d) {
+						pair_categories[static_cast<int>(scoring)].cbegin(),
+						pair_categories[static_cast<int>(scoring)].cend(),
+						back_inserter(pairs),
+						[&](const ImagePair& d) {
 							return d.get_age() < maximum_pair_age;
 						});
 				else if (folder_filter == FolderFilter::same)
 					std::copy_if(
-						duplicate_categories[static_cast<int>(scoring)].cbegin(),
-						duplicate_categories[static_cast<int>(scoring)].cend(),
-						back_inserter(duplicates),
-						[&](const Duplicate& d) {
+						pair_categories[static_cast<int>(scoring)].cbegin(),
+						pair_categories[static_cast<int>(scoring)].cend(),
+						back_inserter(pairs),
+						[&](const ImagePair& d) {
 							return d.get_age() < maximum_pair_age && d.is_in_same_folder();
 						});
 				else if (folder_filter == FolderFilter::different)
 					std::copy_if(
-						duplicate_categories[static_cast<int>(scoring)].cbegin(),
-						duplicate_categories[static_cast<int>(scoring)].cend(),
-						back_inserter(duplicates),
-						[&](const Duplicate& d) {
+						pair_categories[static_cast<int>(scoring)].cbegin(),
+						pair_categories[static_cast<int>(scoring)].cend(),
+						back_inserter(pairs),
+						[&](const ImagePair& d) {
 							return d.get_age() < maximum_pair_age && !d.is_in_same_folder();
 						});
 			}
 
-			duplicates_it = duplicates.begin();
+			pairs_it = pairs.begin();
 
 			auto buttons = {
 				button_swap_images, button_first_pair, button_previous_pair, button_next_pair,
 				button_open_folder_left, button_delete_file_left,
 				button_open_folder_right, button_delete_file_right};
-			if (duplicates.empty())
+			if (pairs.empty())
 				for (auto b : buttons)
 					window.set_button_state(b, false);
 			else
@@ -579,12 +571,12 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 		}
 
 		if (!images_valid) {
-			if (duplicates.empty()) {
+			if (pairs.empty()) {
 				window.set_image(pane_image_left, nullptr);
 				window.set_image(pane_image_right, nullptr);
 			} else {
-				window.set_image(pane_image_left, duplicates_it->image_1);
-				window.set_image(pane_image_right, duplicates_it->image_2);
+				window.set_image(pane_image_left, pairs_it->image_1);
+				window.set_image(pane_image_right, pairs_it->image_2);
 			}
 			swapped_state = false;
 		}
@@ -624,7 +616,7 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 		}
 
 		if (!text_valid) {
-			update_text(window, duplicates, duplicates_it);
+			update_text(window, pairs, pairs_it);
 			window.set_dirty();
 		}
 
@@ -647,13 +639,13 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 		}
 
 		if (!buttons_valid) {
-			if (!duplicates.empty()) {
+			if (!pairs.empty()) {
 				window.set_button_state(button_delete_file_left, window.get_image(pane_image_left)->is_deletable());
 				window.set_button_state(button_delete_file_right, window.get_image(pane_image_right)->is_deletable());
 			}
 		}
 
-		duplicates_valid = true;
+		pairs_valid = true;
 		images_valid = true;
 		scale_levels_valid = true;
 		text_valid = true;
@@ -665,10 +657,10 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 		if (e.type == Event::Type::button) {
 			switch(e.button_id) {
 			case button_next_pair:
-				if (!duplicates.empty()) {
-					duplicates_it++;
-					if (duplicates_it == duplicates.end())
-						duplicates_it = duplicates.begin();
+				if (!pairs.empty()) {
+					pairs_it++;
+					if (pairs_it == pairs.end())
+						pairs_it = pairs.begin();
 
 					images_valid = false;
 					scale_levels_valid = false;
@@ -678,10 +670,10 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 				}
 				break;
 			case button_previous_pair:
-				if (!duplicates.empty()) {
-					if (duplicates_it == duplicates.begin())
-						duplicates_it = duplicates.end();
-					duplicates_it--;
+				if (!pairs.empty()) {
+					if (pairs_it == pairs.begin())
+						pairs_it = pairs.end();
+					pairs_it--;
 
 					images_valid = false;
 					scale_levels_valid = false;
@@ -691,8 +683,8 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 				}
 				break;
 			case button_first_pair:
-				if (!duplicates.empty()) {
-					duplicates_it = duplicates.begin();
+				if (!pairs.empty()) {
+					pairs_it = pairs.begin();
 
 					images_valid = false;
 					scale_levels_valid = false;
@@ -828,7 +820,7 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 
 				window.set_menu_item_checked(e.button_id);
 
-				duplicates_valid = false;
+				pairs_valid = false;
 				images_valid = false;
 				scale_levels_valid = false;
 				text_valid = false;
@@ -874,7 +866,7 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 			} else if (e.key_code == 'S') {
 				window.click_button(button_swap_images);
 			} else if (e.key_code == 'Z' || e.key_code == 'X') {
-				if (!duplicates.empty()) {
+				if (!pairs.empty()) {
 					zoom(window, scale_levels, e.key_code == 'Z' ? 1 : -1);
 					text_valid = false;
 					cursor_valid = false;
@@ -883,7 +875,7 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 		} else if (e.type == Event::Type::quit) {
 			return {};
 		} else if (e.type == Event::Type::wheel) {
-			if (!duplicates.empty()) {
+			if (!pairs.empty()) {
 				zoom(window, scale_levels, e.wheel_count_delta);
 				text_valid = false;
 				cursor_valid = false;

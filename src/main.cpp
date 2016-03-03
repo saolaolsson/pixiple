@@ -1,6 +1,6 @@
 #include "shared.h"
 
-#include "duplicate.h"
+#include "image_pair.h"
 #include "resource.h"
 #include "tests.h"
 #include "window.h"
@@ -23,8 +23,8 @@
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 std::vector<std::tr2::sys::path> scan(Window& window, const std::vector<ComPtr<IShellItem>>& shell_items);
-std::vector<std::vector<Duplicate>> process(Window& window, const std::vector<std::tr2::sys::path>& paths);
-std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::vector<Duplicate>>& duplicate_categories);
+std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<std::tr2::sys::path>& paths);
+std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::vector<ImagePair>>& pair_categories);
 
 std::vector<ComPtr<IShellItem>> browse(HWND parent) {
 	PIDLIST_ABSOLUTE pidlist;
@@ -65,7 +65,7 @@ static void app() {
 	auto items = browse(window.get_handle());
 
 	for (;;) {
-		std::vector<std::vector<Duplicate>> duplicate_categories{4};
+		std::vector<std::vector<ImagePair>> pair_categories{4};
 
 		window.reset();
 
@@ -74,7 +74,7 @@ static void app() {
 			if (window.quit_event_seen())
 				return;
 
-			duplicate_categories = process(window, paths);
+			pair_categories = process(window, paths);
 			if (window.quit_event_seen())
 				return;
 
@@ -82,7 +82,7 @@ static void app() {
 		}
 
 		window.set_drop_target(true);
-		items = compare(window, duplicate_categories);
+		items = compare(window, pair_categories);
 		window.set_drop_target(false);
 
 		if (window.quit_event_seen())
