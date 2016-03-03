@@ -326,8 +326,7 @@ void Pane::draw(ComPtr<ID2D1HwndRenderTarget> render_target) const {
 	render_target->FillRectangle(container(), brush);
 
 	if (text_layout) {
-		auto c = GetSysColor(COLOR_WINDOWTEXT);
-		er = render_target->CreateSolidColorBrush(Colour{GetRValue(c)/255.0f, GetGValue(c)/255.0f, GetBValue(c)/255.0f}.d2d(), &brush);
+		er = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &brush);
 
 		auto padding = (rect_size(container()).h - height) / 2;
 		padding = std::max(padding, 0.0f);
