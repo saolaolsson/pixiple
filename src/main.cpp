@@ -53,7 +53,7 @@ std::vector<ComPtr<IShellItem>> browse(HWND parent) {
 static void app() {
 	#define STRINGIZE_(i) L ## # i
 	#define STRINGIZE(i) STRINGIZE_(i)
-	std::wstring window_title = APP_NAME L" (release " STRINGIZE(APP_RELEASE) L")";
+	std::wstring window_title = APP_NAME L" " STRINGIZE(APP_RELEASE);
 	#ifdef _DEBUG
 	window_title += L" _DEBUG";
 	#endif

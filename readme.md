@@ -16,19 +16,19 @@ Download the executable from [Releases](https://github.com/olaolsso/pixiple/rele
 
 ## Features
 
-- Fast, multi-threaded processing, though even with a fast SSD, you will likely be IO-bound.
+- Uses pixel and metadata content (dates, location, camera) to find related images.
+- Fast, multi-threaded processing.
 - Resizable, DPI-aware UI.
 
 ## Misfeatures
 
 - Simple, idiosyncratic UI with rough edges.
-- Support for image file formats supported by Windows Imaging Component (PNG, JPEG, GIF, TIFF, BMP) only.
-- Only one folder (and all folders below this folder, recursively) is scanned at a time.
+- Support for image file formats supported by Windows Imaging Component only (PNG, JPEG, GIF, TIFF, BMP).
 - No installer.
 
 ## Requirements
 
-Windows 7 (64-bit). May work with Windows Vista and Windows 10.
+Windows Vista or later.
 
 ## What's similar?
 
