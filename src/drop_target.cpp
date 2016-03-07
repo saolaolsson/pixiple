@@ -45,7 +45,7 @@ std::vector<ComPtr<IShellItem>> get_shell_items(IDataObject* object) {
 	auto hdrop = reinterpret_cast<HDROP>(stgm.hGlobal);
 	auto n_paths = DragQueryFile(hdrop, 0xffffffff, nullptr, 0);
 
-	std::vector<ComPtr<IShellItem>> folders;
+	std::vector<ComPtr<IShellItem>> items;
 	for (UINT i = 0; i < n_paths; i++) {
 		auto buffer_size = er = DragQueryFile(hdrop, i, nullptr, 0);
 		std::vector<wchar_t> buffer(buffer_size + 1);
@@ -55,11 +55,11 @@ std::vector<ComPtr<IShellItem>> get_shell_items(IDataObject* object) {
 		ComPtr<IShellItem> si;
 		er = SHCreateItemFromParsingName(
 			buffer.data(), nullptr, IID_IShellItem, reinterpret_cast<void**>(&si));
-		folders.push_back(si);
+		items.push_back(si);
 	}
 	ReleaseStgMedium(&stgm);
 
-	return folders;
+	return items;
 }
 
 HRESULT __stdcall DropTarget::DragEnter(IDataObject* object, DWORD, POINTL, DWORD*) {

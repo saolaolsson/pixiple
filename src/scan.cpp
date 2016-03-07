@@ -77,6 +77,9 @@ std::vector<std::tr2::sys::path> scan(Window& window, const std::vector<ComPtr<I
 				return {};
 	}
 
+	std::sort(paths.begin(), paths.end());
+	paths.erase(std::unique(paths.begin(), paths.end()), paths.end());
+
 	debug_log << L"images found: " << paths.size() << std::endl;
 
 	return paths;

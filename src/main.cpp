@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 
+#include <shellapi.h>
 #include <ShlObj.h>
 
 #pragma comment(lib, "comctl32")
@@ -50,6 +51,19 @@ std::vector<ComPtr<IShellItem>> browse(HWND parent) {
 	return {root};
 }
 
+std::vector<std::wstring> get_command_line_args() {
+	wchar_t** args;
+	int n_args;
+	args = er = CommandLineToArgvW(GetCommandLine(), &n_args);
+
+	std::vector<std::wstring> arg_strings;
+	for (int i = 1; i < n_args; i++)
+		arg_strings.push_back(args[i]);
+		
+	er = LocalFree(args) == nullptr;
+	return arg_strings;
+}
+
 static void app() {
 	#define STRINGIZE_(i) L ## # i
 	#define STRINGIZE(i) STRINGIZE_(i)
@@ -62,7 +76,15 @@ static void app() {
 		window_title, {800, 600},
 		er = LoadIcon(er = GetModuleHandle(nullptr), MAKEINTRESOURCE(APP_ICON))};
 
-	auto items = browse(window.get_handle());
+	std::vector<ComPtr<IShellItem>> items;
+	for (const auto& a : get_command_line_args()) {
+		ComPtr<IShellItem> si;
+		auto hr = SHCreateItemFromParsingName(a.data(), nullptr, IID_IShellItem, reinterpret_cast<void**>(&si));
+		if (SUCCEEDED(hr))
+			items.push_back(si);
+	}
+	if (items.empty())
+		items = browse(window.get_handle());
 
 	for (;;) {
 		std::vector<std::vector<ImagePair>> pair_categories{4};
@@ -90,7 +112,7 @@ static void app() {
 	}
 }
 
-int WINAPI WinMain(__in HINSTANCE, __in_opt HINSTANCE, __in LPSTR, __in int) {
+int main() {
 	TRACE();
 
 	try {

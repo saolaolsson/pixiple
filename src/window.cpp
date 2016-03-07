@@ -51,7 +51,9 @@ Window::Window(const std::wstring& title, const D2D1_SIZE_U& size_min, const HIC
 		std::max(to_dip_y(r.bottom - r.top), this->size_min.h)};
 	er = SetWindowPos(
 		hwnd, nullptr, 0, 0, to_dp_x(s.w), to_dp_y(s.h),
-		SWP_NOMOVE | SWP_SHOWWINDOW | SWP_NOZORDER);
+		SWP_NOMOVE | SWP_NOZORDER);
+
+	ShowWindow(hwnd, SW_SHOWDEFAULT);
 }
 
 Window::~Window() {

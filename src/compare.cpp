@@ -66,7 +66,7 @@ std::vector<std::pair<float, float>> get_scale_levels(
 			scale_level_pairs.push_back({sl2, sl});
 	}
 
-	// remove pairs
+	// remove duplicates
 	std::sort(scale_level_pairs.begin(), scale_level_pairs.end());
 	scale_level_pairs.erase(std::unique(scale_level_pairs.begin(), scale_level_pairs.end()), scale_level_pairs.end());
 	assert(!scale_level_pairs.empty());
