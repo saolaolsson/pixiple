@@ -691,17 +691,19 @@ ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target
 	const auto bitmap_cache_limit = 8;
 
 	BitmapCacheEntry bce;
+	{
+		std::lock_guard<std::mutex> lg{class_mutex};
+		auto i = std::find_if(bitmap_cache.begin(), bitmap_cache.end(),
+			[&](BitmapCacheEntry bce) {
+				return bce.image.lock() == shared_from_this();
+			});
+		if (i != bitmap_cache.end()) {
+			bce = *i;
+			bitmap_cache.erase(i);
+		}
+	}
 
-	auto i = std::find_if(bitmap_cache.begin(), bitmap_cache.end(),
-		[&](BitmapCacheEntry bce) {
-			return bce.image.lock() == shared_from_this();
-		});
-	if (i != bitmap_cache.end()) {
-		// bitmap cached
-		bce = *i;
-		bitmap_cache.erase(i);
-	} else {
-		// bitmap not cached so create bitmap
+	if (bce.bitmap == nullptr) {
 		bce.image = shared_from_this();
 
 		std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size));
@@ -732,9 +734,12 @@ ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target
 			format_converter, D2D1::BitmapProperties(d2d_pf, dpi.x, dpi.y), &bce.bitmap);
 	}
 
-	bitmap_cache.push_back(bce);
-	if (bitmap_cache.size() > bitmap_cache_limit)
-		bitmap_cache.erase(bitmap_cache.begin());
+	{
+		std::lock_guard<std::mutex> lg{class_mutex};
+		bitmap_cache.push_back(bce);
+		if (bitmap_cache.size() > bitmap_cache_limit)
+			bitmap_cache.erase(bitmap_cache.begin());
+	}
 
 	return bce.bitmap;
 }

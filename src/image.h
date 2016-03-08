@@ -54,7 +54,7 @@ private:
 
 	struct BitmapCacheEntry {
 		std::weak_ptr<Image> image;
-		ComPtr<ID2D1Bitmap> bitmap;
+		ComPtr<ID2D1Bitmap> bitmap = nullptr;
 	};
 	static std::vector<BitmapCacheEntry> bitmap_cache;
 

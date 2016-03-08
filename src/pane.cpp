@@ -320,6 +320,8 @@ static D2D1_RECT_F get_destination_rect(
 }
 
 void Pane::draw(ComPtr<ID2D1HwndRenderTarget> render_target) const {
+	CoInitialize(nullptr);
+
 	ComPtr<ID2D1SolidColorBrush> brush;
 
 	er = render_target->CreateSolidColorBrush(colour.d2d(), &brush);
@@ -357,6 +359,8 @@ void Pane::draw(ComPtr<ID2D1HwndRenderTarget> render_target) const {
 	er = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue), &brush);
 	render_target->DrawRectangle(container(), brush);
 	#endif
+
+	CoUninitialize();
 }
 
 void Pane::set_text(

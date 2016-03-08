@@ -7,14 +7,11 @@
 
 ImagePair::ImagePair(
 	const std::shared_ptr<Image>& image_1,
-	const std::shared_ptr<Image>& image_2,
-	const float distance)
+	const std::shared_ptr<Image>& image_2)
 	:
 	image_1{image_1},
-	image_2{image_2},
-	distance{distance}
+	image_2{image_2}
 {
-	assert(distance >= 0);
 	if (image_1 && image_2)
 		if (this->image_2->get_file_time() < this->image_1->get_file_time())
 			std::swap(this->image_1, this->image_2);

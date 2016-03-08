@@ -10,7 +10,7 @@
 #include <WindowsX.h>
 
 Window::Window(const std::wstring& title, const D2D1_SIZE_U& size_min, const HICON icon) {
-	er = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &d2d_factory);
+	er = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &d2d_factory);
 
 	Point2f dpi;
 	d2d_factory->GetDesktopDpi(&dpi.x, &dpi.y);
@@ -611,8 +611,24 @@ void Window::paint() const {
 		auto c = GetSysColor(COLOR_WINDOW);
 		render_target->Clear(Colour{GetRValue(c)/255.0f, GetGValue(c)/255.0f, GetBValue(c)/255.0f}.d2d());
 	} else {
+		const auto wait_cursor_deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(200);
+		HCURSOR cursor = nullptr;
+		std::vector<std::future<void>> futures;
+
 		for (auto& pane : panes)
-			pane.draw(render_target);
+			futures.push_back(std::async(&Pane::draw, &pane, render_target));
+
+		for (auto& f : futures) {
+			auto r = f.wait_until(wait_cursor_deadline);
+			if (r == std::future_status::timeout && cursor == nullptr) {
+				cursor = GetCursor();
+				er = SetCursor(er = LoadCursor(nullptr, IDC_WAIT));
+			}
+		}
+		for (auto& f : futures)
+			f.get();
+		if (cursor)
+			er = SetCursor(cursor);
 	}
 
 	auto hr = render_target->EndDraw();

@@ -14,8 +14,7 @@ public:
 
 	ImagePair(
 		const std::shared_ptr<Image>& image_1,
-		const std::shared_ptr<Image>& image_2,
-		const float distance = 0);
+		const std::shared_ptr<Image>& image_2);
 
 	bool operator<(const ImagePair& rhs) const;
 
