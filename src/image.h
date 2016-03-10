@@ -24,9 +24,9 @@ public:
 	enum class Status {ok, open_failed, decode_failed};
 	Status get_status() const;
 
-	std::tr2::sys::path get_path() const;
-	std::uintmax_t get_file_size() const;
-	std::tr2::sys::file_time_type get_file_time() const;
+	std::tr2::sys::path path() const;
+	std::uintmax_t file_size() const;
+	std::tr2::sys::file_time_type file_time() const;
 
 	std::vector<std::chrono::system_clock::time_point> get_metadata_times() const;
 	std::wstring get_metadata_make_model() const;
@@ -39,6 +39,7 @@ public:
 
 	Hash get_file_hash() const;
 	Hash get_pixel_hash() const;
+	float get_blur() const;
 
 	float get_distance(const Image& image, const float maximum_distance = std::numeric_limits<float>::max()) const;
 
@@ -62,9 +63,9 @@ private:
 
 	Status status = Status::ok;
 
-	std::tr2::sys::path path;
-	std::tr2::sys::file_time_type file_time;
-	std::uintmax_t file_size = 0;
+	std::tr2::sys::path path_;
+	std::tr2::sys::file_time_type file_time_;
+	std::uintmax_t file_size_ = 0;
 
 	Size2u image_size{0, 0};
 
@@ -82,10 +83,12 @@ private:
 	
 	Hash file_hash;
 	Hash pixel_hash;
+	float blur = 0.0f;
 
 	void load_pixels(ComPtr<IWICBitmapFrameDecode> frame);
 	void load_metadata(ComPtr<IWICBitmapFrameDecode> frame);
 	void calculate_hash();
+	void calculate_blur();
 
 	ComPtr<IWICBitmapFrameDecode> get_frame(std::vector<std::uint8_t>& buffer) const;
 	ComPtr<ID2D1Bitmap> get_bitmap(ID2D1HwndRenderTarget* const render_target) const;

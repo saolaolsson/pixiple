@@ -21,17 +21,58 @@ std::mutex Image::class_mutex;
 int Image::n_instances;
 std::vector<Image::BitmapCacheEntry> Image::bitmap_cache;
 
+std::vector<std::vector<float>> convolve(
+	const std::vector<std::vector<float>>& input,
+	const std::vector<std::vector<float>>& kernel
+) {
+	const Size2i s{numeric_cast<int>(input[0].size()), numeric_cast<int>(input.size())};
+	const Size2i sk{numeric_cast<int>(kernel[0].size()), numeric_cast<int>(kernel.size())};
+
+	std::vector<std::vector<float>> output = input;
+	for (int y = 0; y < s.h; y++) {
+		for (int x = 0; x < s.w; x++) {
+			output[y][x] = 0;
+			for (int yk = 0; yk < sk.h; yk++) {
+				for (int xk = 0; xk < sk.w; xk++) {
+					if (y+yk >= s.h || x+xk >= s.w)
+						continue;
+					output[y][x] += input[y+yk][x+xk];
+				}
+			}
+		}
+	}
+	return output;
+}
+
+float variance(const std::vector<std::vector<float>>& input) {
+	const Size2i s{numeric_cast<int>(input[0].size()), numeric_cast<int>(input.size())};
+
+	float sum = 0;
+	for (int y = 0; y < s.h; y++)
+		for (int x = 0; x < s.w; x++)
+			sum += input[y][x];
+	auto average = sum / (s.h*s.w);
+
+	float variance = 0;
+	for (int y = 0; y < s.h; y++)
+		for (int x = 0; x < s.w; x++)
+			variance += (input[y][x] - average)*(input[y][x] - average);
+	variance /= (s.h*s.w);
+
+	return variance;
+}
+
 void Image::clear_cache() {
 	bitmap_cache.clear();
 }
 
-Image::Image(const std::tr2::sys::path& path) : path{path} {
+Image::Image(const std::tr2::sys::path& path) : path_{path} {
 	assert(!path.empty());
 
-	file_size = std::tr2::sys::file_size(path);
-	file_time = std::tr2::sys::last_write_time(path);
+	file_size_ = std::tr2::sys::file_size(path);
+	file_time_ = std::tr2::sys::last_write_time(path);
 
-	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size));
+	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size_));
 	auto frame = get_frame(data);
 	if (frame) {
 		load_pixels(frame);
@@ -55,16 +96,16 @@ Image::Status Image::get_status() const {
 	return status;
 }
 
-std::tr2::sys::path Image::get_path() const {
-	return path;
+std::tr2::sys::path Image::path() const {
+	return path_;
 }
 
-std::uintmax_t Image::get_file_size() const {
-	return file_size;
+std::uintmax_t Image::file_size() const {
+	return file_size_;
 }
 
-std::chrono::system_clock::time_point Image::get_file_time() const {
-	return file_time;
+std::chrono::system_clock::time_point Image::file_time() const {
+	return file_time_;
 }
 
 std::vector<std::chrono::system_clock::time_point> Image::get_metadata_times() const {
@@ -105,6 +146,12 @@ Hash Image::get_pixel_hash() const {
 	if (pixel_hash == Hash{})
 		const_cast<Image*>(this)->calculate_hash();
 	return pixel_hash;
+}
+
+float Image::get_blur() const {
+	if (blur == 0.0f)
+		const_cast<Image*>(this)->calculate_blur();
+	return blur;
 }
 
 float Image::get_distance(const Image& image, const float maximum_distance) const {
@@ -193,7 +240,7 @@ static std::wstring to_windows_path(const std::tr2::sys::path& path) {
 
 bool Image::is_deletable() const {
 	auto h = CreateFile(
-		to_windows_path(path).c_str(), DELETE, FILE_SHARE_DELETE,
+		to_windows_path(path_).c_str(), DELETE, FILE_SHARE_DELETE,
 		nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (h != INVALID_HANDLE_VALUE)
 		er = CloseHandle(h);
@@ -201,11 +248,11 @@ bool Image::is_deletable() const {
 }
 
 void Image::delete_file() const {
-	if (path.empty())
+	if (path_.empty())
 		return;
 
 	ComPtr<IShellItem> file;
-	auto hr = SHCreateItemFromParsingName(path.c_str(), nullptr, IID_PPV_ARGS(&file));
+	auto hr = SHCreateItemFromParsingName(path_.c_str(), nullptr, IID_PPV_ARGS(&file));
 	if (FAILED(hr))
 		return;
 
@@ -222,11 +269,11 @@ void Image::delete_file() const {
 // Try to open explorer window at containing folder with file
 // selected, or try to open containing folder, or fail silently.
 void Image::open_folder() const {
-	__unaligned auto folder = ILCreateFromPath(path.parent_path().c_str());
+	__unaligned auto folder = ILCreateFromPath(path_.parent_path().c_str());
 	if (folder == nullptr)
 		return;
 
-	__unaligned auto file = ILCreateFromPath(path.c_str());
+	__unaligned auto file = ILCreateFromPath(path_.c_str());
 	if (file) {
 		__unaligned const ITEMIDLIST* selection[]{file};
 		er = SHOpenFolderAndSelectItems(folder, 1, selection, 0);
@@ -262,14 +309,14 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 		WICBitmapPaletteTypeCustom);
 
 	const auto pixel_stride = 4;
-	auto pixel_buffer_stride = image_size.w * pixel_stride;
-	std::size_t pixel_buffer_size = pixel_buffer_stride * image_size.h;
+	const auto line_stride = image_size.w * pixel_stride;
+	const std::size_t pixel_buffer_size = line_stride * image_size.h;
 	assert(pixel_buffer_size > 0);
 	std::vector<uint8_t> pixel_buffer(pixel_buffer_size);
 
 	auto hr = format_converter->CopyPixels(
 		nullptr,
-		pixel_buffer_stride,
+		line_stride,
 		numeric_cast<UINT>(pixel_buffer_size),
 		pixel_buffer.data());
 	if (FAILED(hr)) {
@@ -297,10 +344,10 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 
 			for (auto y = offset_y; y < offset_y_next; y++) {
 				for (auto x = offset_x; x < offset_x_next; x++) {
-					b += pixel_buffer.data()[y*pixel_buffer_stride + x*pixel_stride + 0];
-					g += pixel_buffer.data()[y*pixel_buffer_stride + x*pixel_stride + 1];
-					r += pixel_buffer.data()[y*pixel_buffer_stride + x*pixel_stride + 2];
-					a += pixel_buffer.data()[y*pixel_buffer_stride + x*pixel_stride + 3];
+					b += pixel_buffer.data()[y*line_stride + x*pixel_stride + 0];
+					g += pixel_buffer.data()[y*line_stride + x*pixel_stride + 1];
+					r += pixel_buffer.data()[y*line_stride + x*pixel_stride + 2];
+					a += pixel_buffer.data()[y*line_stride + x*pixel_stride + 3];
 				}
 			}
 
@@ -610,7 +657,7 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 }
 
 void Image::calculate_hash() {
-	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size));
+	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size_));
 	auto frame = get_frame(data);
 	if (frame == nullptr)
 		return;
@@ -636,10 +683,63 @@ void Image::calculate_hash() {
 	}
 }
 
+void Image::calculate_blur() {
+	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size_));
+	auto frame = get_frame(data);
+	if (frame == nullptr)
+		return;
+
+	ComPtr<IWICImagingFactory> wic_factory;
+	er = CoCreateInstance(
+		CLSID_WICImagingFactory,
+		nullptr,
+		CLSCTX_INPROC_SERVER,
+		IID_PPV_ARGS(&wic_factory));
+
+	ComPtr<IWICFormatConverter> format_converter;
+	er = wic_factory->CreateFormatConverter(&format_converter);
+	er = format_converter->Initialize(
+		frame,
+		GUID_WICPixelFormat32bppPBGRA,
+		WICBitmapDitherTypeNone,
+		nullptr,
+		0,
+		WICBitmapPaletteTypeCustom);
+
+	const auto pixel_stride = 4;
+	const auto line_stride = image_size.w * pixel_stride;
+	const std::size_t pixel_buffer_size = line_stride * image_size.h;
+	assert(pixel_buffer_size > 0);
+	std::vector<uint8_t> pixel_buffer(pixel_buffer_size);
+
+	auto hr = format_converter->CopyPixels(
+		nullptr,
+		line_stride,
+		numeric_cast<UINT>(pixel_buffer_size),
+		pixel_buffer.data());
+	if (FAILED(hr))
+		return;
+
+	std::vector<std::vector<float>> intensities(image_size.h, std::vector<float>(image_size.w));
+	for (unsigned y = 0; y < image_size.h; y++)
+		for (unsigned x = 0; x < image_size.w; x++)
+			intensities[y][x] = (
+				pixel_buffer.data()[y*line_stride + x*pixel_stride + 0] +
+				pixel_buffer.data()[y*line_stride + x*pixel_stride + 1] +
+				pixel_buffer.data()[y*line_stride + x*pixel_stride + 2]) / 255.0f / 3.0f;
+
+	std::vector<std::vector<float>> kernel{
+		{0,  1, 0},
+		{1, -4, 1},
+		{0,  1, 0},
+	};
+	blur = variance(convolve(intensities, kernel));
+}
+
 ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer) const {
-	std::ifstream ifs(path, std::ios::binary);
-	ifs.read(reinterpret_cast<char*>(buffer.data()), file_size);
-	assert(numeric_cast<std::size_t>(ifs.gcount()) == file_size || (ifs.fail() && ifs.gcount() == 0));
+	std::ifstream ifs(path_, std::ios::binary);
+	ifs.read(reinterpret_cast<char*>(buffer.data()), file_size_);
+	assert(numeric_cast<std::size_t>(ifs.gcount()) == file_size_ || (ifs.fail() && ifs.gcount() == 0));
 	if (ifs.fail())
 		return nullptr;
 	ifs.close();
@@ -656,7 +756,7 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 
 	er = stream->InitializeFromMemory(
 		buffer.data(),
-		numeric_cast<DWORD>(file_size));
+		numeric_cast<DWORD>(file_size_));
 
 	ComPtr<IWICBitmapDecoder> decoder;
 	auto hr = wic_factory->CreateDecoderFromStream(
@@ -672,8 +772,8 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 
 	// if file has changed since *this was created, fail
 
-	if (file_size != 0)
-		if (std::tr2::sys::file_size(path) != file_size)
+	if (file_size_ != 0)
+		if (std::tr2::sys::file_size(path_) != file_size_)
 			return nullptr;
 
 	if (image_size.w != 0 || image_size.h != 0) {
@@ -706,7 +806,7 @@ ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target
 	if (bce.bitmap == nullptr) {
 		bce.image = shared_from_this();
 
-		std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size));
+		std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size_));
 		auto frame = get_frame(data);
 		if (frame == nullptr)
 			return nullptr;

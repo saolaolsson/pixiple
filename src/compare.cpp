@@ -177,25 +177,25 @@ void update_text_image_info(
 
 	// filename
 
-	ss << image->get_path() << L"\n";
-	auto matching_length = get_matching_text_length(image->get_path(), image_other->get_path());
+	ss << image->path() << L"\n";
+	auto matching_length = get_matching_text_length(image->path(), image_other->path());
 	bold_ranges.push_back({index, matching_length});
 
 	matching_length = get_matching_text_length(
-		image->get_path().filename(), image_other->get_path().filename());
+		image->path().filename(), image_other->path().filename());
 	bold_ranges.push_back(
-		{index + image->get_path().parent_path().wstring().length() + 1, matching_length});
+		{index + image->path().parent_path().wstring().length() + 1, matching_length});
 	index = ss.str().length();
 
 	// file
 
-	ss << image->get_file_size() << L" bytes, ";
-	if (image->get_file_size() == image_other->get_file_size())
+	ss << image->file_size() << L" bytes, ";
+	if (image->file_size() == image_other->file_size())
 		bold_ranges.push_back({index, ss.str().length() - index});
 	index = ss.str().length();
 
-	ss << to_string(image->get_file_time()) << L", ";
-	if (image->get_file_time() == image_other->get_file_time())
+	ss << to_string(image->file_time()) << L", ";
+	if (image->file_time() == image_other->file_time())
 		bold_ranges.push_back({index, ss.str().length() - index});
 	index = ss.str().length();
 
@@ -292,6 +292,9 @@ void update_text_image_info(
 	}
 	if (scale == fit_scale)
 		ss << L" (fit pane)";
+
+	ss << ", " << std::setprecision(3) << image->get_blur();
+
 	window.set_text(scale_pane, ss.str());
 }
 

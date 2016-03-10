@@ -13,7 +13,7 @@ ImagePair::ImagePair(
 	image_2{image_2}
 {
 	if (image_1 && image_2)
-		if (this->image_2->get_file_time() < this->image_1->get_file_time())
+		if (this->image_2->file_time() < this->image_1->file_time())
 			std::swap(this->image_1, this->image_2);
 }
 
@@ -22,19 +22,19 @@ bool ImagePair::operator<(const ImagePair& rhs) const {
 		return distance < rhs.distance;
 	} else {
 		// same distance, so sort by file names instead
-		auto& i = image_1->get_path() < image_2->get_path() ? *image_1 : *image_2;
-		const auto& rhsi = rhs.image_1->get_path() < rhs.image_2->get_path() ? *rhs.image_1 : *rhs.image_2;
-		return i.get_path() < rhsi.get_path();
+		auto& i = image_1->path() < image_2->path() ? *image_1 : *image_2;
+		const auto& rhsi = rhs.image_1->path() < rhs.image_2->path() ? *rhs.image_1 : *rhs.image_2;
+		return i.path() < rhsi.path();
 	}
 }
 
 bool ImagePair::is_in_same_folder() const {
-	return image_1->get_path().parent_path() == image_2->get_path().parent_path();
+	return image_1->path().parent_path() == image_2->path().parent_path();
 }
 
 std::chrono::system_clock::duration ImagePair::get_age() const {
 	auto now = std::chrono::system_clock::now();
-	return std::min(now - image_1->get_file_time(), now - image_2->get_file_time());
+	return std::min(now - image_1->file_time(), now - image_2->file_time());
 }
 
 std::wostream& operator<<(std::wostream& os, const std::chrono::system_clock::duration d) {

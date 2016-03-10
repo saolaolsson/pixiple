@@ -611,12 +611,12 @@ void Window::paint() const {
 		auto c = GetSysColor(COLOR_WINDOW);
 		render_target->Clear(Colour{GetRValue(c)/255.0f, GetGValue(c)/255.0f, GetBValue(c)/255.0f}.d2d());
 	} else {
-		const auto wait_cursor_deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(200);
+		const auto wait_cursor_deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(500);
 		HCURSOR cursor = nullptr;
 		std::vector<std::future<void>> futures;
 
 		for (auto& pane : panes)
-			futures.push_back(std::async(&Pane::draw, &pane, render_target));
+			futures.push_back(std::async(&Pane::draw, &pane, render_target)); // pane.draw(render_target)
 
 		for (auto& f : futures) {
 			auto r = f.wait_until(wait_cursor_deadline);
