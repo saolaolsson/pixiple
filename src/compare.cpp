@@ -293,7 +293,7 @@ void update_text_image_info(
 	if (scale == fit_scale)
 		ss << L" (fit pane)";
 
-	ss << ", " << std::setprecision(3) << image->get_blur();
+	ss << ", " << std::setprecision(2) << 1000*image->get_blur();
 
 	window.set_text(scale_pane, ss.str());
 }

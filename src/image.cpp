@@ -36,7 +36,7 @@ std::vector<std::vector<float>> convolve(
 				for (int xk = 0; xk < sk.w; xk++) {
 					if (y+yk >= s.h || x+xk >= s.w)
 						continue;
-					output[y][x] += input[y+yk][x+xk];
+					output[y][x] += input[y+yk][x+xk] * kernel[yk][xk];
 				}
 			}
 		}
