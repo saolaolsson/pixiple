@@ -35,11 +35,9 @@ public:
 		const bool fixed_width,
 		const bool fixed_height,
 		const Colour colour);
-	Pane(const Pane&) = delete;
-	Pane(Pane&& other) = default;
-
 	~Pane();
-
+	Pane(const Pane&) = delete;
+	Pane(Pane&& rhs);
 	Pane& operator=(const Pane&) = delete;
 	Pane& operator=(Pane&&) = delete;
 

@@ -94,6 +94,60 @@ Pane::~Pane() {
 	}
 }
 
+Pane::Pane(Pane&& rhs) {
+	edge_left = rhs.edge_left;
+	edge_top = rhs.edge_top;
+	edge_right = rhs.edge_right;
+	edge_bottom = rhs.edge_bottom;
+
+	dw_factory = rhs.dw_factory;
+	text_format = rhs.text_format;
+
+	button_font = rhs.button_font;
+
+	window = rhs.window;
+
+	width = rhs.width;
+	height = rhs.height;
+	fixed_width = rhs.fixed_width;
+	fixed_height = rhs.fixed_height;
+
+	margin = rhs.margin;
+	colour = rhs.colour;
+	cursor = rhs.cursor;
+
+	// text
+	text = rhs.text;
+	text_bold_ranges = rhs.text_bold_ranges;
+	text_layout = rhs.text_layout;
+	text_tooltip_window = rhs.text_tooltip_window;
+	text_tooltip = rhs.text_tooltip;
+
+	// button
+	buttons = rhs.buttons;
+	button_size = rhs.button_size;
+	button_stride = rhs.button_stride;
+
+	// checkbox
+	checkbox = rhs.checkbox;
+
+	// progressbar
+	progressbar = rhs.progressbar;
+	progressbar_mode = rhs.progressbar_mode;
+	progressbar_taskbar_list = rhs.progressbar_taskbar_list;
+
+	// image
+	image = rhs.image;
+	image_centre = rhs.image_centre;
+	image_scale = rhs.image_scale;
+
+	rhs.button_font = nullptr;
+	rhs.buttons.clear();
+	rhs.checkbox = nullptr;
+	rhs.text_tooltip_window = nullptr;
+	rhs.progressbar = nullptr;
+}
+
 bool Pane::has_width() const {
 	return fixed_width;
 }
@@ -146,6 +200,7 @@ void Pane::set_cursor(LPCTSTR cursor_name) {
 
 void Pane::update() {
 	auto x = content().left;
+	x += (rect_size(content()).w - buttons.size() * button_stride) / 2; // TODO: should be width from first button left edge to last button right edge
 	for (auto& button : buttons) {
 		er = SetWindowPos(
 			button, nullptr,
@@ -156,13 +211,12 @@ void Pane::update() {
 	}
 
 	if (progressbar) {
-		auto content_size = rect_size(content());
 		auto progressbar_size = rect_size(get_client_rect(progressbar, window->get_scale()));
 
 		er = SetWindowPos(
 			progressbar, nullptr,
-			window->to_dp_x((content_size.w - progressbar_size.w) / 2),
-			window->to_dp_y((content_size.h - progressbar_size.h) / 2),
+			window->to_dp_x(content().left + (rect_size(content()).w - progressbar_size.w) / 2),
+			window->to_dp_y(content().top + (rect_size(content()).h - progressbar_size.h) / 2),
 			0, 0, SWP_NOCOPYBITS | SWP_NOSIZE | SWP_NOZORDER);
 	}
 
@@ -420,6 +474,9 @@ void Pane::set_progressbar_progress(const float progress) {
 		er = SetTimer(window->get_handle(), progressbar_timer_id, progressbar_timer_ms, nullptr);
 
 		progressbar_mode = ProgressbarMode::unknown;
+
+		width = ms_recommended_progressbar_size.w;
+		height = ms_recommended_progressbar_size.h;
 
 		window->layout_valid = false;
 	}

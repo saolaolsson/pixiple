@@ -195,16 +195,12 @@ std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<st
 
 	// update progress bar until no more work or window requests that work be stopped
 	while (!job.is_completed()) {
-		if (window.get_event().type == Event::Type::quit) {
+		auto e = window.get_event();
+		if (e.type == Event::Type::quit || e.type == Event::Type::button) {
 			job.force_thread_exit = true;
 			break;
 		}
 		window.set_progressbar_progress(0, job.get_progress());
-	}
-
-	if (!window.quit_event_seen()) {
-		window.set_progressbar_progress(0, 1.0f);
-		window.has_event();
 	}
 
 	// wait for threads to exit
@@ -212,16 +208,14 @@ std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<st
 		thread.join();
 
 	// return nothing if work not complete
-	if (window.quit_event_seen())
-		return {};
+	if (job.force_thread_exit)
+		return {{}, {}, {}, {}};
 
 	for (auto& d : pair_categories)
 		sort(d.begin(), d.end());
 
 	debug_log << L"process time: " << debug_timer() << std::endl;
 	debug_log << L"comparisons (calculated): " << (paths.size()*paths.size() - paths.size())/2 << std::endl;
-
-	window.reset();
 
 	return pair_categories;
 }

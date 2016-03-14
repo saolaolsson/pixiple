@@ -47,13 +47,13 @@ std::vector<std::vector<float>> convolve(
 float variance(const std::vector<std::vector<float>>& input) {
 	const Size2i s{numeric_cast<int>(input[0].size()), numeric_cast<int>(input.size())};
 
-	float sum = 0;
+	auto average = 0.0f;
 	for (int y = 0; y < s.h; y++)
 		for (int x = 0; x < s.w; x++)
-			sum += input[y][x];
-	auto average = sum / (s.h*s.w);
+			average += input[y][x];
+	average = average / (s.h*s.w);
 
-	float variance = 0;
+	auto variance = 0.0f;
 	for (int y = 0; y < s.h; y++)
 		for (int x = 0; x < s.w; x++)
 			variance += (input[y][x] - average)*(input[y][x] - average);

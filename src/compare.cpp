@@ -391,6 +391,8 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 	const auto colour_image_left = Colour{0xffb0b0b0};
 	const auto colour_image_right = Colour{0xffb8b8b8};
 
+	window.reset();
+
 	window.add_edge(0);
 	window.add_edge(0);
 	window.add_edge(1);
