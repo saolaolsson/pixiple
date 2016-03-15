@@ -3,6 +3,7 @@
 #include "d2d.h"
 #include "image.h"
 #include "image_pair.h"
+#include "time.h"
 #include "window.h"
 
 #include "shared/map.h"
@@ -147,18 +148,6 @@ std::size_t get_matching_text_length(const std::wstring& text1, const std::wstri
 	return i;
 }
 
-std::wstring to_string(const std::chrono::system_clock::time_point& tp) {
-	std::wostringstream ss;
-	ss.imbue(std::locale(""));
-
-	auto t = std::chrono::system_clock::to_time_t(tp);
-	tm tm;
-	er = localtime_s(&tm, &t) == 0;
-	ss << std::put_time(&tm, L"%c");
-
-	return ss.str();
-}
-
 void update_text_image_info(
 	Window& window,
 	const std::shared_ptr<const Image>& image,
@@ -194,7 +183,7 @@ void update_text_image_info(
 		bold_ranges.push_back({index, ss.str().length() - index});
 	index = ss.str().length();
 
-	ss << to_string(image->file_time()) << L", ";
+	ss << image->file_time() << L", ";
 	if (image->file_time() == image_other->file_time())
 		bold_ranges.push_back({index, ss.str().length() - index});
 	index = ss.str().length();
@@ -220,7 +209,7 @@ void update_text_image_info(
 
 	auto image_other_metadata_times = image_other->get_metadata_times();
 	for (auto t : image->get_metadata_times()) {
-		ss << to_string(t);
+		ss << t;
 
 		auto r = std::find(image_other_metadata_times.begin(), image_other_metadata_times.end(), t);
 		if (r != image_other_metadata_times.end())
@@ -492,15 +481,15 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 	else
 		assert(false);
 
-	if (maximum_pair_age > std::chrono::hours(365*24))
+	if (maximum_pair_age > 365*24h)
 		window.set_menu_item_checked(button_filters_age_any);
-	else if (maximum_pair_age == std::chrono::hours(365*24))
+	else if (maximum_pair_age == 365*24h)
 		window.set_menu_item_checked(button_filters_age_year);
-	else if (maximum_pair_age == std::chrono::hours(30*24))
+	else if (maximum_pair_age == 30*24h)
 		window.set_menu_item_checked(button_filters_age_month);
-	else if (maximum_pair_age == std::chrono::hours(7*24))
+	else if (maximum_pair_age == 7*24h)
 		window.set_menu_item_checked(button_filters_age_week);
-	else if (maximum_pair_age == std::chrono::hours(24))
+	else if (maximum_pair_age == 24h)
 		window.set_menu_item_checked(button_filters_age_day);
 	else
 		assert(false);
@@ -813,13 +802,13 @@ std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::v
 				else if (e.button_id == button_filters_age_any)
 					maximum_pair_age = std::chrono::system_clock::duration::max();
 				else if (e.button_id == button_filters_age_year)
-					maximum_pair_age = std::chrono::hours(365*24);
+					maximum_pair_age = 365*24h;
 				else if (e.button_id == button_filters_age_month)
-					maximum_pair_age = std::chrono::hours(30*24);
+					maximum_pair_age = 30*24h;
 				else if (e.button_id == button_filters_age_week)
-					maximum_pair_age = std::chrono::hours(7*24);
+					maximum_pair_age = 7*24h;
 				else if (e.button_id == button_filters_age_day)
-					maximum_pair_age = std::chrono::hours(24);
+					maximum_pair_age = 24h;
 				else
 					assert(false);
 

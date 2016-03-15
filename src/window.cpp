@@ -284,9 +284,9 @@ D2D1_RECT_F Window::content(const int pane_index) const {
 	return panes[pane_index].content();
 }
 
-void Window::set_text(const int pane_index, const std::wstring& text, const std::vector<std::pair<std::size_t, std::size_t>>& bold_ranges) {
+void Window::set_text(const int pane_index, const std::wstring& text, const std::vector<std::pair<std::size_t, std::size_t>>& bold_ranges, bool centred) {
 	assert(pane_index < int(edges.size()));
-	panes[pane_index].set_text(text, bold_ranges);
+	panes[pane_index].set_text(text, bold_ranges, centred);
 }
 
 void Window::set_progressbar_progress(const int pane_index, const float progress) {

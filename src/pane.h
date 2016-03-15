@@ -57,7 +57,7 @@ public:
 	void update();
 	void draw(ComPtr<ID2D1HwndRenderTarget> render_target) const;
 
-	void set_text(const std::wstring& text, const std::vector<std::pair<std::size_t, std::size_t>>& bold_ranges = std::vector<std::pair<std::size_t, std::size_t>>());
+	void set_text(const std::wstring& text, const std::vector<std::pair<std::size_t, std::size_t>>& bold_ranges = std::vector<std::pair<std::size_t, std::size_t>>(), bool centred = false);
 
 	void set_progressbar_progress(const float progress);
 
@@ -95,6 +95,7 @@ private:
 	// text
 	std::wstring text;
 	std::vector<std::pair<std::size_t, std::size_t>> text_bold_ranges;
+	bool text_centred;
 	ComPtr<IDWriteTextLayout> text_layout;
 	HWND text_tooltip_window;
 	std::wstring text_tooltip;

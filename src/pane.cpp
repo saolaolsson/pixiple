@@ -119,6 +119,7 @@ Pane::Pane(Pane&& rhs) {
 	// text
 	text = rhs.text;
 	text_bold_ranges = rhs.text_bold_ranges;
+	text_centred = rhs.text_centred;
 	text_layout = rhs.text_layout;
 	text_tooltip_window = rhs.text_tooltip_window;
 	text_tooltip = rhs.text_tooltip;
@@ -384,11 +385,20 @@ void Pane::draw(ComPtr<ID2D1HwndRenderTarget> render_target) const {
 	if (text_layout) {
 		er = render_target->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &brush);
 
-		auto padding = (rect_size(container()).h - height) / 2;
-		padding = std::max(padding, 0.0f);
+		Size2f padding{0, 0};
+
+		padding.v = (rect_size(container()).h - height) / 2;
+		padding.v = std::max(0.0f, padding.v);
+
+		if (text_centred) {
+			DWRITE_TEXT_METRICS tm;
+			er = text_layout->GetMetrics(&tm);
+			padding.h = (rect_size(content()).w - tm.width) / 2;
+			padding.h = std::max(0.0f, padding.h);
+		}
 
 		render_target->DrawTextLayout(
-			D2D1::Point2F(content().left, content().top + padding),
+			D2D1::Point2F(content().left + padding.h, content().top + padding.v),
 			text_layout,
 			brush);
 	}
@@ -419,10 +429,12 @@ void Pane::draw(ComPtr<ID2D1HwndRenderTarget> render_target) const {
 
 void Pane::set_text(
 	const std::wstring& text,
-	const std::vector<std::pair<std::size_t, std::size_t>>& bold_ranges
+	const std::vector<std::pair<std::size_t, std::size_t>>& bold_ranges,
+	bool centred
 ) {
 	this->text = text;
 	this->text_bold_ranges = bold_ranges;
+	this->text_centred = centred;
 
 	if (fixed_width || fixed_height) {
 		// determine maximum text width and height
@@ -452,6 +464,7 @@ void Pane::set_text(
 	}
 
 	window->layout_valid = false;
+	window->set_dirty();
 }
 
 void Pane::set_progressbar_progress(const float progress) {
@@ -554,6 +567,7 @@ void Pane::add_button(const int button_id, const std::wstring& label) {
 	auto button_size = Size2f{
 		size_max.w + font_height_dip,
 		size_max.h + 2*button_vertical_size_margin};
+	button_size.w = std::max(button_size.w, 80.0f);
 
 	for (auto& button : buttons)
 		er = SetWindowPos(

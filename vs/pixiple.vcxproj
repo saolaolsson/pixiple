@@ -185,6 +185,7 @@
     <ClCompile Include="..\src\shared\trim.cpp" />
     <ClCompile Include="..\src\shared\vector.cpp" />
     <ClCompile Include="..\src\tests.cpp" />
+    <ClCompile Include="..\src\time.cpp" />
     <ClCompile Include="..\src\window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -209,6 +210,7 @@
     <ClInclude Include="..\src\shared\trim.h" />
     <ClInclude Include="..\src\shared\vector.h" />
     <ClInclude Include="..\src\tests.h" />
+    <ClInclude Include="..\src\time.h" />
     <ClInclude Include="..\src\window.h" />
   </ItemGroup>
   <ItemGroup>

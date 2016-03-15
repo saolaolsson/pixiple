@@ -35,6 +35,7 @@ std::vector<std::tr2::sys::path> scan(Window& window, const std::vector<ComPtr<I
 	window.add_edge(0.5f);
 	window.add_edge();
 	window.add_edge();
+	window.add_edge();
 
 	const auto mx = 12.0f;
 	const auto my = 8.0f;
@@ -42,14 +43,16 @@ std::vector<std::tr2::sys::path> scan(Window& window, const std::vector<ComPtr<I
 	const auto background = Colour{0xfff8f8f8};
 
 	window.add_pane(0, 5, 2, 4, margin, false, true, background);
-	window.set_cursor(0, IDC_WAIT);
 	window.set_progressbar_progress(0, -1.0f);
 
 	window.add_pane(0, 4, 2, 6, margin, false, true, background);
-	window.add_button(1, 102, L"Cancel");
+	window.set_text(1, L"Scanning folders for images", {}, true);
+
+	window.add_pane(0, 6, 2, 7, margin, false, true, background);
+	window.add_button(2, 0, L"Cancel");
 
 	window.add_pane(0, 1, 2, 5, margin, false, false, background);
-	window.add_pane(0, 6, 2, 3, margin, false, false, background);
+	window.add_pane(0, 7, 2, 3, margin, false, false, background);
 
 	std::vector<std::tr2::sys::path> paths;
 	auto items = shell_items;
@@ -89,10 +92,11 @@ std::vector<std::tr2::sys::path> scan(Window& window, const std::vector<ComPtr<I
 		}
 	}
 
+	window.set_text(1, L"Removing duplicate paths", {}, true);
+	window.has_event();
+
 	std::sort(paths.begin(), paths.end());
 	paths.erase(std::unique(paths.begin(), paths.end()), paths.end());
-
-	debug_log << L"images found: " << paths.size() << std::endl;
 
 	return paths;
 }

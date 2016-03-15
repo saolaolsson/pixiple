@@ -3,12 +3,14 @@
 #include "image.h"
 #include "image_pair.h"
 #include "job.h"
+#include "time.h"
 #include "window.h"
 
 #include "shared/vector.h"
 
 #include <algorithm>
 #include <mutex>
+#include <sstream>
 #include <vector>
 
 static void thread_worker(Job* const job) {
@@ -58,9 +60,9 @@ static void thread_worker(Job* const job) {
 			if (duration_min != std::chrono::system_clock::duration::max())
 				distance_time = std::chrono::duration<float>(duration_min).count();
 
-			if (duration_min < std::chrono::hours{2*24})
+			if (duration_min < 2*24h)
 				distance_combined += -5 * (1 - std::chrono::duration<float>(duration_min).count() / (2*24*3600));
-			else if (duration_min > std::chrono::hours{20*24})
+			else if (duration_min > 20*24h)
 				distance_combined += 5;
 		}
 		distance_combined_min += -5;
@@ -194,13 +196,32 @@ std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<st
 		t = std::thread(thread_worker, &job);
 
 	// update progress bar until no more work or window requests that work be stopped
+	auto start = std::chrono::system_clock::now();
+	auto last_update = std::chrono::system_clock::time_point{};
 	while (!job.is_completed()) {
 		auto e = window.get_event();
 		if (e.type == Event::Type::quit || e.type == Event::Type::button) {
 			job.force_thread_exit = true;
 			break;
 		}
+
 		window.set_progressbar_progress(0, job.get_progress());
+
+		auto now = std::chrono::system_clock::now();
+		if (now - last_update > 1s) {
+			last_update = now;
+
+			std::wostringstream ss;
+			ss.imbue(std::locale(""));
+			ss << L"Processing " << paths.size() << L" images";
+
+			auto elapsed = now - start;
+			if (elapsed > 2s) {
+				auto total = std::chrono::duration_cast<std::chrono::system_clock::duration>(elapsed / job.get_progress());
+				ss << L": " << total - elapsed << L" remaining";
+			}
+			window.set_text(1, ss.str(), {}, true);
+		}
 	}
 
 	// wait for threads to exit
@@ -210,6 +231,9 @@ std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<st
 	// return nothing if work not complete
 	if (job.force_thread_exit)
 		return {{}, {}, {}, {}};
+
+	window.set_text(1, L"Sorting results", {}, true);
+	window.has_event();
 
 	for (auto& d : pair_categories)
 		sort(d.begin(), d.end());

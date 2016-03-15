@@ -87,7 +87,7 @@ public:
 
 	void click_button(const int button_index);
 
-	void set_text(const int pane_index, const std::wstring& text, const std::vector<std::pair<std::size_t, std::size_t>>& bold_ranges = std::vector<std::pair<std::size_t, std::size_t>>());
+	void set_text(const int pane_index, const std::wstring& text, const std::vector<std::pair<std::size_t, std::size_t>>& bold_ranges = std::vector<std::pair<std::size_t, std::size_t>>(), bool centred = false);
 	void set_progressbar_progress(const int pane_index, const float progress);
 
 	void add_button(const int pane_index, const int button_id, const std::wstring& label);

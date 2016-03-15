@@ -2,6 +2,8 @@
 
 #include "image_pair.h"
 
+#include "time.h"
+
 #include <iomanip>
 #include <sstream>
 
@@ -35,24 +37,6 @@ bool ImagePair::is_in_same_folder() const {
 std::chrono::system_clock::duration ImagePair::get_age() const {
 	auto now = std::chrono::system_clock::now();
 	return std::min(now - image_1->file_time(), now - image_2->file_time());
-}
-
-std::wostream& operator<<(std::wostream& os, const std::chrono::system_clock::duration d) {
-	auto ds = std::chrono::duration_cast<std::chrono::seconds>(d).count();
-	std::wostringstream ss;
-	if (d > std::chrono::seconds{2*365*24*3600})
-		ss << static_cast<decltype(ds)>(ds / 3600.0f / 24 / 365 + 0.5f) << L" years";
-	else if (d > std::chrono::seconds{365*24*3600})
-		ss << static_cast<decltype(ds)>(ds / 3600.0f / 24 / 30 + 0.5f) << L" months";
-	else if (d > std::chrono::seconds{2*24*3600})
-		ss << static_cast<decltype(ds)>(ds / 3600.0f / 24 + 0.5f) << L" days";
-	else if (d > std::chrono::seconds{2*3600})
-		ss << static_cast<decltype(ds)>(ds / 3600.0f + 0.5f) << L" hours";
-	else if (d > std::chrono::seconds{2*60})
-		ss << static_cast<decltype(ds)>(ds / 60.0f + 0.5f) << L" minutes";
-	else
-		ss << ds << L" second" << (ds != 1 ? L"s" : L"");
-	return os << ss.str();
 }
 
 std::chrono::system_clock::duration ImagePair::time_distance() const {
