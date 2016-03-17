@@ -41,7 +41,7 @@ public:
 	Hash get_pixel_hash() const;
 	float get_blur() const;
 
-	float get_distance(const Image& image, const float maximum_distance = std::numeric_limits<float>::max()) const;
+	float get_distance(const Image& image, const float maximum_distance, bool& aspect_ratio_flipped) const;
 
 	void draw(ID2D1HwndRenderTarget* const render_target, const D2D1_RECT_F& rect_dest, const D2D1_RECT_F& rect_src, const D2D1_BITMAP_INTERPOLATION_MODE& interpolation_mode) const;
 

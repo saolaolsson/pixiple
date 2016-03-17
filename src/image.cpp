@@ -154,7 +154,9 @@ float Image::get_blur() const {
 	return blur;
 }
 
-float Image::get_distance(const Image& image, const float maximum_distance) const {
+float Image::get_distance(const Image& image, const float maximum_distance, bool& aspect_ratio_flipped) const {
+	aspect_ratio_flipped = false;
+
 	if (status != Status::ok || image.status != Status::ok)
 		return std::numeric_limits<float>::max();
 
@@ -169,22 +171,25 @@ float Image::get_distance(const Image& image, const float maximum_distance) cons
 		Transform::flip_sw_ne,
 	};
 
-	auto sum = std::numeric_limits<float>::max();
+	auto sum = maximum_distance * n_intensity_block_divisions * n_intensity_block_divisions;
 	for (auto t : transforms) {
 		auto s = 0.0f;
 		for (int y = 0; y < n_intensity_block_divisions; y++) {
 			for (int x = 0; x < n_intensity_block_divisions; x++) {
 				Colour c1 = get_intensity(x, y);
 				Colour c2 = image.get_intensity(x, y, t);
-				s += (c2.r - c1.r)*(c2.r - c1.r) + (c2.g - c1.g)*(c2.g - c1.g) + (c2.b - c1.b)*(c2.b - c1.b);
+				s += std::abs(c2.r - c1.r) + std::abs(c2.g - c1.g) + std::abs(c2.b - c1.b);
 			}
-			if (s > sum || s > maximum_distance * maximum_distance * n_intensity_block_divisions * n_intensity_block_divisions)
-				break; // optimization only
+			if (s > sum)
+				break;
 		}
-		sum = std::min(sum, s);
+		if (s < sum) {
+			sum = s;
+			aspect_ratio_flipped = t == Transform::rotate_90 || t == Transform::rotate_270 || t == Transform::flip_nw_se || t == Transform::flip_sw_ne;
+		}
 	}
 	assert(sum == sum);
-	return sqrt(sum / n_intensity_block_divisions / n_intensity_block_divisions);
+	return sum / n_intensity_block_divisions / n_intensity_block_divisions;
 }
 
 void Image::draw(
@@ -229,6 +234,19 @@ void Image::draw(
 
 		render_target->SetAntialiasMode(aam);
 	}
+
+	#if 0
+	for (auto y = 0; y < n_intensity_block_divisions; y++) {
+		for (auto x = 0; x < n_intensity_block_divisions; x++) {
+			ComPtr<ID2D1SolidColorBrush> brush;
+			er = render_target->CreateSolidColorBrush(D2D1::ColorF(intensities[y][x].r, intensities[y][x].g, intensities[y][x].b), &brush);
+			const auto pixel_side = 16.0f;
+			render_target->FillRectangle({
+				rect_dest.left + (x+0)*pixel_side, rect_dest.top + (y+0)*pixel_side,
+				rect_dest.left + (x+1)*pixel_side, rect_dest.top + (y+1)*pixel_side}, brush);
+		}
+	}
+	#endif
 }
 
 static std::wstring to_windows_path(const std::tr2::sys::path& path) {

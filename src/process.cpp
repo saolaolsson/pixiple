@@ -46,6 +46,11 @@ static void thread_worker(Job* const job) {
 
 		// TODO: Magic numbers related to image pair similarity scoring below; should be refactored once it has stabilized.
 
+		// score visual similarity
+		const auto distance_visual_max = 0.6f;
+		bool aspect_ratio_flipped;
+		auto distance_visual = i1->get_distance(*i2, distance_visual_max, aspect_ratio_flipped);
+
 		// score time
 		auto distance_time = std::numeric_limits<float>::max();
 		auto n_images_with_metadata_times =
@@ -136,31 +141,28 @@ static void thread_worker(Job* const job) {
 		// score dimensions
 		auto ar1 = static_cast<float>(i1->get_image_size().w) / i1->get_image_size().h;
 		auto ar2 = static_cast<float>(i2->get_image_size().w) / i2->get_image_size().h;
-		ar1 = std::max(ar1, 1/ar1);
-		ar2 = std::max(ar2, 1/ar2);
-		if (abs(ar1 - ar2) > 0.01f)
-			distance_combined += 1;
+		if (aspect_ratio_flipped)
+			ar1 = 1/ar1;
+		if (ar1 < 1) {
+			ar1 = 1/ar1;
+			ar2 = 1/ar2;
+		}
+		distance_combined += std::min(10.0f*std::sqrt(std::abs(ar1 - ar2)), 10.0f);
 		distance_combined_min += 0;
-		distance_combined_max += 1;
+		distance_combined_max += 10;
 
 		// normalize distance
 		distance_combined = (distance_combined - distance_combined_min) /
 			(distance_combined_max - distance_combined_min);
-		distance_combined *= 0.5f;
 
-		// score visual similarity
-		const auto distance_visual_max = 0.27f;
-		auto distance_visual = std::numeric_limits<float>::max();
-		distance_visual = i1->get_distance(*i2, distance_visual_max);
-		distance_combined += distance_visual;
+		auto visual_fraction = 0.6f;
+		distance_combined = visual_fraction * distance_visual + (1-visual_fraction) * distance_combined;
+
+		// add image pairs to relevant image pair categories
 
 		std::lock_guard<std::mutex> lg{job->pairs_mutex};
 
-		if (distance_visual < distance_visual_max) {
-			ip.distance = distance_visual;
-			job->pairs_visual.push_back(ip);
-		}
-		if (distance_time < 24*3600) {
+		if (distance_time < 12*3600) {
 			ip.distance = distance_time;
 			job->pairs_time.push_back(ip);
 		}
@@ -168,7 +170,17 @@ static void thread_worker(Job* const job) {
 			ip.distance = distance_location;
 			job->pairs_location.push_back(ip);
 		}
-		if (distance_combined < 0.46f) {
+
+		bool aspect_ratios_too_dissimilar = ar1/ar2 > 1.75f || ar2/ar1 > 1.75f;
+		bool aspect_ratios_inverses = std::abs(1/ar1 - ar2) < 0.01f;
+		if (aspect_ratios_too_dissimilar && !aspect_ratios_inverses)
+			continue;
+
+		if (distance_visual < 0.4f) {
+			ip.distance = distance_visual;
+			job->pairs_visual.push_back(ip);
+		}
+		if (distance_combined < 0.4f) {
 			ip.distance = distance_combined;
 			job->pairs_combined.push_back(ip);
 		}
@@ -219,6 +231,7 @@ std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<st
 			if (elapsed > 2s) {
 				auto total = std::chrono::duration_cast<std::chrono::system_clock::duration>(elapsed / job.get_progress());
 				ss << L": " << total - elapsed << L" remaining";
+				debug_log << total << "\n";
 			}
 			window.set_text(1, ss.str(), {}, true);
 		}

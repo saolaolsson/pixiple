@@ -25,8 +25,8 @@ ImagePair Job::get_next_pair() {
 		}
 	}
 
-	auto i_minor = index_minor;
-	auto i_major = index_major;
+	auto index_minor_old = index_minor;
+	auto index_major_old = index_major;
 
 	if (index_minor == index_major) {
 		if (index_major + 1 == images.size()) {
@@ -39,8 +39,12 @@ ImagePair Job::get_next_pair() {
 		index_minor++;
 	}
 
-	progress = static_cast<float>(index_major) / images.size();
-	return {images[i_minor], images[i_major]};
+	if (index_major == images.size())
+		progress = 1.0f;
+	else
+		progress = static_cast<float>(index_major) / images.size();
+
+	return {images[index_minor_old], images[index_major_old]};
 }
 
 float Job::get_progress() const {
