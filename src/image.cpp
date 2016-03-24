@@ -154,44 +154,6 @@ float Image::get_blur() const {
 	return blur;
 }
 
-float Image::get_distance(const Image& image, const float maximum_distance, bool& aspect_ratio_flipped) const {
-	aspect_ratio_flipped = false;
-
-	if (status != Status::ok || image.status != Status::ok)
-		return std::numeric_limits<float>::max();
-
-	Transform transforms[] {
-		Transform::none,
-		Transform::rotate_90,
-		Transform::rotate_180,
-		Transform::rotate_270,
-		Transform::flip_h,
-		Transform::flip_v,
-		Transform::flip_nw_se,
-		Transform::flip_sw_ne,
-	};
-
-	auto sum = maximum_distance * n_intensity_block_divisions * n_intensity_block_divisions;
-	for (auto t : transforms) {
-		auto s = 0.0f;
-		for (int y = 0; y < n_intensity_block_divisions; y++) {
-			for (int x = 0; x < n_intensity_block_divisions; x++) {
-				Colour c1 = get_intensity(x, y);
-				Colour c2 = image.get_intensity(x, y, t);
-				s += std::abs(c2.r - c1.r) + std::abs(c2.g - c1.g) + std::abs(c2.b - c1.b);
-			}
-			if (s > sum)
-				break;
-		}
-		if (s < sum) {
-			sum = s;
-			aspect_ratio_flipped = t == Transform::rotate_90 || t == Transform::rotate_270 || t == Transform::flip_nw_se || t == Transform::flip_sw_ne;
-		}
-	}
-	assert(sum == sum);
-	return sum / n_intensity_block_divisions / n_intensity_block_divisions;
-}
-
 void Image::draw(
 	ID2D1HwndRenderTarget* const render_target,
 	const D2D1_RECT_F& rect_dest,
@@ -236,8 +198,8 @@ void Image::draw(
 	}
 
 	#if 0
-	for (auto y = 0; y < n_intensity_block_divisions; y++) {
-		for (auto x = 0; x < n_intensity_block_divisions; x++) {
+	for (auto y = 0; y < intensities.size(); y++) {
+		for (auto x = 0; x < intensities.size(); x++) {
 			ComPtr<ID2D1SolidColorBrush> brush;
 			er = render_target->CreateSolidColorBrush(D2D1::ColorF(intensities[y][x].r, intensities[y][x].g, intensities[y][x].b), &brush);
 			const auto pixel_side = 16.0f;
@@ -305,44 +267,133 @@ void Image::open_folder() const {
 	CoTaskMemFree(folder);
 }
 
-void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
-	er = frame->GetSize(&image_size.w, &image_size.h);
-	assert(image_size.w > 0 && image_size.h > 0);
+Intensity get_intensity(const IntensityArray& intensities, const int x, const int y, const ImageTransform transform) {
+	const int n_intensity_block_divisions = static_cast<int>(intensities.size());
+	
+	auto xt = x;
+	auto yt = y;
 
-	ComPtr<IWICImagingFactory> wic_factory;
-	er = CoCreateInstance(
-		CLSID_WICImagingFactory,
-		nullptr,
-		CLSCTX_INPROC_SERVER,
-		IID_PPV_ARGS(&wic_factory));
-
-	ComPtr<IWICFormatConverter> format_converter;
-	er = wic_factory->CreateFormatConverter(&format_converter);
-	er = format_converter->Initialize(
-		frame,
-		GUID_WICPixelFormat32bppPBGRA,
-		WICBitmapDitherTypeNone,
-		nullptr,
-		0,
-		WICBitmapPaletteTypeCustom);
-
-	const auto pixel_stride = 4;
-	const auto line_stride = image_size.w * pixel_stride;
-	const std::size_t pixel_buffer_size = line_stride * image_size.h;
-	assert(pixel_buffer_size > 0);
-	std::vector<uint8_t> pixel_buffer(pixel_buffer_size);
-
-	auto hr = format_converter->CopyPixels(
-		nullptr,
-		line_stride,
-		numeric_cast<UINT>(pixel_buffer_size),
-		pixel_buffer.data());
-	if (FAILED(hr)) {
-		status = Status::decode_failed;
-		return;
+	switch (transform) {
+	case ImageTransform::none:
+		break;
+	case ImageTransform::rotate_90:
+		xt = n_intensity_block_divisions - 1 - y;
+		yt = x;
+		break;
+	case ImageTransform::rotate_180:
+		xt = n_intensity_block_divisions - 1 - x;
+		yt = n_intensity_block_divisions - 1 - y;
+		break;
+	case ImageTransform::rotate_270:
+		xt = y;
+		yt = n_intensity_block_divisions - 1 - x;
+		break;
+	case ImageTransform::flip_h:
+		xt = n_intensity_block_divisions - 1 - x;
+		yt = y;
+		break;
+	case ImageTransform::flip_v:
+		xt = x;
+		yt = n_intensity_block_divisions - 1 - y;
+		break;
+	case ImageTransform::flip_nw_se:
+		xt = y;
+		yt = x;
+		break;
+	case ImageTransform::flip_sw_ne:
+		xt = n_intensity_block_divisions - 1 - y;
+		yt = n_intensity_block_divisions - 1 - x;
+		break;
+	default:
+		assert(false);
 	}
 
-	// fill intensities
+	return intensities[yt][xt];
+}
+
+float calculate_distance(
+	const IntensityArray& intensities_1,
+	const IntensityArray& intensities_2,
+	const float maximum_distance,
+	bool& aspect_ratio_flipped
+) {
+	ImageTransform transforms[] {
+		ImageTransform::none,
+		ImageTransform::rotate_90,
+		ImageTransform::rotate_180,
+		ImageTransform::rotate_270,
+		ImageTransform::flip_h,
+		ImageTransform::flip_v,
+		ImageTransform::flip_nw_se,
+		ImageTransform::flip_sw_ne,
+	};
+
+	const auto n_intensity_block_divisions = intensities_1.size();
+	auto sum = maximum_distance * n_intensity_block_divisions * n_intensity_block_divisions;
+	for (auto t : transforms) {
+		auto s = 0.0f;
+		for (int y = 0; y < n_intensity_block_divisions; y++) {
+			for (int x = 0; x < n_intensity_block_divisions; x++) {
+				auto c1 = get_intensity(intensities_1, x, y, ImageTransform::none);
+				auto c2 = get_intensity(intensities_2, x, y, t);
+				s += std::abs(c2.r - c1.r) + std::abs(c2.g - c1.g) + std::abs(c2.b - c1.b);
+			}
+			if (s > sum)
+				break;
+		}
+		if (s < sum) {
+			sum = s;
+			aspect_ratio_flipped = t == ImageTransform::rotate_90 || t == ImageTransform::rotate_270 || t == ImageTransform::flip_nw_se || t == ImageTransform::flip_sw_ne;
+		}
+	}
+	assert(sum == sum);
+	return sum / n_intensity_block_divisions / n_intensity_block_divisions;
+}
+
+#include <utility>
+
+float distance(
+	const Image& image_1,
+	const Image& image_2,
+	const float maximum_distance,
+	bool& aspect_ratio_flipped,
+	bool& cropped
+) {
+	aspect_ratio_flipped = false;
+	cropped = false;
+
+	if (image_1.status != Image::Status::ok || image_2.status != Image::Status::ok)
+		return std::numeric_limits<float>::max();
+
+	auto distance = calculate_distance(image_1.intensities, image_2.intensities, maximum_distance, aspect_ratio_flipped);
+
+	std::vector<std::pair<const IntensityArray&, const IntensityArray&>> pairs{
+		{image_1.intensities_cropped_1, image_2.intensities_cropped_1},
+		{image_1.intensities_cropped_1, image_2.intensities_cropped_2},
+		{image_1.intensities_cropped_2, image_2.intensities_cropped_2},
+	};
+	for (const auto& p : pairs) {
+		bool arf;
+		auto d = calculate_distance(p.first, p.second, maximum_distance, arf);
+		if (d < distance) {
+			distance = d;
+			aspect_ratio_flipped = arf;
+			cropped = true;
+		}
+	}
+
+	return distance;
+}
+
+IntensityArray Image::calculate_intensities(
+	const std::vector<uint8_t>& pixel_buffer,
+	const int pixel_stride,
+	const int line_stride,
+	const D2D_RECT_U& rect
+) const {
+	IntensityArray intensities;
+	const Size2u size{rect.right - rect.left, rect.bottom - rect.top};
+	const auto n_intensity_block_divisions = intensities.size();
 
 	bool rgb_content = false;
 	bool a_content = false;
@@ -350,10 +401,10 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 
 	for (auto by = 0; by < n_intensity_block_divisions; by++) {
 		for (auto bx = 0; bx < n_intensity_block_divisions; bx++) {
-			const auto offset_x = image_size.w * bx / n_intensity_block_divisions;
-			const auto offset_y = image_size.h * by / n_intensity_block_divisions;
-			const auto offset_x_next = image_size.w * (bx + 1) / n_intensity_block_divisions;
-			const auto offset_y_next = image_size.h * (by + 1) / n_intensity_block_divisions;
+			const auto offset_x = rect.left + size.w * (bx + 0) / n_intensity_block_divisions;
+			const auto offset_y = rect.top + size.h * (by + 0) / n_intensity_block_divisions;
+			const auto offset_x_next = rect.left + size.w * (bx + 1) / n_intensity_block_divisions;
+			const auto offset_y_next = rect.top + size.h * (by + 1) / n_intensity_block_divisions;
 
 			std::uint32_t r = 0;
 			std::uint32_t g = 0;
@@ -416,6 +467,55 @@ void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
 			}
 		}
 	}
+
+	return intensities;
+}
+
+void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
+	er = frame->GetSize(&image_size.w, &image_size.h);
+	assert(image_size.w > 0 && image_size.h > 0);
+
+	ComPtr<IWICImagingFactory> wic_factory;
+	er = CoCreateInstance(
+		CLSID_WICImagingFactory,
+		nullptr,
+		CLSCTX_INPROC_SERVER,
+		IID_PPV_ARGS(&wic_factory));
+
+	ComPtr<IWICFormatConverter> format_converter;
+	er = wic_factory->CreateFormatConverter(&format_converter);
+	er = format_converter->Initialize(
+		frame,
+		GUID_WICPixelFormat32bppPBGRA,
+		WICBitmapDitherTypeNone,
+		nullptr,
+		0,
+		WICBitmapPaletteTypeCustom);
+
+	const auto pixel_stride = 4;
+	const auto line_stride = image_size.w * pixel_stride;
+	const std::size_t pixel_buffer_size = line_stride * image_size.h;
+	assert(pixel_buffer_size > 0);
+	std::vector<uint8_t> pixel_buffer(pixel_buffer_size);
+
+	auto hr = format_converter->CopyPixels(
+		nullptr,
+		line_stride,
+		numeric_cast<UINT>(pixel_buffer_size),
+		pixel_buffer.data());
+	if (FAILED(hr)) {
+		status = Status::decode_failed;
+		return;
+	}
+
+	intensities = calculate_intensities(pixel_buffer, pixel_stride, line_stride,
+		D2D1::RectU(0, 0, image_size.w, image_size.h));
+
+	auto square_size = std::min(image_size.w, image_size.h);
+	intensities_cropped_1 = calculate_intensities(pixel_buffer, pixel_stride, line_stride,
+		D2D1::RectU(0, 0, square_size, square_size));
+	intensities_cropped_2 = calculate_intensities(pixel_buffer, pixel_stride, line_stride,
+		D2D1::RectU(image_size.w - square_size, image_size.h - square_size, image_size.w, image_size.h));
 }
 
 static std::wstring widen(const std::string& string) {
@@ -860,49 +960,4 @@ ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target
 	}
 
 	return bce.bitmap;
-}
-
-Image::Colour Image::get_intensity(const int x, const int y, const Transform transform) const {
-	assert(x >= 0 && x < n_intensity_block_divisions);
-	assert(y >= 0 && y < n_intensity_block_divisions);
-
-	auto xt = x;
-	auto yt = y;
-
-	switch (transform) {
-	case Transform::none:
-		break;
-	case Transform::rotate_90:
-		xt = n_intensity_block_divisions - 1 - y;
-		yt = x;
-		break;
-	case Transform::rotate_180:
-		xt = n_intensity_block_divisions - 1 - x;
-		yt = n_intensity_block_divisions - 1 - y;
-		break;
-	case Transform::rotate_270:
-		xt = y;
-		yt = n_intensity_block_divisions - 1 - x;
-		break;
-	case Transform::flip_h:
-		xt = n_intensity_block_divisions - 1 - x;
-		yt = y;
-		break;
-	case Transform::flip_v:
-		xt = x;
-		yt = n_intensity_block_divisions - 1 - y;
-		break;
-	case Transform::flip_nw_se:
-		xt = y;
-		yt = x;
-		break;
-	case Transform::flip_sw_ne:
-		xt = n_intensity_block_divisions - 1 - y;
-		yt = n_intensity_block_divisions - 1 - x;
-		break;
-	default:
-		assert(false);
-	}
-
-	return intensities[yt][xt];
 }

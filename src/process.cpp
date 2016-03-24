@@ -49,7 +49,8 @@ static void thread_worker(Job* const job) {
 		// score visual similarity
 		const auto distance_visual_max = 0.6f;
 		bool aspect_ratio_flipped;
-		auto distance_visual = i1->get_distance(*i2, distance_visual_max, aspect_ratio_flipped);
+		bool cropped;
+		auto distance_visual = distance(*i1, *i2, distance_visual_max, aspect_ratio_flipped, cropped);
 
 		// score time
 		auto distance_time = std::numeric_limits<float>::max();
@@ -147,7 +148,8 @@ static void thread_worker(Job* const job) {
 			ar1 = 1/ar1;
 			ar2 = 1/ar2;
 		}
-		distance_combined += std::min(10.0f*std::sqrt(std::abs(ar1 - ar2)), 10.0f);
+		if (!cropped)
+			distance_combined += std::min(10.0f*std::sqrt(std::abs(ar1 - ar2)), 10.0f);
 		distance_combined_min += 0;
 		distance_combined_max += 10;
 
@@ -173,14 +175,14 @@ static void thread_worker(Job* const job) {
 
 		bool aspect_ratios_too_dissimilar = ar1/ar2 > 1.75f || ar2/ar1 > 1.75f;
 		bool aspect_ratios_inverses = std::abs(1/ar1 - ar2) < 0.01f;
-		if (aspect_ratios_too_dissimilar && !aspect_ratios_inverses)
+		if (aspect_ratios_too_dissimilar && !aspect_ratios_inverses && !cropped)
 			continue;
 
-		if (distance_visual < 0.4f) {
+		if (distance_visual < 0.37f) {
 			ip.distance = distance_visual;
 			job->pairs_visual.push_back(ip);
 		}
-		if (distance_combined < 0.4f) {
+		if (distance_combined < 0.37f) {
 			ip.distance = distance_combined;
 			job->pairs_combined.push_back(ip);
 		}
