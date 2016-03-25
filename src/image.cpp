@@ -17,9 +17,8 @@
 #include <ShlObj.h>
 #include <wincodec.h>
 
-std::mutex Image::class_mutex;
-int Image::n_instances;
 std::vector<Image::BitmapCacheEntry> Image::bitmap_cache;
+std::mutex Image::bitmap_cache_mutex;
 
 std::vector<std::vector<float>> convolve(
 	const std::vector<std::vector<float>>& input,
@@ -80,16 +79,6 @@ Image::Image(const std::tr2::sys::path& path) : path_{path} {
 	} else {
 		status = Status::open_failed;
 	}
-
-	std::lock_guard<std::mutex> lg{class_mutex};
-	n_instances++;
-}
-
-Image::~Image() {
-	std::lock_guard<std::mutex> lg{class_mutex};
-	n_instances--;
-	if (n_instances == 0)
-		clear_cache();
 }
 
 Image::Status Image::get_status() const {
@@ -910,7 +899,7 @@ ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target
 
 	BitmapCacheEntry bce;
 	{
-		std::lock_guard<std::mutex> lg{class_mutex};
+		std::lock_guard<std::mutex> lg{bitmap_cache_mutex};
 		auto i = std::find_if(bitmap_cache.begin(), bitmap_cache.end(),
 			[&](BitmapCacheEntry bce) {
 				return bce.image.lock() == shared_from_this();
@@ -953,7 +942,7 @@ ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target
 	}
 
 	{
-		std::lock_guard<std::mutex> lg{class_mutex};
+		std::lock_guard<std::mutex> lg{bitmap_cache_mutex};
 		bitmap_cache.push_back(bce);
 		if (bitmap_cache.size() > bitmap_cache_limit)
 			bitmap_cache.erase(bitmap_cache.begin());

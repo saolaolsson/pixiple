@@ -142,6 +142,7 @@ int main() {
 
 		er = OleInitialize(nullptr);
 		app();
+		Image::clear_cache();
 		OleUninitialize();
 	} catch (ErrorCodeException& e) {
 		die(e.line, e.file, e.hresult);

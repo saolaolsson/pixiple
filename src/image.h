@@ -31,7 +31,6 @@ public:
 	static void clear_cache();
 
 	Image(const std::tr2::sys::path& path);
-	~Image();
 
 	enum class Status {ok, open_failed, decode_failed};
 	Status get_status() const;
@@ -62,14 +61,12 @@ public:
 	friend float distance(const Image& image_1, const Image& image_2, const float maximum_distance, bool& aspect_ratio_flipped, bool& cropped);
 
 private:
-	static std::mutex class_mutex;
-	static int n_instances;
-
 	struct BitmapCacheEntry {
 		std::weak_ptr<Image> image;
 		ComPtr<ID2D1Bitmap> bitmap = nullptr;
 	};
 	static std::vector<BitmapCacheEntry> bitmap_cache;
+	static std::mutex bitmap_cache_mutex;
 
 	Status status = Status::ok;
 
