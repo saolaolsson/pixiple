@@ -31,8 +31,7 @@ public:
 		pairs_visual{pairs_visual},
 		pairs_time{pairs_time},
 		pairs_location{pairs_location},
-		pairs_combined{pairs_combined},
-		progress{paths.empty() ? 1.0f : 0.0f}
+		pairs_combined{pairs_combined}
 	{
 	}
 
@@ -41,13 +40,14 @@ public:
 	bool is_completed() const;
 
 private:
-	const std::vector<std::tr2::sys::path>& paths;
-	std::vector<std::shared_ptr<Image>> images{paths.size()};
+	std::size_t progress_current() const;
+	std::size_t progress_total() const;
 
+	const std::vector<std::tr2::sys::path>& paths;
+
+	mutable std::mutex mutex;
+	std::vector<std::shared_ptr<Image>> images{paths.size()};
 	std::size_t index_minor = 0;
 	std::size_t index_major = 0;
 	std::size_t index_next_to_create = 0;
-	std::mutex index_mutex;
-
-	std::atomic<float> progress = 0;
 };
