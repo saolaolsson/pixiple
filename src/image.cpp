@@ -232,7 +232,12 @@ void Image::delete_file() const {
 
 	er = fo->SetOperationFlags(FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NORECURSION);
 	er = fo->DeleteItem(file, nullptr);
-	er = fo->PerformOperations();
+
+	hr = fo->PerformOperations();
+	BOOL aborted;
+	er = fo->GetAnyOperationsAborted(&aborted);
+	if (!aborted)
+		er = hr;
 }
 
 // Try to open explorer window at containing folder with file
