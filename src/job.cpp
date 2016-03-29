@@ -25,8 +25,7 @@ ImagePair Job::get_next_pair() {
 	if (index_major == images.size())
 		return {nullptr, nullptr};
 
-	auto index_minor_old = index_minor;
-	auto index_major_old = index_major;
+	auto result = ImagePair{images[index_minor], images[index_major]};
 
 	if (index_minor == index_major) {
 		index_major++;
@@ -35,7 +34,7 @@ ImagePair Job::get_next_pair() {
 		index_minor++;
 	}
 
-	return {images[index_minor_old], images[index_major_old]};
+	return result;
 }
 
 float Job::get_progress() const {
