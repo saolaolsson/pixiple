@@ -68,8 +68,13 @@ void Image::clear_cache() {
 Image::Image(const std::tr2::sys::path& path) : path_{path} {
 	assert(!path.empty());
 
-	file_size_ = std::tr2::sys::file_size(path);
-	file_time_ = std::tr2::sys::last_write_time(path);
+	std::error_code ec;
+	file_size_ = std::tr2::sys::file_size(path, ec);
+	file_time_ = std::tr2::sys::last_write_time(path, ec);
+	if (file_size_ == -1 || file_time_ == std::tr2::sys::file_time_type::min()) {
+		status = Status::open_failed;
+		return;
+	}
 
 	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size_));
 	auto frame = get_frame(data);
