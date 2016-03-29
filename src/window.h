@@ -111,8 +111,8 @@ public:
 		const Vector2f& translation_isn);
 
 private:
-	static const int progressbar_timer_id = 1;
-	static const int progressbar_timer_ms = 200;
+	enum class Timer { progressbar = 1, repaint };
+	static const int timer_ms = 200;
 
 	HWND hwnd;
 

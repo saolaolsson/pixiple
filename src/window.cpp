@@ -405,8 +405,10 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 	auto mouse_position_delta = Vector2f{0, 0};
 	if (this) {
 		POINT mp;
-		er = GetCursorPos(&mp);
-		er = ScreenToClient(hwnd, &mp);
+		if (GetCursorPos(&mp))
+			er = ScreenToClient(hwnd, &mp);
+		else
+			mp = {0, 0};
 		auto mouse_position_new = Point2f{to_dip_x(mp.x), to_dip_y(mp.y)};
 		mouse_position_delta = {mouse_position.x - mouse_position_new.x, mouse_position.y - mouse_position_new.y};
 		mouse_position = mouse_position_new;
@@ -479,10 +481,14 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 			layout_valid = false;
 		}
 	} else if (msg == WM_TIMER) {
-		if (wparam == progressbar_timer_id)
+		if (wparam == static_cast<WPARAM>(Timer::progressbar)) {
 			queue_event(Event{Event::Type::none});
-		else
+		} else if (wparam == static_cast<WPARAM>(Timer::repaint)) {
+			er = KillTimer(hwnd, wparam);
+			set_dirty();
+		} else {
 			assert(false);
+		}
 	} else if (msg == WM_WINDOWPOSCHANGING) {
 		auto wp = reinterpret_cast<WINDOWPOS*>(lparam);
 		wp->cx = std::max(to_dp_x(size_min.w), wp->cx + wp->cx%2);
@@ -590,19 +596,6 @@ void Window::paint() const {
 		Image::clear_cache();
 	}
 
-	// when paint() is called during ctrl-alt-del screen, nothing is drawn
-	// (because of different render target?). when window becomes visible, it is
-	// empty and no WM_PAINT is sent so it remains empty. therefore, the
-	// CheckWindowState/Sleep hack below seems to be required.
-	
-	// render target occluded? if so, skip paint and do not validate dirty
-	// region so that another WM_PAINT will be sent.
-	if (render_target->CheckWindowState() & D2D1_WINDOW_STATE_OCCLUDED) {
-		debug_log << L"D2D1_WINDOW_STATE_OCCLUDED" << std::endl;
-		Sleep(200);
-		return;
-	}
-
 	PAINTSTRUCT ps;
 	er = BeginPaint(hwnd, &ps);
 	render_target->BeginDraw();
@@ -634,17 +627,14 @@ void Window::paint() const {
 	auto hr = render_target->EndDraw();
 	EndPaint(hwnd, &ps);
 
-	// did we draw on occluded render target? if so, make sure another WM_PAINT
-	// is sent. apparently we do not know whether we're occluded until after
-	// EndDraw is called, so the check before BeginPaint is not sufficient on
-	// its own.
-	if (render_target->CheckWindowState() & D2D1_WINDOW_STATE_OCCLUDED) {
-		debug_log << L"D2D1_WINDOW_STATE_OCCLUDED" << std::endl;
-		set_dirty();
+	// if occluded, schedule another paint (if iconic, it will be repainted elsewhere)
+	if (render_target->CheckWindowState() & D2D1_WINDOW_STATE_OCCLUDED && !IsIconic(hwnd)) {
+		debug_log << "D2D1_WINDOW_STATE_OCCLUDED\n";
+		er = SetTimer(hwnd, static_cast<WPARAM>(Timer::repaint), timer_ms, nullptr);
 	}
 
 	if (hr == D2DERR_RECREATE_TARGET) {
-		debug_log << L"D2DERR_RECREATE_TARGET" << std::endl;
+		debug_log << L"D2DERR_RECREATE_TARGET\n";
 		render_target = nullptr;
 		set_dirty();
 	} else {
