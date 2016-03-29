@@ -230,7 +230,7 @@ std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<st
 			ss << L"Processing " << paths.size() << L" images";
 
 			auto elapsed = now - start;
-			if (elapsed > 2s) {
+			if (elapsed > 2s && job.get_progress() > 0) {
 				auto total = std::chrono::duration_cast<std::chrono::system_clock::duration>(elapsed / job.get_progress());
 				ss << L": " << total - elapsed << L" remaining";
 				debug_log << total << "\n";
@@ -250,6 +250,7 @@ std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<st
 	window.set_text(1, L"Sorting results", {}, true);
 	window.has_event();
 
+	window.set_progressbar_progress(0, -1.0f);
 	for (auto& d : pair_categories)
 		sort(d.begin(), d.end());
 

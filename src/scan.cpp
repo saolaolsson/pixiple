@@ -98,5 +98,8 @@ std::vector<std::tr2::sys::path> scan(Window& window, const std::vector<ComPtr<I
 	std::sort(paths.begin(), paths.end());
 	paths.erase(std::unique(paths.begin(), paths.end()), paths.end());
 
+	window.set_text(1, L"", {}, true);
+	window.has_event();
+
 	return paths;
 }

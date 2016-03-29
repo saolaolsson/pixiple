@@ -7,10 +7,7 @@
 ImagePair Job::get_next_pair() {
 	std::unique_lock<std::mutex> ul{mutex};
 
-	if (progress_current() == progress_total())
-		return {nullptr, nullptr};
-
-	while (images[index_major] == nullptr) {
+	while (index_major != images.size() && images[index_major] == nullptr) {
 		if (index_next_to_create < images.size()) {
 			// create image
 			auto i = index_next_to_create++;
@@ -25,6 +22,9 @@ ImagePair Job::get_next_pair() {
 		}
 	}
 
+	if (index_major == images.size())
+		return {nullptr, nullptr};
+
 	auto index_minor_old = index_minor;
 	auto index_major_old = index_major;
 
@@ -35,10 +35,7 @@ ImagePair Job::get_next_pair() {
 		index_minor++;
 	}
 
-	if (index_major == images.size())
-		return {nullptr, nullptr};
-	else
-		return {images[index_minor_old], images[index_major_old]};
+	return {images[index_minor_old], images[index_major_old]};
 }
 
 float Job::get_progress() const {
@@ -48,7 +45,7 @@ float Job::get_progress() const {
 
 bool Job::is_completed() const {
 	std::lock_guard<std::mutex> lg{mutex};
-	return progress_current() == progress_total();
+	return index_major == images.size();
 }
 
 std::size_t Job::progress_current() const {
