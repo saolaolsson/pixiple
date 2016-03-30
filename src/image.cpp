@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <utility>
 #include <vector>
 
 #include <propvarutil.h>
@@ -19,47 +20,6 @@
 
 std::vector<Image::BitmapCacheEntry> Image::bitmap_cache;
 std::mutex Image::bitmap_cache_mutex;
-
-std::vector<std::vector<float>> convolve(
-	const std::vector<std::vector<float>>& input,
-	const std::vector<std::vector<float>>& kernel
-) {
-	const Size2i s{numeric_cast<int>(input[0].size()), numeric_cast<int>(input.size())};
-	const Size2i sk{numeric_cast<int>(kernel[0].size()), numeric_cast<int>(kernel.size())};
-
-	std::vector<std::vector<float>> output = input;
-	for (int y = 0; y < s.h; y++) {
-		for (int x = 0; x < s.w; x++) {
-			output[y][x] = 0;
-			for (int yk = 0; yk < sk.h; yk++) {
-				for (int xk = 0; xk < sk.w; xk++) {
-					if (y+yk >= s.h || x+xk >= s.w)
-						continue;
-					output[y][x] += input[y+yk][x+xk] * kernel[yk][xk];
-				}
-			}
-		}
-	}
-	return output;
-}
-
-float variance(const std::vector<std::vector<float>>& input) {
-	const Size2i s{numeric_cast<int>(input[0].size()), numeric_cast<int>(input.size())};
-
-	auto average = 0.0f;
-	for (int y = 0; y < s.h; y++)
-		for (int x = 0; x < s.w; x++)
-			average += input[y][x];
-	average = average / (s.h*s.w);
-
-	auto variance = 0.0f;
-	for (int y = 0; y < s.h; y++)
-		for (int x = 0; x < s.w; x++)
-			variance += (input[y][x] - average)*(input[y][x] - average);
-	variance /= (s.h*s.w);
-
-	return variance;
-}
 
 void Image::clear_cache() {
 	bitmap_cache.clear();
@@ -140,12 +100,6 @@ Hash Image::get_pixel_hash() const {
 	if (pixel_hash == Hash{})
 		const_cast<Image*>(this)->calculate_hash();
 	return pixel_hash;
-}
-
-float Image::get_blur() const {
-	if (blur == 0.0f)
-		const_cast<Image*>(this)->calculate_blur();
-	return blur;
 }
 
 void Image::draw(
@@ -348,8 +302,6 @@ float calculate_distance(
 	assert(sum == sum);
 	return sum / n_intensity_block_divisions / n_intensity_block_divisions;
 }
-
-#include <utility>
 
 float distance(
 	const Image& image_1,
@@ -798,59 +750,6 @@ void Image::calculate_hash() {
 		er = bitmap_lock->GetDataPointer(&size, static_cast<BYTE**>(&pixel_data));
 		pixel_hash = Hash(pixel_data, size);
 	}
-}
-
-void Image::calculate_blur() {
-	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size_));
-	auto frame = get_frame(data);
-	if (frame == nullptr)
-		return;
-
-	ComPtr<IWICImagingFactory> wic_factory;
-	er = CoCreateInstance(
-		CLSID_WICImagingFactory,
-		nullptr,
-		CLSCTX_INPROC_SERVER,
-		IID_PPV_ARGS(&wic_factory));
-
-	ComPtr<IWICFormatConverter> format_converter;
-	er = wic_factory->CreateFormatConverter(&format_converter);
-	er = format_converter->Initialize(
-		frame,
-		GUID_WICPixelFormat32bppPBGRA,
-		WICBitmapDitherTypeNone,
-		nullptr,
-		0,
-		WICBitmapPaletteTypeCustom);
-
-	const auto pixel_stride = 4;
-	const auto line_stride = image_size.w * pixel_stride;
-	const std::size_t pixel_buffer_size = line_stride * image_size.h;
-	assert(pixel_buffer_size > 0);
-	std::vector<uint8_t> pixel_buffer(pixel_buffer_size);
-
-	auto hr = format_converter->CopyPixels(
-		nullptr,
-		line_stride,
-		numeric_cast<UINT>(pixel_buffer_size),
-		pixel_buffer.data());
-	if (FAILED(hr))
-		return;
-
-	std::vector<std::vector<float>> intensities(image_size.h, std::vector<float>(image_size.w));
-	for (unsigned y = 0; y < image_size.h; y++)
-		for (unsigned x = 0; x < image_size.w; x++)
-			intensities[y][x] = (
-				pixel_buffer.data()[y*line_stride + x*pixel_stride + 0] +
-				pixel_buffer.data()[y*line_stride + x*pixel_stride + 1] +
-				pixel_buffer.data()[y*line_stride + x*pixel_stride + 2]) / 255.0f / 3.0f;
-
-	std::vector<std::vector<float>> kernel{
-		{0,  1, 0},
-		{1, -4, 1},
-		{0,  1, 0},
-	};
-	blur = variance(convolve(intensities, kernel));
 }
 
 ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer) const {

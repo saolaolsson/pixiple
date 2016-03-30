@@ -50,7 +50,6 @@ public:
 
 	Hash get_file_hash() const;
 	Hash get_pixel_hash() const;
-	float get_blur() const;
 
 	void draw(ID2D1HwndRenderTarget* const render_target, const D2D1_RECT_F& rect_dest, const D2D1_RECT_F& rect_src, const D2D1_BITMAP_INTERPOLATION_MODE& interpolation_mode) const;
 
@@ -88,14 +87,12 @@ private:
 	
 	Hash file_hash;
 	Hash pixel_hash;
-	float blur = 0.0f;
 
 	IntensityArray calculate_intensities(const std::vector<uint8_t>& pixel_buffer, const int pixel_stride, const int line_stride, const D2D_RECT_U& rect) const;
 
 	void load_pixels(ComPtr<IWICBitmapFrameDecode> frame);
 	void load_metadata(ComPtr<IWICBitmapFrameDecode> frame);
 	void calculate_hash();
-	void calculate_blur();
 
 	ComPtr<IWICBitmapFrameDecode> get_frame(std::vector<std::uint8_t>& buffer) const;
 	ComPtr<ID2D1Bitmap> get_bitmap(ID2D1HwndRenderTarget* const render_target) const;
