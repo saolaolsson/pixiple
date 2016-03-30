@@ -769,10 +769,12 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 
 	ComPtr<IWICStream> stream;
 	er = wic_factory->CreateStream(&stream);
-	er = stream->InitializeFromMemory(buffer.data(), numeric_cast<DWORD>(buffer.size()));
+	auto hr = stream->InitializeFromMemory(buffer.data(), numeric_cast<DWORD>(buffer.size()));
+	if (FAILED(hr))
+		return nullptr;
 
 	ComPtr<IWICBitmapDecoder> decoder;
-	auto hr = wic_factory->CreateDecoderFromStream(
+	hr = wic_factory->CreateDecoderFromStream(
 		stream,
 		nullptr,
 		WICDecodeMetadataCacheOnDemand,
