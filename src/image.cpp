@@ -29,14 +29,9 @@ Image::Image(const std::tr2::sys::path& path) : path_{path} {
 	assert(!path.empty());
 
 	std::error_code ec;
-	file_size_ = std::tr2::sys::file_size(path, ec);
 	file_time_ = std::tr2::sys::last_write_time(path, ec);
-	if (file_size_ == -1 || file_time_ == std::tr2::sys::file_time_type::min()) {
-		status = Status::open_failed;
-		return;
-	}
 
-	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size_));
+	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size()));
 	auto frame = get_frame(data);
 	if (frame) {
 		load_pixels(frame);
@@ -55,7 +50,12 @@ std::tr2::sys::path Image::path() const {
 }
 
 std::uintmax_t Image::file_size() const {
-	return file_size_;
+	std::error_code ec;
+	auto s = std::tr2::sys::file_size(path_, ec);
+	if (s == -1)
+		return 0;
+	else
+		return s;
 }
 
 std::chrono::system_clock::time_point Image::file_time() const {
@@ -726,12 +726,12 @@ void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
 }
 
 void Image::calculate_hash() {
-	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size_));
-	auto frame = get_frame(data);
+	std::vector<std::uint8_t> buffer(numeric_cast<std::size_t>(file_size()));
+	auto frame = get_frame(buffer);
 	if (frame == nullptr)
 		return;
 
-	file_hash = Hash(data.data(), data.size());
+	file_hash = Hash(buffer.data(), buffer.size());
 
 	ComPtr<IWICImagingFactory> wic_factory;
 	er = CoCreateInstance(
@@ -753,9 +753,9 @@ void Image::calculate_hash() {
 }
 
 ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer) const {
-	std::ifstream ifs(path_, std::ios::binary);
-	ifs.read(reinterpret_cast<char*>(buffer.data()), file_size_);
-	assert(numeric_cast<std::size_t>(ifs.gcount()) == file_size_ || (ifs.fail() && ifs.gcount() == 0));
+	std::ifstream ifs{path_, std::ios::binary};
+	ifs.read(reinterpret_cast<char*>(buffer.data()), buffer.size());
+	assert(numeric_cast<std::size_t>(ifs.gcount()) == buffer.size() || (ifs.fail() && ifs.gcount() == 0));
 	if (ifs.fail())
 		return nullptr;
 	ifs.close();
@@ -769,10 +769,7 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 
 	ComPtr<IWICStream> stream;
 	er = wic_factory->CreateStream(&stream);
-
-	er = stream->InitializeFromMemory(
-		buffer.data(),
-		numeric_cast<DWORD>(file_size_));
+	er = stream->InitializeFromMemory(buffer.data(), numeric_cast<DWORD>(buffer.size()));
 
 	ComPtr<IWICBitmapDecoder> decoder;
 	auto hr = wic_factory->CreateDecoderFromStream(
@@ -786,17 +783,10 @@ ComPtr<IWICBitmapFrameDecode> Image::get_frame(std::vector<std::uint8_t>& buffer
 	ComPtr<IWICBitmapFrameDecode> frame;
 	er = decoder->GetFrame(0, &frame);
 
-	// if file has changed since *this was created, fail
-
-	if (file_size_ != 0)
-		if (std::tr2::sys::file_size(path_) != file_size_)
-			return nullptr;
-
-	if (image_size.w != 0 || image_size.h != 0) {
-		std::uint32_t w;
-		std::uint32_t h;
-		er = frame->GetSize(&w, &h);
-		if (w != image_size.w || h != image_size.h)
+	if (image_size != Size2u{0, 0}) {
+		Size2u s;
+		er = frame->GetSize(&s.w, &s.h);
+		if (s != image_size)
 			return nullptr;
 	}
 
@@ -822,7 +812,7 @@ ComPtr<ID2D1Bitmap> Image::get_bitmap(ID2D1HwndRenderTarget* const render_target
 	if (bce.bitmap == nullptr) {
 		bce.image = shared_from_this();
 
-		std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size_));
+		std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size()));
 		auto frame = get_frame(data);
 		if (frame == nullptr)
 			return nullptr;
