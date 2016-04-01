@@ -41,14 +41,9 @@ std::chrono::system_clock::duration ImagePair::get_age() const {
 
 std::chrono::system_clock::duration ImagePair::time_distance() const {
 	auto duration_min = std::chrono::system_clock::duration::max();
-	for (auto t1 : image_1->get_metadata_times()) {
-		for (auto t2 : image_2->get_metadata_times()) {
-			// TODO: C++17: std::chrono::min(duration_min, std::chrono::abs(t1 - t2))
-			auto dc = std::abs((t1 - t2).count());
-			if (dc < duration_min.count())
-				duration_min = std::chrono::system_clock::duration{dc};
-		}
-	}
+	for (auto t1 : image_1->get_metadata_times())
+		for (auto t2 : image_2->get_metadata_times())
+			duration_min = std::min(duration_min, std::chrono::abs(t1 - t2));
 	return duration_min;
 }
 
