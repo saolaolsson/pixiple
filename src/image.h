@@ -6,7 +6,7 @@
 #include "shared/vector.h"
 
 #include <chrono>
-#include <filesystem>
+#include <experimental/filesystem>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -30,14 +30,14 @@ class Image : public std::enable_shared_from_this<Image> {
 public:
 	static void clear_cache();
 
-	Image(const std::tr2::sys::path& path);
+	Image(const std::experimental::filesystem::path& path);
 
 	enum class Status {ok, open_failed, decode_failed};
 	Status get_status() const;
 
-	std::tr2::sys::path path() const;
+	std::experimental::filesystem::path path() const;
 	std::uintmax_t file_size() const;
-	std::tr2::sys::file_time_type file_time() const;
+	std::experimental::filesystem::file_time_type file_time() const;
 
 	std::vector<std::chrono::system_clock::time_point> get_metadata_times() const;
 	std::wstring get_metadata_make_model() const;
@@ -78,8 +78,8 @@ private:
 
 	Status status = Status::ok;
 
-	std::tr2::sys::path path_;
-	std::tr2::sys::file_time_type file_time_;
+	std::experimental::filesystem::path path_;
+	std::experimental::filesystem::file_time_type file_time_;
 
 	Size2u image_size{0, 0};
 

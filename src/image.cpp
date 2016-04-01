@@ -25,11 +25,11 @@ void Image::clear_cache() {
 	bitmap_cache.clear();
 }
 
-Image::Image(const std::tr2::sys::path& path) : path_{path} {
+Image::Image(const std::experimental::filesystem::path& path) : path_{path} {
 	assert(!path.empty());
 
 	std::error_code ec;
-	file_time_ = std::tr2::sys::last_write_time(path, ec);
+	file_time_ = std::experimental::filesystem::last_write_time(path, ec);
 
 	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size()));
 	auto frame = get_frame(data);
@@ -45,13 +45,13 @@ Image::Status Image::get_status() const {
 	return status;
 }
 
-std::tr2::sys::path Image::path() const {
+std::experimental::filesystem::path Image::path() const {
 	return path_;
 }
 
 std::uintmax_t Image::file_size() const {
 	std::error_code ec;
-	auto s = std::tr2::sys::file_size(path_, ec);
+	auto s = std::experimental::filesystem::file_size(path_, ec);
 	if (s == -1)
 		return 0;
 	else
@@ -159,7 +159,7 @@ void Image::draw(
 	#endif
 }
 
-static std::wstring to_windows_path(const std::tr2::sys::path& path) {
+static std::wstring to_windows_path(const std::experimental::filesystem::path& path) {
 	if (path.wstring().substr(0, 2) == L"\\\\")
 		return L"\\\\?\\UNC\\" + path.wstring().substr(2);
 	else

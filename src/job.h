@@ -3,7 +3,7 @@
 #include "image_pair.h"
 
 #include <atomic>
-#include <filesystem>
+#include <experimental/filesystem>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -21,7 +21,7 @@ public:
 
 	std::atomic<bool> force_thread_exit = false;
 
-	Job(const std::vector<std::tr2::sys::path>& paths,
+	Job(const std::vector<std::experimental::filesystem::path>& paths,
 		std::vector<ImagePair>& pairs_visual,
 		std::vector<ImagePair>& pairs_time,
 		std::vector<ImagePair>& pairs_location,
@@ -43,7 +43,7 @@ private:
 	std::size_t progress_current() const;
 	std::size_t progress_total() const;
 
-	const std::vector<std::tr2::sys::path>& paths;
+	const std::vector<std::experimental::filesystem::path>& paths;
 
 	mutable std::mutex mutex;
 	std::vector<std::shared_ptr<Image>> images{paths.size()};
