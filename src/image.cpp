@@ -281,7 +281,7 @@ float calculate_distance(
 		ImageTransform::flip_sw_ne,
 	};
 
-	const auto n_intensity_block_divisions = intensities_1.size();
+	const auto n_intensity_block_divisions = numeric_cast<int>(intensities_1.size());
 	auto sum = maximum_distance * n_intensity_block_divisions * n_intensity_block_divisions;
 	for (auto t : transforms) {
 		auto s = 0.0f;
