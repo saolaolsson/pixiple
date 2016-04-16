@@ -14,7 +14,7 @@ Unlike similar program, Pixiple will attempt to find not only duplicate images b
 
 ## Download
 
-Download the executable from [Releases](https://github.com/olaolsso/pixiple/releases). The x86 version will work on 32-bit and 64-bit Windows, the x64 version will only work on 64-bit Windows but may be slightly faster.
+Download the executable from [Releases](https://github.com/olaolsso/pixiple/releases). The x86 version will work on 32-bit and 64-bit Windows while the x64 version will only work on 64-bit Windows but may be slightly faster.
 
 ## Features
 
@@ -41,4 +41,4 @@ Pixiple will easily detect images that are identical, have identical pixel conte
 
 Pixiple is less well able to detect similar images with significant changes to pixel content (cropping or change of brightness, contrast, saturation, etc).
 
-File metadata (name, size, date, format) is ignored when detecting similarity. Ny default, the path of an image is also ignored.
+File metadata (name, size, date, format) is ignored when detecting similarity. By default, the path of an image is also ignored.
