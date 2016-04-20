@@ -22,6 +22,7 @@ Download the executable from [Releases](https://github.com/olaolsso/pixiple/rele
 - Fast, multi-threaded processing.
 - Simple, minimalistic, resizable, DPI-aware UI.
 - Portable: single file, no settings saved, no installation required.
+- Open source, no restrictions, no nonsense.
 
 ## Misfeatures
 
