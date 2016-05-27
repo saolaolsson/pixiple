@@ -211,8 +211,7 @@ void Image::open_folder() const {
 		__unaligned const ITEMIDLIST* selection[]{file};
 		er = SHOpenFolderAndSelectItems(folder, 1, selection, 0);
 		CoTaskMemFree(file);
-	}
-	else {
+	} else {
 		__unaligned const ITEMIDLIST* selection[]{folder};
 		er = SHOpenFolderAndSelectItems(folder, 1, selection, 0);
 	}
