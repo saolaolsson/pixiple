@@ -66,26 +66,26 @@ Vector3f normalize(const Vector3f& v) {
 		static_cast<XMVECTOR>(v)));
 }
 
-Vector<3, float> orthogonal(const Vector<3, float>& v) {
+Vector3f orthogonal(const Vector3f& v) {
 	if (abs(v.x) > abs(v.y))
 		return {-v.z, 0, v.x}; // v cross {0, 1, 0}
 	else
 		return {0, v.z, -v.y}; // v cross {1, 0, 0}
 }
 
-Vector<3, float> orthogonal(const Vector<3, float>& lhs, const Vector<3, float>& rhs) {
+Vector3f orthogonal(const Vector3f& lhs, const Vector3f& rhs) {
 	return {
 		lhs.y*rhs.z - lhs.z*rhs.y,
 		lhs.z*rhs.x - lhs.x*rhs.z,
 		lhs.x*rhs.y - lhs.y*rhs.x};
 }
 
-Vector<3, float> vector(const Vector<3, float>& yaw_pitch_roll) {
+Vector3f vector(const Vector3f& yaw_pitch_roll) {
 	return vector(Quaternion{yaw_pitch_roll.y, yaw_pitch_roll.x, yaw_pitch_roll.z});
 }
 
-Vector<3, float> vector(const Quaternion& orientation) {
-	return Vector<3, float>{0, 0, 1} * orientation;
+Vector3f vector(const Quaternion& orientation) {
+	return Vector3f{0, 0, 1} * orientation;
 }
 
 // Vector4f
