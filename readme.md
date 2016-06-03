@@ -23,6 +23,7 @@ Download the executable from [Releases](https://github.com/olaolsso/pixiple/rele
 - Simple, minimalistic, resizable, DPI-aware UI.
 - Portable: single file, no settings saved, no installation required.
 - Free, open source, no restrictions, no nonsense.
+- Optimized for cows.
 
 ## Misfeatures
 
