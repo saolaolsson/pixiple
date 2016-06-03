@@ -22,12 +22,13 @@ Download the executable from [Releases](https://github.com/olaolsso/pixiple/rele
 - Fast, multi-threaded processing.
 - Simple, minimalistic, resizable, DPI-aware UI.
 - Portable: single file, no settings saved, no installation required.
-- Open source, no restrictions, no nonsense.
+- Free, open source, no restrictions, no nonsense.
 
 ## Misfeatures
 
 - Only a single folder (and all its subfolders, recursively) may be scanned at a time.
 - Support for image file formats supported by Windows Imaging Component only (PNG, JPEG, GIF, TIFF, BMP).
+- No caching of previous results, so all images must be processed every new scan.
 - No installer.
 
 ## Requirements
