@@ -27,10 +27,10 @@ Download the executable from [Releases](https://github.com/olaolsso/pixiple/rele
 
 ## Misfeatures
 
-- Only a single folder (and all its subfolders, recursively) may be scanned at a time.
 - Support for image file formats supported by Windows Imaging Component only (PNG, JPEG, GIF, TIFF, BMP).
 - No caching of previous results, so all images must be processed every new scan.
 - No installer.
+- Cows not included.
 
 ## Requirements
 
