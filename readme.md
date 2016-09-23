@@ -20,7 +20,7 @@ Download the executable from [Releases](https://github.com/olaolsso/pixiple/rele
 
 - Uses both pixel and metadata content (dates, location, camera) to find related images.
 - Fast, multi-threaded processing.
-- Simple, minimalistic, resizable, DPI-aware UI.
+- Simple, minimalistic, resizable, localized, DPI-aware UI.
 - Portable: single file, no settings saved, no installation required.
 - Free, open source, no restrictions, no nonsense.
 - Optimized for cows.
@@ -44,4 +44,4 @@ Pixiple will easily detect images that are identical, have identical pixel conte
 
 Pixiple is less well able to detect similar images with significant changes to pixel content (cropping or change of brightness, contrast, saturation, etc).
 
-File metadata (name, size, date, format) is ignored when detecting similarity. By default, the path of an image is also ignored.
+File metadata (name, size, date, format) is ignored when detecting similarity. By default, image paths are also ignored.
