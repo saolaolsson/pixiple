@@ -20,7 +20,7 @@ Download the executable from [Releases](https://github.com/olaolsso/pixiple/rele
 
 - Uses both pixel and metadata content (dates, location, camera) to find related images.
 - Fast, multi-threaded processing.
-- Simple, minimalistic, resizable, localized, DPI-aware UI.
+- Minimalistic, resizable, localized, DPI-aware UI.
 - Portable: single file, no settings saved, no installation required.
 - Free, open source, no restrictions, no nonsense.
 - Optimized for cows.
