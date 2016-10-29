@@ -47,7 +47,7 @@ std::vector<std::pair<float, float>> get_scale_levels(
 	scale_level_pairs.push_back({fit_scale_left, fit_scale_left * swapped_left_right_scale_ratio});
 	scale_level_pairs.push_back({fit_scale_right / swapped_left_right_scale_ratio, fit_scale_right});
 
-	// find smallast scale to include
+	// find smallest scale to include
 	auto min_scale = std::min({
 		scale_level_pairs[0].first,
 		scale_level_pairs[0].second,
