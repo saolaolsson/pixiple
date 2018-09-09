@@ -70,7 +70,7 @@ private:
 	ComPtr<ID2D1Bitmap> get_bitmap(ID2D1HwndRenderTarget* const render_target) const;
 
 	struct BitmapCacheEntry {
-		std::weak_ptr<Image> image;
+		std::weak_ptr<const Image> image;
 		ComPtr<ID2D1Bitmap> bitmap = nullptr;
 	};
 	static std::vector<BitmapCacheEntry> bitmap_cache;
