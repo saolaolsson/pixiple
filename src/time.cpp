@@ -2,6 +2,7 @@
 
 #include "time.h"
 
+#include <cmath>
 #include <iomanip>
 
 std::wostream& operator<<(std::wostream& os, const std::chrono::system_clock::time_point tp) {
@@ -20,15 +21,15 @@ std::wostream& operator<<(std::wostream& os, const std::chrono::system_clock::du
 	auto ds = std::chrono::duration_cast<std::chrono::seconds>(d).count();
 	std::wostringstream ss;
 	if (d > 2*365*24h)
-		ss << static_cast<decltype(ds)>(ds / 3600.0f / 24 / 365 + 0.5f) << L" years";
+		ss << static_cast<decltype(ds)>(std::round(ds / 3600.0f / 24 / 365)) << L" years";
 	else if (d > 365*24h)
-		ss << static_cast<decltype(ds)>(ds / 3600.0f / 24 / 30 + 0.5f) << L" months";
+		ss << static_cast<decltype(ds)>(std::round(ds / 3600.0f / 24 / 30)) << L" months";
 	else if (d > 2*24h)
-		ss << static_cast<decltype(ds)>(ds / 3600.0f / 24 + 0.5f) << L" days";
+		ss << static_cast<decltype(ds)>(std::round(ds / 3600.0f / 24)) << L" days";
 	else if (d > 2h)
-		ss << static_cast<decltype(ds)>(ds / 3600.0f + 0.5f) << L" hours";
+		ss << static_cast<decltype(ds)>(std::round(ds / 3600.0f)) << L" hours";
 	else if (d > 2min)
-		ss << static_cast<decltype(ds)>(ds / 60.0f + 0.5f) << L" minutes";
+		ss << static_cast<decltype(ds)>(std::round(ds / 60.0f)) << L" minutes";
 	else
 		ss << ds << L" second" << (ds != 1 ? L"s" : L"");
 	return os << ss.str();
