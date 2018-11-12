@@ -42,7 +42,7 @@ std::vector<ComPtr<IShellItem>> get_shell_items(IDataObject* object) {
 	if (FAILED(object->GetData(&format, &stgm)))
 		return {};
 
-	auto hdrop = reinterpret_cast<HDROP>(stgm.hGlobal);
+	auto hdrop = static_cast<HDROP>(stgm.hGlobal);
 	auto n_paths = DragQueryFile(hdrop, 0xffffffff, nullptr, 0);
 
 	std::vector<ComPtr<IShellItem>> items;
