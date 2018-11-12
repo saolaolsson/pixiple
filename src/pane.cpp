@@ -375,7 +375,7 @@ static D2D1_RECT_F get_destination_rect(
 }
 
 void Pane::draw(ID2D1HwndRenderTarget* const render_target) const {
-	CoInitialize(nullptr);
+	er = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
 	ComPtr<ID2D1SolidColorBrush> brush;
 
