@@ -41,6 +41,10 @@ public:
 	bool layout_valid;
 
 	Window::Window(const std::wstring& title, const D2D1_SIZE_U& size_min, const HICON icon);
+	Window(const Window&) = delete;
+	Window(const Window&&) = delete;
+	Window& operator=(const Window&) = delete;
+	Window& operator=(const Window&&) = delete;
 	~Window();
 
 	HWND get_handle() const;
