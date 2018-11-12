@@ -62,8 +62,8 @@ public:
 private:
 	IntensityArray calculate_intensities(const std::vector<uint8_t>& pixel_buffer, const int pixel_stride, const int line_stride, const D2D_RECT_U& rect) const;
 
-	void load_pixels(ComPtr<IWICBitmapFrameDecode> frame);
-	void load_metadata(ComPtr<IWICBitmapFrameDecode> frame);
+	void load_pixels(IWICBitmapFrameDecode* const frame);
+	void load_metadata(IWICBitmapFrameDecode* const frame);
 	void calculate_hash();
 
 	ComPtr<IWICBitmapFrameDecode> get_frame(std::vector<std::uint8_t>& buffer) const;

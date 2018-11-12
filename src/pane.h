@@ -55,7 +55,7 @@ public:
 	void set_cursor(LPCTSTR cursor_name);
 
 	void update();
-	void draw(ComPtr<ID2D1HwndRenderTarget> render_target) const;
+	void draw(ID2D1HwndRenderTarget* const render_target) const;
 
 	void set_text(const std::wstring& text, const std::vector<std::pair<std::size_t, std::size_t>>& bold_ranges = std::vector<std::pair<std::size_t, std::size_t>>(), bool centred = false);
 

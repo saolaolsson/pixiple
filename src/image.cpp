@@ -421,7 +421,7 @@ IntensityArray Image::calculate_intensities(
 	return intensities;
 }
 
-void Image::load_pixels(ComPtr<IWICBitmapFrameDecode> frame) {
+void Image::load_pixels(IWICBitmapFrameDecode* const frame) {
 	er = frame->GetSize(&image_size.w, &image_size.h);
 	assert(image_size.w > 0 && image_size.h > 0);
 
@@ -564,7 +564,7 @@ float get_propvariant_location(const PROPVARIANT& pv) {
 	return d + m/60 + s/3600;
 }
 
-void Image::load_metadata(ComPtr<IWICBitmapFrameDecode> frame) {
+void Image::load_metadata(IWICBitmapFrameDecode* const frame) {
 	HRESULT hr;
 
 	ComPtr<IWICMetadataQueryReader> reader;
