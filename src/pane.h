@@ -24,7 +24,6 @@ public:
 	Edge* edge_right;
 	Edge* edge_bottom;
 
-	Pane() = delete;
 	Pane(
 		Window* const window,
 		Edge* const edge_left,
