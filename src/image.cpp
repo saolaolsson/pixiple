@@ -363,10 +363,10 @@ IntensityArray Image::calculate_intensities(
 
 			for (auto y = offset_y; y < offset_y_next; y++) {
 				for (auto x = offset_x; x < offset_x_next; x++) {
-					b += pixel_buffer.data()[y*line_stride + x*pixel_stride + 0];
-					g += pixel_buffer.data()[y*line_stride + x*pixel_stride + 1];
-					r += pixel_buffer.data()[y*line_stride + x*pixel_stride + 2];
-					a += pixel_buffer.data()[y*line_stride + x*pixel_stride + 3];
+					b += pixel_buffer[y*line_stride + x*pixel_stride + 0];
+					g += pixel_buffer[y*line_stride + x*pixel_stride + 1];
+					r += pixel_buffer[y*line_stride + x*pixel_stride + 2];
+					a += pixel_buffer[y*line_stride + x*pixel_stride + 3];
 				}
 			}
 
