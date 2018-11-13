@@ -220,7 +220,7 @@ void Image::open_folder() const {
 }
 
 Intensity get_intensity(const IntensityArray& intensities, const int x, const int y, const ImageTransform transform) {
-	const int n_intensity_block_divisions = static_cast<int>(intensities.size());
+	const int n_intensity_block_divisions = numeric_cast<int>(intensities.size());
 	
 	auto xt = x;
 	auto yt = y;

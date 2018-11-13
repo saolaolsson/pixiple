@@ -437,7 +437,7 @@ LRESULT WINAPI Window::window_procedure(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 		}
 	} else if (msg == WM_KEYDOWN) {
 		Event e{Event::Type::key};
-		e.key_code = static_cast<std::uint8_t>(wparam);
+		e.key_code = numeric_cast<std::uint8_t>(wparam);
 		queue_event(e);
 	} else if (msg == WM_LBUTTONDOWN) {
 		SetCapture(hwnd);
