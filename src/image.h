@@ -64,7 +64,7 @@ private:
 
 	void load_pixels(IWICBitmapFrameDecode* const frame);
 	void load_metadata(IWICBitmapFrameDecode* const frame);
-	void calculate_hash();
+	void calculate_hash() const;
 
 	ComPtr<IWICBitmapFrameDecode> get_frame(std::vector<std::uint8_t>& buffer) const;
 	ComPtr<ID2D1Bitmap> get_bitmap(ID2D1HwndRenderTarget* const render_target) const;
@@ -93,6 +93,6 @@ private:
 	std::wstring metadata_image_id;
 	Point2f metadata_position{0, 0};
 	
-	Hash file_hash;
-	Hash pixel_hash;
+	mutable Hash file_hash;
+	mutable Hash pixel_hash;
 };

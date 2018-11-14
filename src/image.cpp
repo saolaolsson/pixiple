@@ -92,13 +92,13 @@ Size2f Image::get_bitmap_size(const Vector2f& scale) const {
 
 Hash Image::get_file_hash() const {
 	if (file_hash == Hash{})
-		const_cast<Image*>(this)->calculate_hash();
+		calculate_hash();
 	return file_hash;
 }
 
 Hash Image::get_pixel_hash() const {
 	if (pixel_hash == Hash{})
-		const_cast<Image*>(this)->calculate_hash();
+		calculate_hash();
 	return pixel_hash;
 }
 
@@ -724,7 +724,7 @@ void Image::load_metadata(IWICBitmapFrameDecode* const frame) {
 	}
 }
 
-void Image::calculate_hash() {
+void Image::calculate_hash() const {
 	std::vector<std::uint8_t> buffer(numeric_cast<std::size_t>(file_size()));
 	auto frame = get_frame(buffer);
 	if (frame == nullptr)
