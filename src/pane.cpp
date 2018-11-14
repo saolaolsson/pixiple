@@ -509,7 +509,7 @@ void Pane::set_progressbar_progress(const float progress) {
 			progressbar_mode = ProgressbarMode::normal;
 		}
 
-		auto max_value = std::numeric_limits<std::int16_t>::max();
+		constexpr auto max_value = std::numeric_limits<std::int16_t>::max();
 		auto value = std::min(static_cast<decltype(max_value)>(progress * max_value), max_value);
 		er = PostMessage(progressbar, PBM_SETRANGE32, 0, max_value);
 		er = PostMessage(progressbar, PBM_SETPOS, value, 0);
