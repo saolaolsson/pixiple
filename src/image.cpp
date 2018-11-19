@@ -6,6 +6,7 @@
 #include "shared/trim.h"
 
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -25,11 +26,12 @@ void Image::clear_cache() {
 	bitmap_cache.clear();
 }
 
-Image::Image(const std::experimental::filesystem::path& path) : path_{path} {
+Image::Image(const std::filesystem::path& path) : path_{path} {
 	assert(!path.empty());
 
 	std::error_code ec;
-	file_time_ = std::experimental::filesystem::last_write_time(path, ec);
+	// TODO: remove experimental workaround
+	file_time_ = std::experimental::filesystem::last_write_time(std::experimental::filesystem::path(path.native()), ec);
 
 	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size()));
 	
@@ -45,20 +47,20 @@ Image::Status Image::get_status() const {
 	return status;
 }
 
-std::experimental::filesystem::path Image::path() const {
+std::filesystem::path Image::path() const {
 	return path_;
 }
 
 std::uintmax_t Image::file_size() const {
 	std::error_code ec;
-	auto s = std::experimental::filesystem::file_size(path_, ec);
+	auto s = std::filesystem::file_size(path_, ec);
 	if (s == -1)
 		return 0;
 	else
 		return s;
 }
 
-std::chrono::system_clock::time_point Image::file_time() const {
+std::experimental::filesystem::file_time_type Image::file_time() const {
 	return file_time_;
 }
 
@@ -158,7 +160,7 @@ void Image::draw(
 	#endif
 }
 
-static std::wstring to_windows_path(const std::experimental::filesystem::path& path) {
+static std::wstring to_windows_path(const std::filesystem::path& path) {
 	if (path.wstring().substr(0, 2) == L"\\\\")
 		return L"\\\\?\\UNC\\" + path.wstring().substr(2);
 	else

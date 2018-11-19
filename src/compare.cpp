@@ -166,7 +166,7 @@ void update_text_image_info(
 
 	// filename
 
-	ss << image->path() << L"\n";
+	ss << image->path().native() << L"\n";
 	auto matching_length = get_matching_text_length(image->path(), image_other->path());
 	bold_ranges.push_back({index, matching_length});
 

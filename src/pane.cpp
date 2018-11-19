@@ -611,7 +611,7 @@ void Pane::add_combobox(const int button_id, const std::vector<std::wstring>& it
 	er = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof NONCLIENTMETRICS, &ncm, 0);
 	// reported font height is in DP but increases with windows DPI settings.
 	// revert this increase to get the font height in DIP.
-	float font_height_dip = window->to_dip_y(std::abs(ncm.lfMessageFont.lfHeight));
+	auto font_height_dip = window->to_dip_y(std::abs(ncm.lfMessageFont.lfHeight));
 	if (button_font == nullptr) {
 		ncm.lfMessageFont.lfHeight = -window->to_dp_y(font_height_dip);
 		button_font = er = CreateFontIndirect(&ncm.lfMessageFont);

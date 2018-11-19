@@ -8,7 +8,7 @@
 #include "shared/com.h"
 
 #include <atomic>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -23,8 +23,8 @@
 
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
-std::vector<std::experimental::filesystem::path> scan(Window& window, const std::vector<ComPtr<IShellItem>>& shell_items);
-std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<std::experimental::filesystem::path>& paths);
+std::vector<std::filesystem::path> scan(Window& window, const std::vector<ComPtr<IShellItem>>& shell_items);
+std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<std::filesystem::path>& paths);
 std::vector<ComPtr<IShellItem>> compare(Window& window, const std::vector<std::vector<ImagePair>>& pair_categories);
 
 std::vector<ComPtr<IShellItem>> browse(HWND parent) {
@@ -52,9 +52,8 @@ std::vector<ComPtr<IShellItem>> browse(HWND parent) {
 }
 
 std::vector<std::wstring> get_command_line_args() {
-	wchar_t** args;
 	int n_args;
-	args = er = CommandLineToArgvW(GetCommandLine(), &n_args);
+	auto args = er = CommandLineToArgvW(GetCommandLine(), &n_args);
 
 	std::vector<std::wstring> arg_strings;
 	for (int i = 1; i < n_args; i++)

@@ -5,7 +5,7 @@
 
 #include "shared/com.h"
 
-#include <experimental/filesystem>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -27,7 +27,7 @@ static bool is_image(const std::wstring& filename) {
 	return false;
 }
 
-std::vector<std::experimental::filesystem::path> scan(Window& window, const std::vector<ComPtr<IShellItem>>& shell_items) {
+std::vector<std::filesystem::path> scan(Window& window, const std::vector<ComPtr<IShellItem>>& shell_items) {
 	window.add_edge(0);
 	window.add_edge(0);
 	window.add_edge(1);
@@ -54,7 +54,7 @@ std::vector<std::experimental::filesystem::path> scan(Window& window, const std:
 	window.add_pane(0, 1, 2, 5, margin, false, false, background);
 	window.add_pane(0, 7, 2, 3, margin, false, false, background);
 
-	std::vector<std::experimental::filesystem::path> paths;
+	std::vector<std::filesystem::path> paths;
 	auto items = shell_items;
 
 	while (!items.empty()) {

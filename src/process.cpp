@@ -192,7 +192,7 @@ static void thread_worker(Job* const job) {
 	TRACE();
 }
 
-std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<std::experimental::filesystem::path>& paths) {
+std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<std::filesystem::path>& paths) {
 	// prepare job
 	std::vector<std::vector<ImagePair>> pair_categories{4};
 	Job job{
