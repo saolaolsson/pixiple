@@ -213,24 +213,21 @@ std::vector<std::vector<ImagePair>> process(Window& window, const std::vector<st
 	auto start = std::chrono::system_clock::now();
 	auto last_update = std::chrono::system_clock::time_point{};
 	while (!job.is_completed()) {
-		auto e = window.get_event();
-		if (e.type == Event::Type::quit || e.type == Event::Type::button) {
+		if (auto e = window.get_event(); e.type == Event::Type::quit || e.type == Event::Type::button) {
 			job.force_thread_exit = true;
 			break;
 		}
 
 		window.set_progressbar_progress(0, job.get_progress());
 
-		auto now = std::chrono::system_clock::now();
-		if (now - last_update > 1s) {
+		if (auto now = std::chrono::system_clock::now(); now - last_update > 1s) {
 			last_update = now;
 
 			std::wostringstream ss;
 			ss.imbue(std::locale(""));
 			ss << L"Processing " << paths.size() << L" images";
 
-			auto elapsed = now - start;
-			if (elapsed > 2s && job.get_progress() > 0) {
+			if (auto elapsed = now - start; elapsed > 2s && job.get_progress() > 0) {
 				auto total = std::chrono::duration_cast<std::chrono::system_clock::duration>(elapsed / job.get_progress());
 				ss << L": " << total - elapsed << L" remaining";
 				debug_log << total << "\n";

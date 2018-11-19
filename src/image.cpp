@@ -32,8 +32,8 @@ Image::Image(const std::experimental::filesystem::path& path) : path_{path} {
 	file_time_ = std::experimental::filesystem::last_write_time(path, ec);
 
 	std::vector<std::uint8_t> data(numeric_cast<std::size_t>(file_size()));
-	auto frame = get_frame(data);
-	if (frame) {
+	
+	if (auto frame = get_frame(data)) {
 		load_pixels(frame);
 		load_metadata(frame);
 	} else {
@@ -108,8 +108,7 @@ void Image::draw(
 	const D2D1_RECT_F& rect_src,
 	const D2D1_BITMAP_INTERPOLATION_MODE& interpolation_mode
 ) const {
-	auto bitmap = get_bitmap(render_target);
-	if (bitmap) {
+	if (auto bitmap = get_bitmap(render_target)) {
 		render_target->DrawBitmap(bitmap, rect_dest, 1.0, interpolation_mode, rect_src);
 	} else {
 		// draw placeholder
@@ -206,8 +205,7 @@ void Image::open_folder() const {
 	if (folder == nullptr)
 		return;
 
-	__unaligned auto file = ILCreateFromPath(path_.c_str());
-	if (file) {
+	if (__unaligned auto file = ILCreateFromPath(path_.c_str())) {
 		__unaligned const ITEMIDLIST* selection[]{file};
 		er = SHOpenFolderAndSelectItems(folder, 1, selection, 0);
 		CoTaskMemFree(file);

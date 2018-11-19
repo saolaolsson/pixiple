@@ -88,12 +88,10 @@ std::wstring ImagePair::description() const {
 	std::wostringstream ss;
 	ss << L"Distance " << std::setprecision(3) << distance;
 
-	auto td = time_distance();
-	if (td != std::chrono::system_clock::duration::max())
+	if (auto td = time_distance(); td != std::chrono::system_clock::duration::max())
 		ss << L", " << td;
 
-	auto ld = location_distance();
-	if (ld != std::numeric_limits<float>::max()) {
+	if (auto ld = location_distance(); ld != std::numeric_limits<float>::max()) {
 		if (ld > 3*1000)
 			ss << L", " << static_cast<int>(ld / 1000 + 0.5f) << " kilometers";
 		else

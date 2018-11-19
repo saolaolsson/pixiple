@@ -73,6 +73,7 @@
     <OutDir>$(ProjectDir)..\vs_output\$(ProjectName)_x86_$(Configuration)\</OutDir>
     <IntDir>$(OutDir)\</IntDir>
     <TargetName>$(ProjectName)_x86</TargetName>
+    <CodeAnalysisRuleSet>NativeMinimumRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -90,6 +91,7 @@
     <OutDir>$(ProjectDir)..\vs_output\$(ProjectName)_x64_$(Configuration)\</OutDir>
     <IntDir>$(OutDir)\</IntDir>
     <TargetName>$(ProjectName)_x64</TargetName>
+    <CodeAnalysisRuleSet>NativeMinimumRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -103,6 +105,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
