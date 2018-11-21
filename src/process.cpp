@@ -48,9 +48,7 @@ static void thread_worker(Job* const job) {
 
 		// score visual similarity
 		const auto distance_visual_max = 0.6f;
-		bool aspect_ratio_flipped;
-		bool cropped;
-		auto distance_visual = distance(*i1, *i2, distance_visual_max, aspect_ratio_flipped, cropped);
+		auto [distance_visual, aspect_ratio_flipped, cropped] =	distance(*i1, *i2, distance_visual_max);
 
 		// score time
 		auto distance_time = std::numeric_limits<float>::max();

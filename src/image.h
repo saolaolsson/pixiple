@@ -57,7 +57,7 @@ public:
 	void delete_file() const;
 	void open_folder() const;
 
-	friend float distance(const Image& image_1, const Image& image_2, const float maximum_distance, bool& aspect_ratio_flipped, bool& cropped);
+	friend std::tuple<float, bool, bool> distance(const Image& image_1, const Image& image_2, const float maximum_distance);
 
 private:
 	IntensityArray calculate_intensities(const std::vector<uint8_t>& pixel_buffer, const int pixel_stride, const int line_stride, const D2D_RECT_U& rect) const;

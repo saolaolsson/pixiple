@@ -263,11 +263,10 @@ Intensity get_intensity(const IntensityArray& intensities, const int x, const in
 	return intensities[yt][xt];
 }
 
-float calculate_distance(
+std::pair<float, bool> calculate_distance(
 	const IntensityArray& intensities_1,
 	const IntensityArray& intensities_2,
-	const float maximum_distance,
-	bool& aspect_ratio_flipped
+	const float maximum_distance
 ) {
 	ImageTransform transforms[] {
 		ImageTransform::none,
@@ -279,6 +278,8 @@ float calculate_distance(
 		ImageTransform::flip_nw_se,
 		ImageTransform::flip_sw_ne,
 	};
+	
+	bool aspect_ratio_flipped = false;
 
 	const auto n_intensity_block_divisions = numeric_cast<int>(intensities_1.size());
 	auto sum = maximum_distance * n_intensity_block_divisions * n_intensity_block_divisions;
@@ -299,23 +300,20 @@ float calculate_distance(
 		}
 	}
 	assert(sum == sum);
-	return sum / n_intensity_block_divisions / n_intensity_block_divisions;
+	return {sum / n_intensity_block_divisions / n_intensity_block_divisions, aspect_ratio_flipped};
 }
 
-float distance(
+std::tuple<float, bool, bool> distance(
 	const Image& image_1,
 	const Image& image_2,
-	const float maximum_distance,
-	bool& aspect_ratio_flipped,
-	bool& cropped
+	const float maximum_distance
 ) {
-	aspect_ratio_flipped = false;
-	cropped = false;
+	bool cropped = false;
 
 	if (image_1.status != Image::Status::ok || image_2.status != Image::Status::ok)
-		return std::numeric_limits<float>::max();
+		return {std::numeric_limits<float>::max(), false, false};
 
-	auto distance = calculate_distance(image_1.intensities, image_2.intensities, maximum_distance, aspect_ratio_flipped);
+	auto [distance, aspect_ratio_flipped] = calculate_distance(image_1.intensities, image_2.intensities, maximum_distance);
 
 	std::vector<std::pair<const IntensityArray&, const IntensityArray&>> pairs{
 		{image_1.intensities_cropped_1, image_2.intensities_cropped_1},
@@ -323,8 +321,7 @@ float distance(
 		{image_1.intensities_cropped_2, image_2.intensities_cropped_2},
 	};
 	for (const auto& p : pairs) {
-		bool arf;
-		auto d = calculate_distance(p.first, p.second, maximum_distance, arf);
+		auto [d, arf] = calculate_distance(p.first, p.second, maximum_distance);
 		if (d < distance) {
 			distance = d;
 			aspect_ratio_flipped = arf;
@@ -332,7 +329,7 @@ float distance(
 		}
 	}
 
-	return distance;
+	return {distance, aspect_ratio_flipped, cropped};
 }
 
 IntensityArray Image::calculate_intensities(
