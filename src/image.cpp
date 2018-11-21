@@ -512,11 +512,11 @@ std::chrono::system_clock::time_point get_propvariant_time(const PROPVARIANT& pv
 	std::size_t pos;
 
 	pos = s.find_last_of(L'+');
-	if (pos != std::string::npos && pos > 15)
+	if (pos != std::wstring::npos && pos > 15)
 		s.erase(pos);
 
 	pos = s.find_last_of(L'-');
-	if (pos != std::string::npos && pos > 15)
+	if (pos != std::wstring::npos && pos > 15)
 		s.erase(pos);
 
 	tm tm{0};

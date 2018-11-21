@@ -336,11 +336,11 @@ static D2D1_RECT_F get_source_rect(
 
 	// clamp offset to top left corner and
 	// bottom right corner (minus width or height)
-	offset_is.x = clamp(
+	offset_is.x = std::clamp(
 		offset_is.x,
 		0.0f,
 		bitmap_size.w - source_rect_size.w);
-	offset_is.y = clamp(
+	offset_is.y = std::clamp(
 		offset_is.y,
 		0.0f,
 		bitmap_size.h - source_rect_size.h);
@@ -693,8 +693,8 @@ static Point2f clamp_centre(
 	auto centre_min = Point2f{margin.w, margin.h};
 	auto centre_max = Point2f{1.0f - margin.w, 1.0f - margin.h};
 	return {
-		clamp(centre.x, centre_min.x, centre_max.x),
-		clamp(centre.y, centre_min.y, centre_max.y)};
+		std::clamp(centre.x, centre_min.x, centre_max.x),
+		std::clamp(centre.y, centre_min.y, centre_max.y)};
 }
 
 void Pane::image_zoom_transform(
@@ -725,8 +725,8 @@ void Pane::image_zoom_transform(
 		std::max(0.0f, bitmap_size.w - rect_size(content()).w / image_scale),
 		std::max(0.0f, bitmap_size.h - rect_size(content()).h / image_scale)};
 	offset_is = {
-		clamp(offset_is.x, 0.0f, offset_max_is.x),
-		clamp(offset_is.y, 0.0f, offset_max_is.y)};
+		std::clamp(offset_is.x, 0.0f, offset_max_is.x),
+		std::clamp(offset_is.y, 0.0f, offset_max_is.y)};
 
 	// calculate actual centre
 	// using pane size OR image size (whichever is smaller)

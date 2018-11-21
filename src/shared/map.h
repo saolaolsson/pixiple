@@ -10,7 +10,7 @@ T sign(const T value) {
 		return 0;
 }
 
-// wrap (not modulo) a number into [0, max]
+// wrap (not modulo) value into [0, max]
 template<typename T>
 T wrap(const T value, const T max) {
 	assert(max > 0);
@@ -25,25 +25,8 @@ T wrap(const T value, const T max) {
 	return wrapped_value; 
 }
 
-// clamp a number into [min, max]
-template<typename T>
-T clamp(
-	const T value,
-	const T min = static_cast<T>(0),
-	const T max = static_cast<T>(1)
-) {
-	assert(max >= min);
-
-	if (value < min)
-		return min;
-	else if (value > max)
-		return max;
-	else
-		return value;
-}
-
 /*
-Map values between [input_0, input_n] to [output_0, output_n] using
+Map values [input_0, input_n] to [output_0, output_n] using
 piecewise linear interpolatation. Clamp values outside the input
 interval to the output interval endpoints.
 */

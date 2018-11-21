@@ -30,7 +30,7 @@ float get_fit_scale(const Size2f pane_size, const Size2f bitmap_size) {
 	auto fit_scale = std::min(
 		pane_size.w / bitmap_size.w,
 		pane_size.h / bitmap_size.h);
-	return clamp(
+	return std::clamp(
 		fit_scale,
 		pow(2.0f, scale_level_exponent_min),
 		pow(2.0f, scale_level_exponent_max));
