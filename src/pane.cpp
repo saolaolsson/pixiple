@@ -7,7 +7,6 @@
 #include "image.h"
 #include "window.h"
 
-#include "shared/map.h"
 #include "shared/numeric_cast.h"
 
 Pane::Pane(

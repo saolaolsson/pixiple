@@ -6,8 +6,6 @@
 #include "time.h"
 #include "window.h"
 
-#include "shared/map.h"
-
 #include <iomanip>
 #include <iterator>
 #include <sstream>
