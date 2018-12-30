@@ -6,7 +6,7 @@
 
 Pixiple is a Windows application that searches your files for images that are similar in pixel and metadata content and presents you with a sorted list of similar image pairs to compare.
 
-Unlike similar programs, Pixiple will attempt to find not only duplicate images but images that have something in common, either in their general appearance or their metadata, and may belong together. Pixiple also lets you compare two images (with synchronized zooming and panning) and check for minute quality differences (with the "swap images" button).
+Unlike similar programs, Pixiple will attempt to find not only duplicate images but images that have something in common, either in their general appearance or their metadata, and may belong together. Pixiple also lets you compare two images (with synchronised zooming and panning) and check for minute quality differences (with the "swap images" button).
 
 ## Screenshot
 
@@ -16,10 +16,10 @@ Unlike similar programs, Pixiple will attempt to find not only duplicate images 
 
 - Uses both pixel and metadata content (dates, location, camera) to find related images.
 - Fast, multi-threaded processing.
-- Minimalist, resizable, localized, DPI-aware UI.
+- Minimalist, resizable, localised, DPI-aware UI.
 - Portable: single file, no settings saved, no installation required.
 - Free, open source, no restrictions, no nonsense.
-- Optimized for cows.
+- Optimised for cows.
 
 ## Misfeatures
 
